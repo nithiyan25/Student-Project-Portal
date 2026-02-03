@@ -1119,32 +1119,55 @@ router.post('/assign-solo-project', authenticate, authorize(['ADMIN']), adminVal
 });
 
 // GET PROJECT REQUESTS (Admin)
-router.get('/project-requests', authenticate, authorize(['ADMIN']), async (req, res, next) => {
+router.get('/project-requests', authenticate, authorize(['ADMIN']), commonValidations.pagination, async (req, res, next) => {
     try {
-        const { status } = req.query;
+        const { status, scopeId } = req.query;
+        const page = parseInt(req.query.page) || DEFAULT_PAGE;
+        const limit = Math.min(parseInt(req.query.limit) || DEFAULT_LIMIT, MAX_LIMIT);
+        const skip = (page - 1) * limit;
 
         const where = {};
         if (status && status !== 'ALL') {
             where.status = status;
         }
+        if (scopeId && scopeId !== 'ALL') {
+            where.project = { scopeId };
+        }
 
-        const requests = await prisma.projectrequest.findMany({
-            where,
-            include: {
-                team: {
-                    include: {
-                        members: {
-                            where: { approved: true },
-                            include: { user: true }
+        const [requests, total] = await Promise.all([
+            prisma.projectrequest.findMany({
+                where,
+                skip,
+                take: limit,
+                include: {
+                    team: {
+                        include: {
+                            members: {
+                                where: { approved: true },
+                                include: { user: true }
+                            }
+                        }
+                    },
+                    project: {
+                        include: {
+                            scope: true
                         }
                     }
                 },
-                project: true
-            },
-            orderBy: { requestedAt: 'desc' }
-        });
+                orderBy: { requestedAt: 'desc' }
+            }),
+            prisma.projectrequest.count({ where })
+        ]);
 
-        res.json({ requests });
+        res.json({
+            requests,
+            pagination: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit)
+            }
+        });
     } catch (e) {
         next(e);
     }
@@ -1280,60 +1303,88 @@ router.post('/bulk-approve-project-requests', authenticate, authorize(['ADMIN'])
             return res.status(400).json({ error: 'No request IDs provided' });
         }
 
-        const results = await prisma.$transaction(async (tx) => {
-            const processed = [];
-            for (const requestId of requestIds) {
-                const request = await tx.projectrequest.findUnique({
-                    where: { id: requestId },
-                    include: { project: true, team: { include: { members: { where: { approved: true } } } } }
-                });
+        const BATCH_SIZE = 50;
+        const processed = [];
+        const errors = [];
 
-                if (request && request.status === 'PENDING' && (request.project.status === 'AVAILABLE' || request.project.status === 'REQUESTED')) {
-                    // Update request status
-                    await tx.projectrequest.update({
-                        where: { id: requestId },
-                        data: {
-                            status: 'APPROVED',
-                            reviewedBy: req.user.id,
-                            reviewedAt: new Date()
+        for (let i = 0; i < requestIds.length; i += BATCH_SIZE) {
+            const batch = requestIds.slice(i, i + BATCH_SIZE);
+
+            // Process each batch in a separate transaction
+            await prisma.$transaction(async (tx) => {
+                for (const requestId of batch) {
+                    try {
+                        const request = await tx.projectrequest.findUnique({
+                            where: { id: requestId },
+                            include: {
+                                project: true,
+                                team: {
+                                    include: {
+                                        members: { where: { approved: true } }
+                                    }
+                                }
+                            }
+                        });
+
+                        // Check if project is still available or requested by this team
+                        if (request && request.status === 'PENDING' && (request.project.status === 'AVAILABLE' || request.project.status === 'REQUESTED')) {
+                            // Update request status
+                            await tx.projectrequest.update({
+                                where: { id: requestId },
+                                data: {
+                                    status: 'APPROVED',
+                                    reviewedBy: req.user.id,
+                                    reviewedAt: new Date()
+                                }
+                            });
+
+                            // Assign project to team
+                            await tx.project.update({
+                                where: { id: request.projectId },
+                                data: { status: 'ASSIGNED' }
+                            });
+
+                            await tx.team.update({
+                                where: { id: request.teamId },
+                                data: {
+                                    projectId: request.projectId,
+                                    status: 'NOT_COMPLETED'
+                                }
+                            });
+
+                            // Reject any other pending requests for this project
+                            await tx.projectrequest.updateMany({
+                                where: {
+                                    projectId: request.projectId,
+                                    status: 'PENDING',
+                                    id: { not: requestId }
+                                },
+                                data: {
+                                    status: 'REJECTED',
+                                    reviewedBy: req.user.id,
+                                    reviewedAt: new Date(),
+                                    rejectionReason: 'Project was assigned to another team'
+                                }
+                            });
+                            processed.push(requestId);
                         }
-                    });
-
-                    // Assign project to team
-                    await tx.project.update({
-                        where: { id: request.projectId },
-                        data: { status: 'ASSIGNED' }
-                    });
-
-                    await tx.team.update({
-                        where: { id: request.teamId },
-                        data: {
-                            projectId: request.projectId,
-                            status: 'NOT_COMPLETED'
-                        }
-                    });
-
-                    // Reject any other pending requests for this project
-                    await tx.projectrequest.updateMany({
-                        where: {
-                            projectId: request.projectId,
-                            status: 'PENDING',
-                            id: { not: requestId }
-                        },
-                        data: {
-                            status: 'REJECTED',
-                            reviewedBy: req.user.id,
-                            reviewedAt: new Date(),
-                            rejectionReason: 'Project was assigned to another team'
-                        }
-                    });
-                    processed.push(requestId);
+                    } catch (err) {
+                        console.error(`Error processing request ${requestId}:`, err);
+                        errors.push({ requestId, error: err.message });
+                    }
                 }
-            }
-            return processed;
-        });
+            }, {
+                timeout: 30000 // Increase timeout for the batch transaction
+            });
+        }
 
-        res.json({ success: true, message: `Successfully approved ${results.length} requests`, approvedCount: results.length });
+        res.json({
+            success: true,
+            message: `Processed ${requestIds.length} requests. Successfully approved ${processed.length}.`,
+            approvedCount: processed.length,
+            errorCount: errors.length,
+            errors: errors.length > 0 ? errors : undefined
+        });
     } catch (e) {
         next(e);
     }

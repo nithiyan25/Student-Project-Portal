@@ -1,16 +1,28 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const prisma = require('../utils/prisma');
+const { OAuth2Client } = require('google-auth-library');
 
 const router = express.Router();
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// Email-only Login (Insecure - requested by user)
+// Google OAuth Login
 // SECURITY: Only users pre-registered in the database can login.
-router.post('/login', async (req, res) => {
-    const { email } = req.body;
+router.post('/google', async (req, res) => {
+    const { token } = req.body;
 
-    if (!email) {
-        return res.status(400).json({ error: "Email is required" });
+    try {
+        // 1. Verify Google ID Token
+        const ticket = await client.verifyIdToken({
+            idToken: token,
+            audience: process.env.GOOGLE_CLIENT_ID
+        });
+        const payload = ticket.getPayload();
+        email = payload.email;
+        // console.log("Google Token Verified:", email);
+    } catch (e) {
+        console.error("Token verification failed:", e.message);
+        return res.status(400).json({ error: "Invalid Google Token" });
     }
 
     try {
@@ -33,7 +45,7 @@ router.post('/login', async (req, res) => {
         );
         res.json({ token: appToken, user });
     } catch (error) {
-        console.error("Login error:", error);
+        console.error(error);
         res.status(500).json({ error: 'Login failed' });
     }
 });

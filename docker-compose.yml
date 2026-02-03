@@ -3,7 +3,7 @@ version: "3.9"
 services:
   # Frontend Service
   frontend:
-    image: client:v5
+    image: client:v5.1
     container_name: project-portal-Frontend
     ports:
       - "8088:80"
@@ -19,7 +19,7 @@ services:
 
   # Backend Service
   backend:
-    image: backend:v5
+    image: backend:v5.1
     container_name: project-portal-Backend
     ports:
       - "5008:5000"

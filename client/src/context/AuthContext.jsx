@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
+import { googleLogout } from '@react-oauth/google';
 import api from '../api';
 
 export const AuthContext = createContext();
@@ -55,9 +56,9 @@ export const AuthProvider = ({ children }) => {
     return () => events.forEach(e => window.removeEventListener(e, handler));
   }, []);
 
-  const login = async (email) => {
-    // Send email to backend, get app token
-    const res = await api.post('/auth/login', { email });
+  const login = async (googleToken) => {
+    // Send Google token to backend, get app token
+    const res = await api.post('/auth/google', { token: googleToken });
     const now = Date.now().toString();
     localStorage.setItem('token', res.data.token);
     localStorage.setItem('user', JSON.stringify(res.data.user));
@@ -68,6 +69,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    googleLogout();
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('lastActivityTime');

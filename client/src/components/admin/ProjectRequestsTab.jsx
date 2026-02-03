@@ -2,14 +2,23 @@ import React, { useState, useEffect } from 'react';
 import api from '../../api';
 import { CheckCircle, XCircle, Clock, Search, Filter, MessageSquare, AlertCircle } from 'lucide-react';
 
-export default function ProjectRequestsTab() {
+export default function ProjectRequestsTab({ scopes = [] }) {
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [filterStatus, setFilterStatus] = useState('PENDING');
+    const [selectedScope, setSelectedScope] = useState('ALL');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
     const [selectedDepartment, setSelectedDepartment] = useState('');
+
+    // Pagination State
+    const [pagination, setPagination] = useState({
+        total: 0,
+        page: 1,
+        limit: 12,
+        totalPages: 1
+    });
 
     // Rejection Modal State
     const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
@@ -24,9 +33,15 @@ export default function ProjectRequestsTab() {
         setLoading(true);
         try {
             const response = await api.get('/admin/project-requests', {
-                params: { status: filterStatus }
+                params: {
+                    status: filterStatus,
+                    scopeId: selectedScope,
+                    page: pagination.page,
+                    limit: pagination.limit
+                }
             });
             setRequests(response.data.requests);
+            setPagination(response.data.pagination);
             setError(null);
         } catch (err) {
             setError('Failed to fetch project requests');
@@ -38,14 +53,18 @@ export default function ProjectRequestsTab() {
 
     useEffect(() => {
         fetchRequests();
-    }, [filterStatus]);
+    }, [filterStatus, selectedScope, pagination.page]);
+
+    const handlePageChange = (newPage) => {
+        setPagination(prev => ({ ...prev, page: newPage }));
+    };
 
     const handleApprove = async (requestId) => {
         if (!window.confirm('Are you sure you want to approve this project request? This will assign the project to the team and reject other pending requests for the same project.')) return;
 
         try {
-            await api.post('/admin/approve-project-request', { requestId });
-            alert('Project request approved successfully!');
+            const res = await api.post('/admin/approve-project-request', { requestId });
+            alert(res.data.message || 'Project request approved successfully!');
             fetchRequests();
         } catch (err) {
             alert(err.response?.data?.error || 'Failed to approve request');
@@ -86,8 +105,8 @@ export default function ProjectRequestsTab() {
 
         setIsSubmitting(true);
         try {
-            await api.post('/admin/bulk-approve-project-requests', { requestIds: selectedIds });
-            alert(`Successfully approved ${selectedIds.length} requests`);
+            const res = await api.post('/admin/bulk-approve-project-requests', { requestIds: selectedIds });
+            alert(res.data.message || `Successfully approved ${selectedIds.length} requests`);
             setSelectedIds([]);
             fetchRequests();
         } catch (err) {
@@ -177,6 +196,7 @@ export default function ProjectRequestsTab() {
                                     setSelectedIds([]);
                                     setSelectedCategory('');
                                     setSelectedDepartment('');
+                                    setPagination(prev => ({ ...prev, page: 1 }));
                                 }}
                                 className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${filterStatus === status
                                     ? 'bg-white text-blue-600 shadow-sm border border-gray-100'
@@ -194,7 +214,25 @@ export default function ProjectRequestsTab() {
             <div className="flex flex-wrap items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                 <div className="flex items-center gap-2">
                     <Filter size={16} className="text-gray-400" />
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Quick Filters:</span>
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Filters:</span>
+                </div>
+
+                {/* Batch/Scope Filter */}
+                <div className="flex items-center gap-2 min-w-[200px]">
+                    <span className="text-[10px] font-black text-gray-400 uppercase">Batch:</span>
+                    <select
+                        value={selectedScope}
+                        onChange={(e) => {
+                            setSelectedScope(e.target.value);
+                            setPagination(prev => ({ ...prev, page: 1 }));
+                        }}
+                        className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-xs font-bold text-gray-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                    >
+                        <option value="ALL">All Batches</option>
+                        {scopes.map(scope => (
+                            <option key={scope.id} value={scope.id}>{scope.name}</option>
+                        ))}
+                    </select>
                 </div>
 
                 <select
@@ -219,12 +257,14 @@ export default function ProjectRequestsTab() {
                     ))}
                 </select>
 
-                {(selectedCategory || selectedDepartment || searchQuery) && (
+                {(selectedCategory || selectedDepartment || searchQuery || selectedScope !== 'ALL') && (
                     <button
                         onClick={() => {
                             setSelectedCategory('');
                             setSelectedDepartment('');
                             setSearchQuery('');
+                            setSelectedScope('ALL');
+                            setPagination(prev => ({ ...prev, page: 1 }));
                         }}
                         className="text-xs font-bold text-blue-600 hover:underline px-2"
                     >
@@ -238,8 +278,8 @@ export default function ProjectRequestsTab() {
                     <button
                         onClick={toggleSelectAll}
                         className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border ${selectedIds.length === filteredRequests.length && filteredRequests.length > 0
-                                ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-100'
-                                : 'bg-white border-gray-200 text-gray-600 hover:border-blue-400'
+                            ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-100'
+                            : 'bg-white border-gray-200 text-gray-600 hover:border-blue-400'
                             }`}
                     >
                         <CheckCircle size={14} />
@@ -293,7 +333,7 @@ export default function ProjectRequestsTab() {
                     <h3 className="text-lg font-bold text-red-800">{error}</h3>
                     <button onClick={fetchRequests} className="mt-4 px-6 py-2 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition">Try Again</button>
                 </div>
-            ) : filteredRequests.length === 0 ? (
+            ) : requests.length === 0 ? (
                 <div className="bg-white p-20 rounded-3xl border border-gray-100 shadow-sm text-center">
                     <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
                         <Clock className="text-gray-300" size={40} />
@@ -302,92 +342,144 @@ export default function ProjectRequestsTab() {
                     <p className="text-gray-500 mt-2">There are no project requests matching your filters.</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredRequests.map((req) => (
-                        <div key={req.id} className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col">
-                            {/* Card Header */}
-                            <div className="p-6 pb-4">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="flex items-center gap-3">
-                                        <button
-                                            onClick={() => toggleSelect(req.id)}
-                                            className={`p-1 rounded-md border transition-all ${selectedIds.includes(req.id) ? 'bg-blue-600 border-blue-600 text-white' : 'bg-gray-50 border-gray-200 text-transparent hover:border-blue-400 font-bold'}`}
-                                        >
-                                            <CheckCircle size={16} className={selectedIds.includes(req.id) ? 'opacity-100' : 'opacity-0'} />
-                                        </button>
-                                        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${req.status === 'PENDING' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                                            req.status === 'APPROVED' ? 'bg-green-50 text-green-700 border-green-200' :
-                                                'bg-red-50 text-red-700 border-red-200'
-                                            }`}>
-                                            {req.status}
-                                        </span>
-                                    </div>
-                                    <span className="text-[10px] font-mono text-gray-400">
-                                        {new Date(req.requestedAt).toLocaleDateString()}
-                                    </span>
-                                </div>
-
-                                <h3 className="text-lg font-bold text-gray-800 line-clamp-2 leading-tight mb-1">{req.project?.title}</h3>
-                                <p className="text-xs text-blue-600 font-bold uppercase tracking-wide">{req.project?.category}</p>
-                            </div>
-
-                            {/* Team Info */}
-                            <div className="px-6 py-4 bg-gray-50/50 border-y border-gray-50">
-                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">
-                                    {req.team?.members?.length > 1 ? 'Team Members' : 'Requested By'}
-                                </p>
-                                <div className="space-y-2">
-                                    {req.team?.members?.map(m => (
-                                        <div key={m.id} className="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-gray-100 shadow-sm">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-[10px] font-bold text-blue-700">
-                                                    {m.user?.name[0].toUpperCase()}
-                                                </div>
-                                                <span className="text-xs font-bold text-gray-700">{m.user?.name}</span>
-                                            </div>
-                                            <span className="text-[10px] font-mono font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
-                                                {m.user?.rollNumber || 'N/A'}
+                <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredRequests.map((req) => (
+                            <div key={req.id} className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col">
+                                {/* Card Header */}
+                                <div className="p-6 pb-4">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="flex items-center gap-3">
+                                            <button
+                                                onClick={() => toggleSelect(req.id)}
+                                                className={`p-1 rounded-md border transition-all ${selectedIds.includes(req.id) ? 'bg-blue-600 border-blue-600 text-white' : 'bg-gray-50 border-gray-200 text-transparent hover:border-blue-400 font-bold'}`}
+                                            >
+                                                <CheckCircle size={16} className={selectedIds.includes(req.id) ? 'opacity-100' : 'opacity-0'} />
+                                            </button>
+                                            <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${req.status === 'PENDING' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                                                req.status === 'APPROVED' ? 'bg-green-50 text-green-700 border-green-200' :
+                                                    'bg-red-50 text-red-700 border-red-200'
+                                                }`}>
+                                                {req.status}
                                             </span>
                                         </div>
-                                    ))}
+                                        <div className="flex flex-col items-end gap-1">
+                                            <span className="text-[10px] font-mono text-gray-400">
+                                                {new Date(req.requestedAt).toLocaleDateString()}
+                                            </span>
+                                            {req.project?.scope && (
+                                                <span className="text-[9px] font-black text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 uppercase">
+                                                    {req.project.scope.name}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <h3 className="text-lg font-bold text-gray-800 line-clamp-2 leading-tight mb-1">{req.project?.title}</h3>
+                                    <p className="text-xs text-blue-600 font-bold uppercase tracking-wide">{req.project?.category}</p>
+                                </div>
+
+                                {/* Team Info */}
+                                <div className="px-6 py-4 bg-gray-50/50 border-y border-gray-50">
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">
+                                        {req.team?.members?.length > 1 ? 'Team Members' : 'Requested By'}
+                                    </p>
+                                    <div className="space-y-2">
+                                        {req.team?.members?.map(m => (
+                                            <div key={m.id} className="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-gray-100 shadow-sm">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-[10px] font-bold text-blue-700">
+                                                        {m.user?.name[0].toUpperCase()}
+                                                    </div>
+                                                    <span className="text-xs font-bold text-gray-700">{m.user?.name}</span>
+                                                </div>
+                                                <span className="text-[10px] font-mono font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                                                    {m.user?.rollNumber || 'N/A'}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Actions or Review Info */}
+                                <div className="p-6 mt-auto">
+                                    {req.status === 'PENDING' ? (
+                                        <div className="flex gap-3">
+                                            <button
+                                                onClick={() => handleApprove(req.id)}
+                                                className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white py-2.5 rounded-xl font-bold text-sm hover:bg-green-700 transition active:scale-95 shadow-lg shadow-green-100"
+                                            >
+                                                <CheckCircle size={18} /> Approve
+                                            </button>
+                                            <button
+                                                onClick={() => openRejectModal(req.id)}
+                                                className="flex-1 flex items-center justify-center gap-2 bg-red-50 text-red-600 py-2.5 rounded-xl font-bold text-sm hover:bg-red-100 transition active:scale-95 border border-red-100"
+                                            >
+                                                <XCircle size={18} /> Reject
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            <div className="flex items-center justify-between text-[11px] font-medium text-gray-500">
+                                                <span>Reviewed At:</span>
+                                                <span className="font-bold text-gray-700">{req.reviewedAt ? new Date(req.reviewedAt).toLocaleString() : 'N/A'}</span>
+                                            </div>
+                                            {req.status === 'REJECTED' && req.rejectionReason && (
+                                                <div className="bg-red-50 p-3 rounded-xl border border-red-100">
+                                                    <p className="text-[10px] font-black text-red-400 uppercase tracking-widest mb-1">Rejection Reason</p>
+                                                    <p className="text-xs text-red-700 italic">"{req.rejectionReason}"</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
+                        ))}
+                    </div>
 
-                            {/* Actions or Review Info */}
-                            <div className="p-6 mt-auto">
-                                {req.status === 'PENDING' ? (
-                                    <div className="flex gap-3">
-                                        <button
-                                            onClick={() => handleApprove(req.id)}
-                                            className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white py-2.5 rounded-xl font-bold text-sm hover:bg-green-700 transition active:scale-95 shadow-lg shadow-green-100"
-                                        >
-                                            <CheckCircle size={18} /> Approve
-                                        </button>
-                                        <button
-                                            onClick={() => openRejectModal(req.id)}
-                                            className="flex-1 flex items-center justify-center gap-2 bg-red-50 text-red-600 py-2.5 rounded-xl font-bold text-sm hover:bg-red-100 transition active:scale-95 border border-red-100"
-                                        >
-                                            <XCircle size={18} /> Reject
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-3">
-                                        <div className="flex items-center justify-between text-[11px] font-medium text-gray-500">
-                                            <span>Reviewed At:</span>
-                                            <span className="font-bold text-gray-700">{req.reviewedAt ? new Date(req.reviewedAt).toLocaleString() : 'N/A'}</span>
-                                        </div>
-                                        {req.status === 'REJECTED' && req.rejectionReason && (
-                                            <div className="bg-red-50 p-3 rounded-xl border border-red-100">
-                                                <p className="text-[10px] font-black text-red-400 uppercase tracking-widest mb-1">Rejection Reason</p>
-                                                <p className="text-xs text-red-700 italic">"{req.rejectionReason}"</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
+                    {/* Pagination Controls */}
+                    {!loading && pagination.totalPages > 1 && (
+                        <div className="flex items-center justify-center gap-2 py-8">
+                            <button
+                                onClick={() => handlePageChange(pagination.page - 1)}
+                                disabled={pagination.page === 1}
+                                className="p-2 rounded-xl bg-white border border-gray-200 text-gray-600 disabled:opacity-50 hover:bg-gray-50 transition-all font-bold text-sm"
+                            >
+                                Previous
+                            </button>
+                            {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                                let pageNum = i + 1;
+                                if (pagination.totalPages > 5 && pagination.page > 3) {
+                                    pageNum = pagination.page - 3 + i + 1;
+                                }
+                                if (pageNum > pagination.totalPages) return null;
+
+                                return (
+                                    <button
+                                        key={pageNum}
+                                        onClick={() => handlePageChange(pageNum)}
+                                        className={`w-10 h-10 rounded-xl font-bold text-sm transition-all ${pagination.page === pageNum
+                                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-100'
+                                            : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                                            }`}
+                                    >
+                                        {pageNum}
+                                    </button>
+                                );
+                            })}
+                            {pagination.totalPages > 5 && pagination.page < pagination.totalPages - 2 && (
+                                <span className="px-2 text-gray-400">...</span>
+                            )}
+                            <button
+                                onClick={() => handlePageChange(pagination.page + 1)}
+                                disabled={pagination.page === pagination.totalPages}
+                                className="p-2 rounded-xl bg-white border border-gray-200 text-gray-600 disabled:opacity-50 hover:bg-gray-50 transition-all font-bold text-sm"
+                            >
+                                Next
+                            </button>
                         </div>
-                    ))}
-                </div>
+                    )}
+                </>
             )}
 
             {/* Rejection Modal */}

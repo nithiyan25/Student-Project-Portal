@@ -950,7 +950,7 @@ export default function AdminDashboard() {
               )}
 
               {activeTab === 'project-requests' && (
-                <ProjectRequestsTab />
+                <ProjectRequestsTab scopes={scopes} />
               )}
 
               {activeTab === 'individual-stats' && (
