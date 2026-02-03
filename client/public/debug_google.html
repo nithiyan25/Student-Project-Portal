@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Google Auth Debugger</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        #log { background: #f4f4f4; padding: 10px; border-radius: 5px; white-space: pre-wrap; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Google Auth Debugger</h1>
+    <p>This page tests if your Client ID is valid and allowed to run from localhost.</p>
+    
+    <div id="setup">
+        <label>Client ID:</label><br>
+        <input type="text" id="clientId" style="width: 100%; padding: 8px; margin: 10px 0;" placeholder="Enter Client ID here">
+        <button onclick="testAuth()" style="padding: 10px 20px; background: #4285f4; color: white; border: none; border-radius: 4px; cursor: pointer;">Test Auth</button>
+    </div>
+
+    <div id="g_id_onload"></div>
+    <div class="g_id_signin" data-type="standard"></div>
+
+    <div id="log">Loading...</div>
+
+    <script>
+        const log = document.getElementById('log');
+        const clientIdInput = document.getElementById('clientId');
+
+        // Try to get from URL params first
+        const urlParams = new URLSearchParams(window.location.search);
+        let currentClientId = urlParams.get('cid') || "880469513355-if6hl5ch9jan3r0me72e2jm3trv07e58.apps.googleusercontent.com";
+        clientIdInput.value = currentClientId;
+
+        function updateLog(msg, isError = false) {
+            log.innerHTML += (isError ? '<span class="error">' : '<span>') + msg + '</span>\n';
+        }
+
+        log.innerHTML = "Debugger Ready.\n";
+        updateLog("Current Client ID: " + currentClientId);
+
+        function handleCredentialResponse(response) {
+            updateLog("✅ Success! Token received.", false);
+            console.log("Encoded JWT ID token: " + response.credential);
+            updateLog("Token length: " + response.credential.length);
+        }
+
+        function testAuth() {
+            const id = clientIdInput.value.trim();
+            if(!id) return alert("Enter ID");
+            window.location.search = "?cid=" + encodeURIComponent(id);
+        }
+
+        window.onload = function () {
+            if (!currentClientId) return;
+            
+            try {
+                google.accounts.id.initialize({
+                    client_id: currentClientId,
+                    callback: handleCredentialResponse
+                });
+                google.accounts.id.renderButton(
+                    document.querySelector(".g_id_signin"),
+                    { theme: "outline", size: "large" }
+                );
+                updateLog("Google SDK initialized.");
+            } catch (e) {
+                updateLog("❌ Initialization Error: " + e.message, true);
+            }
+        };
+
+        // Catch global errors (like 403/401 from script)
+        window.addEventListener('error', function(e) {
+            if (e.message.includes('Script error')) {
+                updateLog("❌ Script Error (could be CORS or blocked): " + e.message, true);
+            }
+        });
+    </script>
+</body>
+</html>

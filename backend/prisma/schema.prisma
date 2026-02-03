@@ -1,0 +1,252 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model project {
+  id               String             @id @default(cuid())
+  title            String
+  category         String
+  maxTeamSize      Int
+  status           project_status     @default(AVAILABLE)
+  session          String?
+  description      String?            @db.Text
+  createdAt        DateTime           @default(now())
+  scopeId          String?
+  scope            projectscope?      @relation(fields: [scopeId], references: [id], map: "Project_scopeId_fkey")
+  projectRequests  projectrequest[]
+  reviews          review[]
+  assignedFaculty  reviewassignment[]
+  teams            team[]
+  techStack        String?            @db.Text
+  srs              String?            @db.Text
+
+  @@index([category], map: "Project_category_idx")
+  @@index([scopeId], map: "Project_scopeId_fkey")
+  @@index([session], map: "Project_session_idx")
+  @@index([status], map: "Project_status_idx")
+}
+
+model projectrequest {
+  id              String    @id @default(cuid())
+  teamId          String
+  projectId       String
+  requestedBy     String
+  requestedAt     DateTime  @default(now())
+  status          String    @default("PENDING")
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  rejectionReason String?   @db.Text
+  isRead          Boolean   @default(false)
+  project         project   @relation(fields: [projectId], references: [id], onDelete: Cascade, map: "ProjectRequest_projectId_fkey")
+  team            team      @relation(fields: [teamId], references: [id], onDelete: Cascade, map: "ProjectRequest_teamId_fkey")
+
+  @@unique([teamId, status, projectId], map: "ProjectRequest_teamId_status_projectId_key")
+  @@index([projectId], map: "ProjectRequest_projectId_idx")
+  @@index([status], map: "ProjectRequest_status_idx")
+  @@index([teamId], map: "ProjectRequest_teamId_idx")
+}
+
+model projectscope {
+  id                   String    @id @default(cuid())
+  name                 String
+  description          String?   @db.Text
+  isActive             Boolean   @default(true)
+  type                 String?
+  requireGuide         Boolean   @default(false)
+  requireSubjectExpert Boolean   @default(false)
+  numberOfPhases       Int       @default(4)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime
+  projects             project[]
+  teams                team[]
+  students             user[]    @relation("projectscopetouser")
+}
+
+model review {
+  id               String         @id @default(cuid())
+  content          String         @db.Text
+  facultyId        String
+  status           review_status?
+  resubmittedAt    DateTime?
+  completedAt      DateTime?
+  resubmissionNote String?        @db.Text
+  reviewPhase      Int?
+  teamId           String
+  projectId        String
+  createdAt        DateTime       @default(now())
+  faculty          user           @relation(fields: [facultyId], references: [id], map: "Review_facultyId_fkey")
+  project          project        @relation(fields: [projectId], references: [id], map: "Review_projectId_fkey")
+  team             team           @relation(fields: [teamId], references: [id], map: "Review_teamId_fkey")
+  reviewMarks      reviewmark[]
+
+  @@index([facultyId], map: "Review_facultyId_fkey")
+  @@index([projectId], map: "Review_projectId_fkey")
+  @@index([teamId], map: "Review_teamId_fkey")
+}
+
+model reviewassignment {
+  id              String       @id @default(cuid())
+  projectId       String
+  facultyId       String
+  assignedAt      DateTime     @default(now())
+  assignedBy      String
+  accessStartsAt  DateTime?
+  accessExpiresAt DateTime?
+  reviewPhase     Int?
+  mode            review_mode  @default(OFFLINE)
+  faculty         user         @relation(fields: [facultyId], references: [id], onDelete: Cascade, map: "ReviewAssignment_facultyId_fkey")
+  project         project      @relation(fields: [projectId], references: [id], onDelete: Cascade, map: "ReviewAssignment_projectId_fkey")
+
+  @@unique([projectId, facultyId, reviewPhase], map: "ReviewAssignment_projectId_facultyId_reviewPhase_key")
+  @@index([facultyId], map: "ReviewAssignment_facultyId_idx")
+  @@index([projectId], map: "ReviewAssignment_projectId_idx")
+}
+
+model reviewmark {
+  id             String  @id @default(cuid())
+  reviewId       String
+  studentId      String
+  marks          Int
+  criterionMarks String? @db.LongText
+  review         review  @relation(fields: [reviewId], references: [id], onDelete: Cascade, map: "ReviewMark_reviewId_fkey")
+  student        user    @relation(fields: [studentId], references: [id], map: "ReviewMark_studentId_fkey")
+
+  @@index([reviewId], map: "ReviewMark_reviewId_fkey")
+  @@index([studentId], map: "ReviewMark_studentId_fkey")
+}
+
+model rubric {
+  id         String   @id @default(cuid())
+  name       String
+  category   String
+  phase      Int
+  criteria   String   @db.LongText
+  totalMarks Int      @default(100)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([category, phase])
+  @@index([category])
+  @@index([phase])
+}
+
+model systemsettings {
+  id        String   @id @default(cuid())
+  key       String   @unique(map: "SystemSettings_key_key")
+  value     String   @db.Text
+  updatedAt DateTime
+}
+
+model team {
+  id               String           @id @default(cuid())
+  projectId        String?
+  scopeId          String?
+  status           team_status      @default(PENDING)
+  createdAt        DateTime         @default(now())
+  guideId          String?
+  guideStatus      faculty_approval_status @default(PENDING)
+  subjectExpertId  String?
+  expertStatus     faculty_approval_status @default(PENDING)
+  projectRequests  projectrequest[]
+  reviews          review[]
+  guide            user?            @relation("team_guideIdTouser", fields: [guideId], references: [id], map: "Team_guideId_fkey")
+  project          project?         @relation(fields: [projectId], references: [id], map: "Team_projectId_fkey")
+  scope            projectscope?    @relation(fields: [scopeId], references: [id], map: "Team_scopeId_fkey")
+  subjectExpert    user?            @relation("team_subjectExpertIdTouser", fields: [subjectExpertId], references: [id], map: "Team_subjectExpertId_fkey")
+  members          teammember[]
+
+  @@index([guideId], map: "Team_guideId_idx")
+  @@index([projectId], map: "Team_projectId_idx")
+  @@index([scopeId], map: "Team_scopeId_fkey")
+  @@index([status], map: "Team_status_idx")
+  @@index([subjectExpertId], map: "Team_subjectExpertId_idx")
+}
+
+model teammember {
+  id       String  @id @default(cuid())
+  userId   String
+  teamId   String
+  approved Boolean @default(false)
+  isLeader Boolean @default(false)
+  team     team    @relation(fields: [teamId], references: [id], onDelete: Cascade, map: "TeamMember_teamId_fkey")
+  user     user    @relation(fields: [userId], references: [id], map: "TeamMember_userId_fkey")
+
+  @@unique([userId, teamId], map: "TeamMember_userId_teamId_key")
+  @@index([teamId], map: "TeamMember_teamId_fkey")
+}
+
+model user {
+  id                    String             @id @default(cuid())
+  email                 String             @unique(map: "User_email_key")
+  rollNumber            String?            @unique(map: "User_rollNumber_key")
+  name                  String
+  role                  user_role
+  department            String?
+  year                  Int?
+  isTemporaryAdmin      Boolean            @default(false)
+  tempAdminTabs         String?            @db.Text
+  createdAt             DateTime           @default(now())
+  isGuide               Boolean            @default(false)
+  isSubjectExpert       Boolean            @default(false)
+  reviews               review[]
+  assignedReviews       reviewassignment[]
+  reviewMarks           reviewmark[]
+  guidedTeams           team[]             @relation("team_guideIdTouser")
+  expertTeams           team[]             @relation("team_subjectExpertIdTouser")
+  teamMemberships       teammember[]
+  scopes                projectscope[]     @relation("projectscopetouser")
+
+  @@index([department], map: "User_department_idx")
+  @@index([role], map: "User_role_idx")
+  @@index([year], map: "User_year_idx")
+}
+
+enum review_status {
+  PENDING
+  APPROVED
+  NOT_COMPLETED
+  IN_PROGRESS
+  CHANGES_REQUIRED
+  READY_FOR_REVIEW
+  COMPLETED
+}
+
+enum team_status {
+  PENDING
+  APPROVED
+  NOT_COMPLETED
+  IN_PROGRESS
+  CHANGES_REQUIRED
+  READY_FOR_REVIEW
+  COMPLETED
+}
+
+enum project_status {
+  AVAILABLE
+  REQUESTED
+  ASSIGNED
+  COMPLETED
+}
+
+enum user_role {
+  ADMIN
+  FACULTY
+  STUDENT
+}
+
+enum faculty_approval_status {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum review_mode {
+  ONLINE
+  OFFLINE
+}

@@ -1,0 +1,71 @@
+version: "3.9"
+
+services:
+  # Frontend Service
+  frontend:
+    image: client:v5
+    container_name: project-portal-Frontend
+    ports:
+      - "8088:80"
+    environment:
+      VITE_API_URL: ${VITE_API_URL}
+      VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID}
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - project-portal-network
+      - reverse-proxy
+
+  # Backend Service
+  backend:
+    image: backend:v5
+    container_name: project-portal-Backend
+    ports:
+      - "5008:5000"
+    environment:
+      DATABASE_URL: mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}
+      JWT_SECRET: ${JWT_SECRET}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      FRONTEND_URL: ${FRONTEND_URL}
+    volumes:
+      - /opt/uploads/project-portal:/app/uploads
+    depends_on:
+      - mysql
+    restart: unless-stopped
+    networks:
+      - project-portal-network
+      - reverse-proxy
+
+  mysql:
+    image: mysql:8.4
+    container_name: project-portal-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    command: --bind-address=0.0.0.0
+    ports:
+      - "3312:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - project-portal-network
+      - reverse-proxy
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mysql_data:
+
+
+networks:
+  project-portal-network:
+    driver: bridge
+  reverse-proxy:
+    external: true
