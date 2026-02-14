@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { Users, UserCheck, UserX, Search, Filter, Crown, Folder, X, Edit2, Save, Award, History, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, CheckCircle2, Clock, Download, Eye, RotateCcw } from 'lucide-react';
+import { Users, UserCheck, UserX, Search, Filter, Crown, Folder, X, Edit2, Save, Award, History, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, CheckCircle2, Clock, Download, Eye, RotateCcw, AlertCircle, MessageSquare } from 'lucide-react';
 import SearchInput from '../ui/SearchInput';
 import api from '../../api';
+import { useToast } from '../../context/ToastContext';
 
-const StudentDetailView = ({ student, onClose, updateMark, updateReview }) => {
+const StudentDetailView = ({ student, onClose, updateMark, updateReview, addToast }) => {
     const [editingMarkId, setEditingMarkId] = useState(null);
     const [editMarkValue, setEditMarkValue] = useState('');
     const [editingReviewId, setEditingReviewId] = useState(null);
@@ -11,7 +12,7 @@ const StudentDetailView = ({ student, onClose, updateMark, updateReview }) => {
 
     const handleMarkUpdate = async (markId) => {
         if (isNaN(editMarkValue) || editMarkValue < 0 || editMarkValue > 100) {
-            alert("Score must be between 0 and 100");
+            addToast("Score must be between 0 and 100", 'warning');
             return;
         }
         await updateMark(markId, parseInt(editMarkValue), student.id);
@@ -181,12 +182,12 @@ const StudentDetailView = ({ student, onClose, updateMark, updateReview }) => {
                                                                         <div className="flex items-center gap-3 text-[10px] text-gray-400 mt-1">
                                                                             <span>{new Date(review.createdAt).toLocaleDateString('en-GB')} {new Date(review.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                                                             {review.resubmittedAt && (
-                                                                                <div className="flex flex-col">
-                                                                                    <span className="text-orange-500 font-bold">Resubmitted</span>
+                                                                                <div className="flex flex-col mt-1">
+                                                                                    <span className="text-[9px] font-black text-orange-600 uppercase tracking-wider mb-1">Resubmission context</span>
                                                                                     {review.resubmissionNote && (
-                                                                                        <span className="text-gray-500 italic bg-orange-50 px-1 rounded border border-orange-100 max-w-xs truncate" title={review.resubmissionNote}>
-                                                                                            Note: {review.resubmissionNote}
-                                                                                        </span>
+                                                                                        <pre className="text-[10px] text-gray-500 italic bg-orange-50/50 p-2 rounded border border-orange-100 whitespace-pre-wrap font-sans leading-tight">
+                                                                                            {review.resubmissionNote}
+                                                                                        </pre>
                                                                                     )}
                                                                                 </div>
                                                                             )}
@@ -210,7 +211,21 @@ const StudentDetailView = ({ student, onClose, updateMark, updateReview }) => {
                                                                                     setEditingMarkId(mId);
                                                                                     setEditMarkValue(marks !== null ? marks : '');
                                                                                 }}>
-                                                                                <span className="text-[10px] font-bold">{marks !== null ? marks : 'Set'} / {marks > 10 ? '100' : '10'}</span>
+                                                                                <span className="text-[10px] font-bold">
+                                                                                    {(() => {
+                                                                                        const mEntry = review.reviewMarks?.find(m => m.studentId === student.id);
+                                                                                        let totalScale = "100";
+                                                                                        if (mEntry?.criterionMarks) {
+                                                                                            try {
+                                                                                                const cm = typeof mEntry.criterionMarks === 'string' ? JSON.parse(mEntry.criterionMarks) : mEntry.criterionMarks;
+                                                                                                if (cm._total) totalScale = cm._total;
+                                                                                            } catch (e) { }
+                                                                                        } else if (marks <= 20 && marks !== null) {
+                                                                                            totalScale = "20";
+                                                                                        }
+                                                                                        return `${marks !== null ? marks : 'Set'} / ${totalScale}`;
+                                                                                    })()}
+                                                                                </span>
                                                                                 <Edit2 size={10} className="opacity-40" />
                                                                             </div>
                                                                             {/* Criterion Breakdown */}
@@ -221,11 +236,13 @@ const StudentDetailView = ({ student, onClose, updateMark, updateReview }) => {
                                                                                     const cm = typeof cmRaw === 'string' ? JSON.parse(cmRaw) : cmRaw;
                                                                                     return (
                                                                                         <div className="flex flex-col gap-0.5 items-end">
-                                                                                            {Object.entries(cm).map(([k, v]) => (
-                                                                                                <span key={k} className="text-[9px] text-gray-400 bg-gray-50 px-1.5 rounded border border-gray-50 cursor-help" title={k}>
-                                                                                                    {k.length > 15 ? k.substring(0, 15) + '...' : k}: <span className="text-gray-600 font-bold">{v}</span>
-                                                                                                </span>
-                                                                                            ))}
+                                                                                            {Object.entries(cm)
+                                                                                                .filter(([k]) => k !== '_total')
+                                                                                                .map(([k, v]) => (
+                                                                                                    <span key={k} className="text-[9px] text-gray-400 bg-gray-50 px-1.5 rounded border border-gray-50 cursor-help" title={k}>
+                                                                                                        {k.length > 15 ? k.substring(0, 15) + '...' : k}: <span className="text-gray-600 font-bold">{typeof v === 'object' ? `${v.score}/${v.max}` : v}</span>
+                                                                                                    </span>
+                                                                                                ))}
                                                                                         </div>
                                                                                     );
                                                                                 } catch (e) { return null; }
@@ -283,6 +300,7 @@ const StudentDetailView = ({ student, onClose, updateMark, updateReview }) => {
 };
 
 export default function IndividualStatsTab({ users, teams, onBack, updateMark, updateReview, scopes }) {
+    const { addToast } = useToast();
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
     const [deptFilter, setDeptFilter] = useState('ALL');
@@ -470,13 +488,13 @@ export default function IndividualStatsTab({ users, teams, onBack, updateMark, u
             link.remove();
         } catch (err) {
             console.error('Export failed:', err);
-            alert('Failed to export data. Please try again.');
+            addToast('Failed to export data. Please try again.', 'error');
         }
     };
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 relative">
-            {selectedStudent && <StudentDetailView student={selectedStudent} onClose={() => setSelectedStudentId(null)} updateMark={updateMark} updateReview={updateReview} />}
+            {selectedStudent && <StudentDetailView student={selectedStudent} onClose={() => setSelectedStudentId(null)} updateMark={updateMark} updateReview={updateReview} addToast={addToast} />}
 
             <button onClick={onBack} className="flex items-center gap-2 text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors group px-1">
                 <ChevronLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
@@ -682,6 +700,6 @@ export default function IndividualStatsTab({ users, teams, onBack, updateMark, u
                     </div>
                 </div>
             </div>
-        </div >
+        </div>
     );
 }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Briefcase, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Edit2, X, Save, Info, Users, CheckCircle, FileText } from 'lucide-react';
+import { Briefcase, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Edit2, X, Save, Info, Users, CheckCircle, FileText, ShieldCheck } from 'lucide-react';
 import SearchInput from '../ui/SearchInput';
 
 const EditFacultyModal = ({ faculty, isOpen, onClose, onSave }) => {
@@ -132,7 +132,7 @@ const FacultyDetailsModal = ({ faculty, isOpen, onClose }) => {
                                                 <span key={tabId} className="bg-white px-2 py-1 rounded border border-orange-200 text-[10px] font-black text-orange-600 uppercase">
                                                     {tabId.replace('-', ' ')}
                                                 </span>
-                                            )) : <span className="text-xs text-orange-400 italic">No tabs selected (Full Access)</span>;
+                                            )) : <span className="text-xs text-red-500 font-bold">Restricted Access (No Tabs)</span>;
                                         } catch (e) {
                                             return <span className="text-xs text-red-500">Error parsing permissions</span>;
                                         }
@@ -215,12 +215,15 @@ const ADMIN_TABS = [
     { id: 'scopes', label: 'Project Batches', group: 'Projects & Teams' },
     { id: 'projects', label: 'Projects', group: 'Projects & Teams' },
     { id: 'project-requests', label: 'Project Requests', group: 'Projects & Teams' },
+    { id: 'student-request-status', label: 'Request Status List', group: 'Projects & Teams' },
     { id: 'teams', label: 'Teams', group: 'Projects & Teams' },
     { id: 'manage-teams', label: 'Manage Teams', group: 'Projects & Teams' },
     { id: 'faculty-assignments', label: 'Faculty Assignments', group: 'Projects & Teams' },
     { id: 'rubrics', label: 'Rubrics', group: 'Evaluation' },
     { id: 'reviews', label: 'Reviews', group: 'Evaluation' },
+    { id: 'review-assignments', label: 'Review Assignments', group: 'Evaluation' },
     { id: 'individual-stats', label: 'Student Stats', group: 'Evaluation' },
+    { id: 'venue-scheduler', label: 'Venue Scheduler', group: 'Scheduling' },
 ];
 
 const TempAdminModal = ({ faculty, isOpen, onClose, onSave }) => {

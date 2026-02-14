@@ -129,9 +129,14 @@ router.get('/my-teams', authenticate, async (req, res, next) => {
                         members: { include: { user: true } },
                         guide: true,
                         subjectExpert: true,
+                        scope: {
+                            include: { deadlines: true }
+                        },
+
                         project: {
                             include: {
                                 scope: true,
+
                                 assignedFaculty: {
                                     include: { faculty: true }
                                 }
@@ -153,6 +158,51 @@ router.get('/my-teams', authenticate, async (req, res, next) => {
             }
         });
 
+        const now = new Date();
+        for (const membership of memberships) {
+            const team = membership.team;
+
+            // Enrich team with currentPhase logic based on deadlines
+            const passedPhases = new Set([
+                ...(team.reviews || []).filter(r => r.status && r.status !== 'PENDING').map(r => r.reviewPhase),
+                ...(team.project?.assignedFaculty || [])
+                    .filter(a => a.accessExpiresAt && new Date(a.accessExpiresAt) < now)
+                    .map(a => a.reviewPhase),
+                ...(team.scope?.deadlines || [])
+                    .filter(d => new Date(d.deadline) < now)
+                    .map(d => d.phase)
+
+            ]);
+            const reviewedPhaseSet = new Set(
+                (team.reviews || []).filter(r => r.status === 'COMPLETED' || r.status === 'NOT_COMPLETED').map(r => r.reviewPhase)
+            );
+            const activeAssignment = (team.project?.assignedFaculty || []).find(a => {
+                if (!a.accessExpiresAt) return false;
+                if (reviewedPhaseSet.has(a.reviewPhase)) return false;
+                return new Date(a.accessExpiresAt) > now;
+            });
+            team.currentPhase = activeAssignment?.reviewPhase || (Math.max(0, ...Array.from(passedPhases)) + 1);
+
+            if (team.project && team.project.assignedFaculty.length > 0 && team.project.scopeId) {
+                for (const assignment of team.project.assignedFaculty) {
+                    if (assignment.mode === 'OFFLINE') {
+                        const session = await prisma.labsession.findFirst({
+                            where: {
+                                facultyId: assignment.facultyId,
+                                scopeId: team.project.scopeId
+                            },
+                            include: { venue: true },
+                            orderBy: { startTime: 'desc' }
+                        });
+
+                        if (session && session.venue) {
+                            assignment.venue = session.venue;
+                        }
+                    }
+                }
+            }
+        }
+
         res.json(memberships.map(m => m.team));
     } catch (e) {
         next(e);
@@ -170,9 +220,16 @@ router.get('/my-team', authenticate, async (req, res, next) => {
                         members: { include: { user: true } },
                         guide: true,
                         subjectExpert: true,
+                        scope: {
+                            include: { deadlines: true }
+                        },
+
                         project: {
                             include: {
-                                scope: true,
+                                scope: {
+                                    include: { deadlines: true }
+                                },
+
                                 assignedFaculty: {
                                     include: { faculty: true }
                                 }
@@ -195,7 +252,51 @@ router.get('/my-team', authenticate, async (req, res, next) => {
         });
 
         if (!member || !member.team) return res.json(null);
-        res.json(member.team);
+
+        const team = member.team;
+        const now = new Date();
+
+        // Enrich team with currentPhase logic based on deadlines
+        const passedPhases = new Set([
+            ...(team.reviews || []).filter(r => r.status && r.status !== 'PENDING').map(r => r.reviewPhase),
+            ...(team.project?.assignedFaculty || [])
+                .filter(a => a.accessExpiresAt && new Date(a.accessExpiresAt) < now)
+                .map(a => a.reviewPhase),
+            ...(team.scope?.deadlines || [])
+                .filter(d => new Date(d.deadline) < now)
+                .map(d => d.phase)
+
+        ]);
+        const reviewedPhaseSet = new Set(
+            (team.reviews || []).filter(r => r.status === 'COMPLETED' || r.status === 'NOT_COMPLETED').map(r => r.reviewPhase)
+        );
+        const activeAssignment = (team.project?.assignedFaculty || []).find(a => {
+            if (!a.accessExpiresAt) return false;
+            if (reviewedPhaseSet.has(a.reviewPhase)) return false;
+            return new Date(a.accessExpiresAt) > now;
+        });
+        team.currentPhase = activeAssignment?.reviewPhase || (Math.max(0, ...Array.from(passedPhases)) + 1);
+
+        if (team.project && team.project.assignedFaculty.length > 0 && team.project.scopeId) {
+            for (const assignment of team.project.assignedFaculty) {
+                if (assignment.mode === 'OFFLINE') {
+                    const session = await prisma.labsession.findFirst({
+                        where: {
+                            facultyId: assignment.facultyId,
+                            scopeId: team.project.scopeId
+                        },
+                        include: { venue: true },
+                        orderBy: { startTime: 'desc' }
+                    });
+
+                    if (session && session.venue) {
+                        assignment.venue = session.venue;
+                    }
+                }
+            }
+        }
+
+        res.json(team);
     } catch (e) {
         next(e);
     }
@@ -419,7 +520,13 @@ router.post('/submit-for-review', authenticate, authorize(['STUDENT']), async (r
             where: { userId: req.user.id, teamId, approved: true },
             include: {
                 team: {
-                    include: { scope: true }
+                    include: {
+
+                        reviews: { where: { status: { in: ['COMPLETED', 'NOT_COMPLETED'] } } },
+                        project: {
+                            include: { assignedFaculty: true }
+                        }
+                    }
                 }
             }
         });
@@ -443,12 +550,48 @@ router.post('/submit-for-review', authenticate, authorize(['STUDENT']), async (r
             }
         }
 
-        if (team.status !== 'CHANGES_REQUIRED' && team.status !== 'IN_PROGRESS' && team.status !== 'NOT_COMPLETED') {
-            return res.status(400).json({ error: "Only teams in progress or needing changes can submit for review" });
+        // Allow COMPLETED status so teams can submit for subsequent phases
+        const allowedStatuses = ['CHANGES_REQUIRED', 'IN_PROGRESS', 'NOT_COMPLETED', 'COMPLETED'];
+        if (!allowedStatuses.includes(team.status)) {
+            return res.status(400).json({ error: "Team status does not allow submission for review. Current status: " + team.status });
+        }
+
+        // Calculate Next Phase
+        // Support flexible progression: check for active assignments first, 
+        // fallback to completed count + 1.
+        const reviewedPhaseSetForSubmit = new Set(
+            team.reviews.map(r => r.reviewPhase)
+        );
+        const activeAssignment = team.project.assignedFaculty?.find(a => {
+            if (!a.accessExpiresAt) return false;
+            if (reviewedPhaseSetForSubmit.has(a.reviewPhase)) return false; // Skip completed or missed phases
+            return new Date(a.accessExpiresAt) > new Date();
+        });
+
+        const completedReviewsCount = team.reviews.length;
+
+        // Count unique phases that are either handled by a review (non-pending), MISSED (expired slot), or PASSED DEADLINE
+        const passedPhases = new Set([
+            ...team.reviews.filter(r => r.status && r.status !== 'PENDING').map(r => r.reviewPhase),
+            ...(team.project.assignedFaculty || [])
+                .filter(a => a.accessExpiresAt && new Date(a.accessExpiresAt) < new Date())
+                .map(a => a.reviewPhase),
+
+        ]);
+
+        const nextPhase = activeAssignment?.reviewPhase || (Math.max(0, ...Array.from(passedPhases)) + 1);
+
+        if (team.scope && nextPhase > team.scope.numberOfPhases) {
+            return res.status(400).json({ error: "All phases for this batch are already completed." });
         }
 
         await prisma.$transaction(async (tx) => {
             // Find the latest "Changes Required" review that isn't already completed
+            // If resubmitting, we might update the existing review or just create a new state
+            // For this new flow, we just update the TEAM status to READY_FOR_REVIEW
+            // and maybe store the phase. 
+
+            // If there's a CHANGES_REQUIRED review, we are addressing it.
             const latestFeedback = await tx.review.findFirst({
                 where: {
                     teamId: team.id,
@@ -463,19 +606,60 @@ router.post('/submit-for-review', authenticate, authorize(['STUDENT']), async (r
                     where: { id: latestFeedback.id },
                     data: {
                         resubmittedAt: new Date(),
-                        resubmissionNote: resubmissionNote || null
+                        resubmissionNote: `Faculty Instructions: "${latestFeedback.content}" \n\nStudent Note: "${resubmissionNote || ''}"`,
+                        status: 'READY_FOR_REVIEW'
+                        // If we update review status, it disappears from faculty "Changes Required" list
+                        // Let's keep the Review entity for history, but the Team Status is key trigger.
                     }
                 });
+
+                // AUTO-REASSIGN: Refresh the same faculty's assignment for 24 hours
+                // This ensures the faculty who gave "Changes Required" can immediately review the resubmission
+                if (team.projectId && latestFeedback.facultyId) {
+                    const newExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 1 day (24 hours) from now
+
+                    // Find existing assignment for this faculty and project (Matching the Phase)
+                    const existingAssignment = await tx.reviewassignment.findFirst({
+                        where: {
+                            projectId: team.projectId,
+                            facultyId: latestFeedback.facultyId,
+                            reviewPhase: latestFeedback.reviewPhase || nextPhase
+                        }
+                    });
+
+                    if (existingAssignment) {
+                        // Refresh the access expiration
+                        await tx.reviewassignment.update({
+                            where: { id: existingAssignment.id },
+                            data: { accessExpiresAt: newExpiry }
+                        });
+                    } else {
+                        // Create new assignment (in case original expired or was deleted)
+                        await tx.reviewassignment.create({
+                            data: {
+                                projectId: team.projectId,
+                                facultyId: latestFeedback.facultyId,
+                                assignedBy: 'SYSTEM_AUTO_REASSIGN',
+                                reviewPhase: latestFeedback.reviewPhase || nextPhase,
+                                accessExpiresAt: newExpiry
+                            }
+                        });
+                    }
+                }
             }
 
             await tx.team.update({
                 where: { id: team.id },
-                data: { status: 'READY_FOR_REVIEW' }
+                data: {
+                    status: 'READY_FOR_REVIEW',
+                    submissionPhase: nextPhase
+                }
             });
         });
 
         res.json({ success: true, message: "Project submitted for review successfully" });
     } catch (e) {
+        console.error("Submit for Review Error:", e);
         next(e);
     }
 });
@@ -601,6 +785,100 @@ router.post('/select-expert', authenticate, authorize(['STUDENT']), async (req, 
         });
 
         res.json({ success: true, message: "Subject Expert selected successfully" });
+    } catch (e) {
+        next(e);
+    }
+});
+
+// Update Team Status (Admin Only)
+router.patch('/:id/status', authenticate, authorize(['ADMIN']), async (req, res, next) => {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    try {
+        const validStatuses = ['PENDING', 'APPROVED', 'NOT_COMPLETED', 'IN_PROGRESS', 'CHANGES_REQUIRED', 'READY_FOR_REVIEW', 'COMPLETED'];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({ error: "Invalid status" });
+        }
+
+        const team = await prisma.team.findUnique({
+            where: { id },
+            include: { project: true }
+        });
+
+        if (!team) return res.status(404).json({ error: "Team not found" });
+
+        const result = await prisma.$transaction(async (tx) => {
+            // Update Team Status
+            const updatedTeam = await tx.team.update({
+                where: { id },
+                data: { status }
+            });
+
+            // If status is not PENDING, ensure all members and assigned faculty are approved
+            if (status !== 'PENDING') {
+                await tx.teammember.updateMany({
+                    where: { teamId: id },
+                    data: { approved: true }
+                });
+
+                // Auto-approve Guide and Expert if they are assigned
+                await tx.team.update({
+                    where: { id },
+                    data: {
+                        guideStatus: team.guideId ? 'APPROVED' : undefined,
+                        expertStatus: team.subjectExpertId ? 'APPROVED' : undefined
+                    }
+                });
+            }
+
+            // ACTION: If Admin resets status to 'NOT_COMPLETED' or 'IN_PROGRESS', 
+            // we must cancel any existing PENDING/READY reviews so the student can validly resubmit.
+            // Otherwise the frontend "hasPendingReview" check blocks them.
+            if (['NOT_COMPLETED', 'IN_PROGRESS', 'PENDING'].includes(status)) {
+                await tx.review.updateMany({
+                    where: {
+                        teamId: id,
+                        status: { in: ['PENDING', 'READY_FOR_REVIEW'] }
+                    },
+                    data: { status: 'NOT_COMPLETED' }
+                });
+            }
+
+            // Dependency Handling
+            if (status === 'CHANGES_REQUIRED') {
+                // Targeted Extension: Only extend assignments for the CURRENT phase
+                if (team.projectId) {
+                    const newExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+                    // Determine which phase to extend: latest review or latest assignment
+                    const latestReview = await tx.review.findFirst({
+                        where: { teamId: id },
+                        orderBy: { createdAt: 'desc' }
+                    });
+
+                    await tx.reviewassignment.updateMany({
+                        where: {
+                            projectId: team.projectId,
+                            reviewPhase: latestReview?.reviewPhase || undefined
+                        },
+                        data: { accessExpiresAt: newExpiry }
+                    });
+                }
+            } else if (status === 'COMPLETED') {
+                // Update Project Status if team is completed
+                if (team.projectId) {
+                    await tx.project.update({
+                        where: { id: team.projectId },
+                        data: { status: 'COMPLETED' }
+                    });
+                }
+            }
+
+            return updatedTeam;
+        });
+
+        res.json(result);
     } catch (e) {
         next(e);
     }

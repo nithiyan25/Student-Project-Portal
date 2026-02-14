@@ -12,6 +12,7 @@ const { MAX_LIMIT } = require('../utils/constants');
 const validate = (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+        console.error('Validation Errors:', JSON.stringify(errors.array(), null, 2));
         return res.status(400).json({
             error: 'Validation failed',
             details: errors.array()
@@ -282,13 +283,13 @@ const reviewValidation = {
             .notEmpty()
             .withMessage('Invalid project ID'),
         body('content')
-            .optional()
+            .optional({ checkFalsy: true })
             .trim()
-            .isLength({ min: 1, max: 5000 })
-            .withMessage('Content must be between 1 and 5000 characters'),
+            .isLength({ max: 5000 })
+            .withMessage('Content must be at most 5000 characters'),
         body('status')
             .optional()
-            .isIn(['NOT_COMPLETED', 'IN_PROGRESS', 'CHANGES_REQUIRED', 'READY_FOR_REVIEW', 'COMPLETED'])
+            .isIn(['PENDING', 'APPROVED', 'NOT_COMPLETED', 'IN_PROGRESS', 'CHANGES_REQUIRED', 'READY_FOR_REVIEW', 'COMPLETED'])
             .withMessage('Invalid status'),
         body('reviewPhase')
             .optional()
@@ -304,28 +305,33 @@ const reviewValidation = {
             .withMessage('Invalid student ID in marks'),
         body('individualMarks.*.marks')
             .if(body('individualMarks').exists())
-            .isInt({ min: 0, max: 100 })
-            .withMessage('Marks must be between 0 and 100'),
+            .isInt({ min: 0 })
+            .withMessage('Marks must be a non-negative integer'),
         validate
     ],
 
     update: [
         commonValidations.uuid,
         body('content')
-            .optional()
+            .optional({ checkFalsy: true })
             .trim()
-            .isLength({ min: 1, max: 5000 }),
+            .isLength({ max: 5000 }),
         body('status')
             .optional()
-            .isIn(['NOT_COMPLETED', 'IN_PROGRESS', 'CHANGES_REQUIRED', 'READY_FOR_REVIEW', 'COMPLETED']),
+            .isIn(['PENDING', 'APPROVED', 'NOT_COMPLETED', 'IN_PROGRESS', 'CHANGES_REQUIRED', 'READY_FOR_REVIEW', 'COMPLETED']),
         validate
     ],
 
     updateMark: [
         param('id').notEmpty().withMessage('Invalid mark ID'),
         body('marks')
-            .isInt({ min: 0, max: 100 })
-            .withMessage('Marks must be between 0 and 100'),
+            .isInt({ min: 0 })
+            .withMessage('Marks must be a non-negative integer'),
+        validate
+    ],
+
+    delete: [
+        commonValidations.uuid,
         validate
     ]
 };
@@ -362,21 +368,39 @@ const adminValidation = {
 
     bulkAssignFaculty: [
         body('projectIds')
-            .isArray({ min: 1 })
-            .withMessage('Project IDs must be a non-empty array'),
+            .custom((value, { req }) => {
+                if (!Array.isArray(value) && !req.body.studentRollNumbers) {
+                    throw new Error('Project IDs must be an array unless student roll numbers are provided');
+                }
+                return true;
+            }),
         body('projectIds.*')
+            .optional()
             .exists()
             .withMessage('Each Project ID must be valid'),
+        body('studentRollNumbers')
+            .optional()
+            .isArray()
+            .withMessage('Student Roll Numbers must be an array'),
+        body('studentRollNumbers.*')
+            .optional()
+            .isString()
+            .withMessage('Each Roll Number must be a string'),
         body('facultyIds')
-            .isArray({ min: 1 })
-            .withMessage('Faculty IDs must be a non-empty array'),
+            .custom((value, { req }) => {
+                if (req.body.useVenueFaculty === true) return true;
+                if (!Array.isArray(value) || value.length === 0) {
+                    throw new Error('Faculty IDs must be a non-empty array');
+                }
+                return true;
+            }),
         body('facultyIds.*')
             .exists()
             .withMessage('Each Faculty ID must be valid'),
         body('accessDurationHours')
             .optional()
-            .isInt({ min: 1, max: 8760 })
-            .withMessage('Access duration must be between 1 and 8760 hours'),
+            .isInt({ min: 0, max: 8760 }) // Allow 0 for permanent
+            .withMessage('Access duration must be between 0 and 8760 hours'),
         body('reviewPhase')
             .optional()
             .isInt({ min: 1, max: 10 })
@@ -393,6 +417,23 @@ const adminValidation = {
             .optional({ nullable: true })
             .isISO8601()
             .withMessage('Invalid start date/time format'),
+        body('useVenueFaculty')
+            .optional()
+            .isBoolean()
+            .withMessage('useVenueFaculty must be a boolean'),
+        body('scopeId')
+            .optional({ nullable: true })
+            .isString()
+            .withMessage('scopeId must be a string'),
+        // Ensure at least one target is provided
+        body().custom(body => {
+            const hasProjects = Array.isArray(body.projectIds) && body.projectIds.length > 0;
+            const hasRollNumbers = Array.isArray(body.studentRollNumbers) && body.studentRollNumbers.length > 0;
+            if (!hasProjects && !hasRollNumbers) {
+                throw new Error('Either Project IDs or Student Roll Numbers must be provided');
+            }
+            return true;
+        }),
         validate
     ],
 
@@ -425,7 +466,11 @@ const adminValidation = {
     ],
 
     createTeam: [
-        commonValidations.email,
+        body('memberEmail')
+            .trim()
+            .isEmail()
+            .withMessage('Must be a valid email address')
+            .normalizeEmail(),
         validate
     ],
 
@@ -433,7 +478,11 @@ const adminValidation = {
         body('teamId')
             .notEmpty()
             .withMessage('Invalid team ID'),
-        commonValidations.email,
+        body('memberEmail')
+            .trim()
+            .isEmail()
+            .withMessage('Must be a valid email address')
+            .normalizeEmail(),
         validate
     ],
 

@@ -153,6 +153,9 @@ router.get('/', authenticate, authorize(['ADMIN']), commonValidations.pagination
         if (role) {
             where.role = role;
         }
+        if (req.query.scopeId && req.query.scopeId !== 'ALL') {
+            where.scopes = { some: { id: req.query.scopeId } };
+        }
         if (search) {
             where.OR = [
                 { name: { contains: search } },
@@ -213,6 +216,22 @@ router.delete('/:id', authenticate, authorize(['ADMIN']), userValidation.delete,
 
         if (assignedTeam) {
             return res.status(400).json({ error: "Cannot delete faculty who is assigned as a Guide or Subject Expert to a team. Unassign them first." });
+        }
+
+        // Check 3: Is assigned to any Lab Sessions?
+        const assignedSession = await prisma.labsession.findFirst({
+            where: { facultyId: id }
+        });
+        if (assignedSession) {
+            return res.status(400).json({ error: "Cannot delete faculty who has assigned lab sessions. Delete or reassign the sessions first." });
+        }
+
+        // Check 4: Has submitted any Reviews?
+        const submittedReview = await prisma.review.findFirst({
+            where: { facultyId: id }
+        });
+        if (submittedReview) {
+            return res.status(400).json({ error: "Cannot delete faculty who has submitted reviews. Delete the reviews first." });
         }
 
         await prisma.user.delete({ where: { id } });

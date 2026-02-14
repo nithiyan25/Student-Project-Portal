@@ -6,8 +6,8 @@ const { DEFAULT_PAGE, DEFAULT_LIMIT, MAX_LIMIT } = require('../utils/constants')
 
 const router = express.Router();
 
-// GET ALL TEAMS (For Admin View with pagination)
-router.get('/teams', authenticate, authorize(['ADMIN']), commonValidations.pagination, async (req, res, next) => {
+// GET ALL TEAMS (For Admin/Faculty View with pagination)
+router.get('/teams', authenticate, authorize(['ADMIN', 'FACULTY']), commonValidations.pagination, async (req, res, next) => {
     try {
         const page = parseInt(req.query.page) || DEFAULT_PAGE;
         const limit = Math.min(parseInt(req.query.limit) || DEFAULT_LIMIT, MAX_LIMIT);
@@ -17,6 +17,22 @@ router.get('/teams', authenticate, authorize(['ADMIN']), commonValidations.pagin
             prisma.team.findMany({
                 skip,
                 take: limit,
+                where: {
+                    AND: [
+                        // Search Filter (Project Title OR Member Name OR Member Roll Number)
+                        req.query.search ? {
+                            OR: [
+                                { project: { title: { contains: req.query.search } } }, // Removed mode: 'insensitive' for MySQL compatibility if needed, or keep if using Postgres/compatible MySQL collation. Prisma usually handles it.
+                                { members: { some: { user: { name: { contains: req.query.search } } } } },
+                                { members: { some: { user: { rollNumber: { contains: req.query.search } } } } }
+                            ]
+                        } : {},
+                        // Status Filter
+                        req.query.status && req.query.status !== 'ALL' ? { status: req.query.status } : {},
+                        // Scope Filter
+                        req.query.scopeId && req.query.scopeId !== 'ALL' ? { scopeId: req.query.scopeId } : {}
+                    ]
+                },
                 include: {
                     members: {
                         include: { user: true },
@@ -26,6 +42,7 @@ router.get('/teams', authenticate, authorize(['ADMIN']), commonValidations.pagin
                         include: { scope: true }
                     },
                     scope: true,
+
                     guide: true,
                     subjectExpert: true,
                     reviews: {
@@ -38,7 +55,21 @@ router.get('/teams', authenticate, authorize(['ADMIN']), commonValidations.pagin
                 },
                 orderBy: { createdAt: 'desc' }
             }),
-            prisma.team.count()
+            prisma.team.count({
+                where: {
+                    AND: [
+                        req.query.search ? {
+                            OR: [
+                                { project: { title: { contains: req.query.search } } },
+                                { members: { some: { user: { name: { contains: req.query.search } } } } },
+                                { members: { some: { user: { rollNumber: { contains: req.query.search } } } } }
+                            ]
+                        } : {},
+                        req.query.status && req.query.status !== 'ALL' ? { status: req.query.status } : {},
+                        req.query.scopeId && req.query.scopeId !== 'ALL' ? { scopeId: req.query.scopeId } : {}
+                    ]
+                }
+            })
         ]);
 
         res.json({
@@ -50,6 +81,754 @@ router.get('/teams', authenticate, authorize(['ADMIN']), commonValidations.pagin
                 totalPages: Math.ceil(total / limit)
             }
         });
+    } catch (e) {
+        next(e);
+    }
+});
+
+// BULK UPDATE TEAM STATUS
+router.post('/teams/bulk-status', authenticate, authorize(['ADMIN']), async (req, res, next) => {
+    const { teamIds, status } = req.body;
+
+    try {
+        const validStatuses = ['PENDING', 'APPROVED', 'NOT_COMPLETED', 'IN_PROGRESS', 'CHANGES_REQUIRED', 'READY_FOR_REVIEW', 'COMPLETED', 'REJECTED'];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({ error: "Invalid status" });
+        }
+
+        if (!Array.isArray(teamIds) || teamIds.length === 0) {
+            return res.status(400).json({ error: "No team IDs provided" });
+        }
+
+        const results = await prisma.$transaction(async (tx) => {
+            const updatedTeams = [];
+
+            for (const id of teamIds) {
+                const team = await tx.team.findUnique({
+                    where: { id },
+                    include: { project: true }
+                });
+
+                if (!team) continue;
+
+                // Update Team Status
+                await tx.team.update({
+                    where: { id },
+                    data: { status }
+                });
+
+                // If status is not PENDING, ensure all members and assigned faculty are approved
+                if (status !== 'PENDING') {
+                    await tx.teammember.updateMany({
+                        where: { teamId: id },
+                        data: { approved: true }
+                    });
+
+                    // Auto-approve Guide and Expert if they are assigned
+                    await tx.team.update({
+                        where: { id },
+                        data: {
+                            guideStatus: team.guideId ? 'APPROVED' : undefined,
+                            expertStatus: team.subjectExpertId ? 'APPROVED' : undefined
+                        }
+                    });
+                }
+
+                // If reset, cancel pending/ready reviews
+                if (['NOT_COMPLETED', 'IN_PROGRESS', 'PENDING'].includes(status)) {
+                    await tx.review.updateMany({
+                        where: {
+                            teamId: id,
+                            status: { in: ['PENDING', 'READY_FOR_REVIEW'] }
+                        },
+                        data: { status: 'NOT_COMPLETED' }
+                    });
+                }
+
+                // Changes Required Extension
+                if (status === 'CHANGES_REQUIRED' && team.projectId) {
+                    const newExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+                    const latestReview = await tx.review.findFirst({
+                        where: { teamId: id },
+                        orderBy: { createdAt: 'desc' }
+                    });
+
+                    await tx.reviewassignment.updateMany({
+                        where: {
+                            projectId: team.projectId,
+                            reviewPhase: latestReview ? latestReview.reviewPhase : undefined
+                        },
+                        data: { accessExpiresAt: newExpiry }
+                    });
+                }
+
+                updatedTeams.push(id);
+            }
+            return updatedTeams;
+        }, {
+            timeout: 30000
+        });
+
+        res.json({ message: `Successfully updated ${results.length} teams`, count: results.length });
+    } catch (e) {
+        next(e);
+    }
+});
+
+// GET SINGLE TEAM BY ID (For Admin/Faculty)
+router.get('/teams/:id', authenticate, authorize(['ADMIN', 'FACULTY']), async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const team = await prisma.team.findUnique({
+            where: { id },
+            include: {
+                members: {
+                    include: { user: true },
+                    where: { approved: true }
+                },
+                project: {
+                    include: { scope: true }
+                },
+                scope: true,
+                deadlineGroup: { include: { deadlines: true } },
+                guide: true,
+                subjectExpert: true,
+                reviews: {
+                    include: {
+                        reviewMarks: true,
+                        faculty: true
+                    },
+                    orderBy: { createdAt: 'desc' }
+                }
+            }
+        });
+
+        if (!team) return res.status(404).json({ error: "Team not found" });
+
+        // FACULTY Permission Check
+        if (req.user.role === 'FACULTY') {
+            const isGuide = team.guideId === req.user.id;
+            const isExpert = team.subjectExpertId === req.user.id;
+
+            // Is Assigned Reviewer?
+            const isReviewer = await prisma.reviewassignment.findFirst({
+                where: {
+                    projectId: team.projectId,
+                    facultyId: req.user.id
+                }
+            });
+
+            // Has ACTIVE or UPCOMING Lab Session with any team member?
+            const now = new Date();
+            const session = await prisma.labsession.findFirst({
+                where: {
+                    facultyId: req.user.id,
+                    endTime: { gte: now }, // Active or Future
+                    user_sessionstudents: {
+                        some: {
+                            id: { in: team.members.map(m => m.user.id) }
+                        }
+                    }
+                }
+            });
+
+            if (!isGuide && !isExpert && !isReviewer && !session) {
+                return res.status(403).json({
+                    error: "Access denied. You can only view details of teams you guide, expert, review, or are currently supervising."
+                });
+            }
+        }
+
+        res.json(team);
+    } catch (e) {
+        next(e);
+    }
+});
+
+
+
+// GET PENDING REVIEW ASSIGNMENTS
+router.get('/pending-reviews', authenticate, authorize(['ADMIN']), async (req, res, next) => {
+    try {
+        const now = new Date();
+        const { search, phase, scopeId, activeSession } = req.query;
+
+        // Build Prisma Where Clause for Search & Scope
+        const whereClause = {
+            status: 'READY_FOR_REVIEW'
+        };
+
+        if (scopeId && scopeId !== 'ALL') {
+            whereClause.scopeId = scopeId;
+        }
+
+        if (search) {
+            whereClause.OR = [
+                { project: { title: { contains: search } } }, // Removed mode: 'insensitive' for compatibility
+                { members: { some: { user: { name: { contains: search } } } } },
+                { members: { some: { user: { rollNumber: { contains: search } } } } },
+                { project: { assignedFaculty: { some: { faculty: { name: { contains: search } } } } } } // Search by assigned faculty too? Maybe not needed but good to have. User asked for "Faculty Name" - technically this is for *pending* reviews, so maybe they mean the Guide? Or any faculty associated? Let's stick to Project/Student/Faculty(Guide?)
+                // Actually user said "search box with name , roll number , project name , faculty name". 
+                // For pending reviews, "Faculty Name" could mean the Guide.
+            ];
+            // Add Guide search
+            whereClause.OR.push({ guide: { name: { contains: search } } });
+        }
+
+        const teams = await prisma.team.findMany({
+            where: whereClause,
+            include: {
+                project: {
+                    include: {
+                        assignedFaculty: true // Include existing assignments
+                    }
+                },
+                scope: true,
+                guide: true, // Include guide for display/search
+                members: { include: { user: true } },
+                reviews: {
+                    include: { faculty: true }
+                }
+            }
+        });
+
+        // Filter out teams that already have a valid assignment
+        // AND apply 'phase' and 'activeSession' filters
+        let teamsNeedingAssignment = teams.filter(team => {
+            if (!team.project) return true; // No project, needs assignment (edge case)
+
+            const passedPhases = new Set([
+                ...(team.reviews || []).filter(r => r.status && r.status !== 'PENDING').map(r => r.reviewPhase),
+                ...(team.project?.assignedFaculty || [])
+                    .filter(a => a.accessExpiresAt && new Date(a.accessExpiresAt) < now)
+                    .map(a => a.reviewPhase),
+                ...(team.deadlineGroup?.deadlines || [])
+                    .filter(d => new Date(d.deadline) < now)
+                    .map(d => d.phase)
+            ]);
+            const nextPhase = Math.max(team.submissionPhase || 0, Math.max(0, ...Array.from(passedPhases)) + 1);
+
+            // Filter by Phase (if provided)
+            if (phase && phase !== 'ALL' && nextPhase !== parseInt(phase)) {
+                return false;
+            }
+
+            // Check if there's a valid (non-expired) assignment specifically for the target phase
+            const hasValidAssignmentForPhase = team.project.assignedFaculty?.some(a =>
+                a.reviewPhase === nextPhase && (a.accessExpiresAt === null || new Date(a.accessExpiresAt) > now)
+            );
+
+            // If already has valid assignment for this phase, don't show in pending list
+            return !hasValidAssignmentForPhase;
+        });
+
+        // Enrich with suggested faculty based on active lab session
+        const enrichedTeams = await Promise.all(teamsNeedingAssignment.map(async (team) => {
+            const passedPhases = new Set([
+                ...(team.reviews || []).filter(r => r.status && r.status !== 'PENDING').map(r => r.reviewPhase),
+                ...(team.project?.assignedFaculty || [])
+                    .filter(a => a.accessExpiresAt && new Date(a.accessExpiresAt) < now)
+                    .map(a => a.reviewPhase),
+                ...(team.deadlineGroup?.deadlines || [])
+                    .filter(d => new Date(d.deadline) < now)
+                    .map(d => d.phase)
+            ]);
+            const nextPhase = Math.max(team.submissionPhase || 0, Math.max(0, ...Array.from(passedPhases)) + 1);
+
+            const studentIds = team.members.map(m => m.userId);
+
+            // Find ANY active session for the team members
+            const activeSessionData = await prisma.labsession.findFirst({
+                where: {
+                    user_sessionstudents: { some: { id: { in: studentIds } } },
+                    endTime: { gte: new Date() } // Active or Future
+                },
+                include: { user_labsession_facultyIdTouser: true },
+                orderBy: { startTime: 'asc' }
+            });
+
+            return {
+                ...team,
+                nextPhase,
+                suggestedFaculty: activeSessionData ? activeSessionData.user_labsession_facultyIdTouser : null
+            };
+        }));
+
+        // Filter by Active Session (if provided)
+        let finalResult = enrichedTeams;
+        if (activeSession && activeSession !== 'ALL') {
+            const wantActive = activeSession === 'true';
+            finalResult = finalResult.filter(t => wantActive ? t.suggestedFaculty !== null : t.suggestedFaculty === null);
+        }
+
+        res.json(finalResult);
+    } catch (e) {
+        next(e);
+    }
+});
+
+// GET ABSENTEES (Students marked absent or who missed their session)
+router.get('/absentees', authenticate, authorize(['ADMIN']), async (req, res, next) => {
+    try {
+        const { scopeId, phase, department } = req.query;
+        const now = new Date();
+
+        // 1. Fetch Explicit Absentees (from reviewmark)
+        const explicitAbsentees = await prisma.reviewmark.findMany({
+            where: {
+                isAbsent: true,
+                ...(phase && phase !== 'ALL' ? { review: { reviewPhase: parseInt(phase) } } : {}),
+                ...(scopeId && scopeId !== 'ALL' ? { review: { team: { scopeId } } } : {}),
+                ...(department && department !== 'ALL' ? { student: { department } } : {})
+            },
+            include: {
+                student: true,
+                review: {
+                    include: {
+                        faculty: true,
+                        team: {
+                            include: {
+                                project: true,
+                                scope: true
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 2. Fetch Implicit Absentees (Expired assignments with no review)
+        const expiredAssignments = await prisma.reviewassignment.findMany({
+            where: {
+                accessExpiresAt: { lt: now },
+                ...(scopeId && scopeId !== 'ALL' ? { project: { scopeId } } : {}),
+                ...(phase && phase !== 'ALL' ? { reviewPhase: parseInt(phase) } : {})
+            },
+            include: {
+                project: {
+                    include: {
+                        teams: {
+                            include: {
+                                members: {
+                                    include: { user: true },
+                                    where: { approved: true }
+                                },
+                                reviews: true
+                            }
+                        }
+                    }
+                },
+                faculty: true
+            }
+        });
+
+        const implicitAbsentees = [];
+        for (const assignment of expiredAssignments) {
+            if (!assignment.project?.teams) continue;
+
+            for (const team of assignment.project.teams) {
+                // Check if THIS team in THE project has a review for THIS specific phase
+                const hasReview = team.reviews.some(r => r.reviewPhase === assignment.reviewPhase);
+
+                if (!hasReview) {
+                    for (const member of team.members) {
+                        if (department && department !== 'ALL' && member.user.department !== department) continue;
+
+                        // Avoid duplicates if a student is already marked absent explicitly
+                        const isAlreadyExplicit = explicitAbsentees.some(ea => ea.studentId === member.user.id && ea.review.reviewPhase === assignment.reviewPhase);
+                        if (isAlreadyExplicit) continue;
+
+                        implicitAbsentees.push({
+                            student: member.user,
+                            type: 'MISSED_DEADLINE',
+                            phase: assignment.reviewPhase,
+                            teamId: team.id,
+                            projectTitle: assignment.project.title,
+                            facultyName: assignment.faculty?.name || "N/A",
+                            facultyId: assignment.facultyId,
+                            scopeId: team.scopeId,
+                            assignedAt: assignment.assignedAt,
+                            expiresAt: assignment.accessExpiresAt
+                        });
+                    }
+                }
+            }
+        }
+
+        // 3. (Removed Deadline Absentees logic as it depended on PhaseDeadline/DeadlineGroup)
+
+        // 3. Merge and format (Adjusted logic to skip deadline absentees for now or use Scope deadlines if valid, but for revert just removing group logic)
+        const report = await Promise.all([
+            ...explicitAbsentees.map(async (a) => {
+                // Find session active during review creation
+                const session = await prisma.labsession.findFirst({
+                    where: {
+                        facultyId: a.review.facultyId,
+                        scopeId: a.review.team?.scopeId,
+                        startTime: { lte: a.createdAt },
+                        endTime: { gte: a.createdAt }
+                    },
+                    include: { venue: true }
+                });
+
+                return {
+                    student: a.student,
+                    type: 'MARKED_ABSENT',
+                    phase: a.review.reviewPhase,
+                    teamId: a.review.teamId,
+                    projectTitle: a.review.team.project?.title,
+                    facultyName: a.review.faculty?.name,
+                    date: a.createdAt,
+                    sessionName: session?.title || "Off-session Review",
+                    venue: session?.venue?.name || "N/A",
+                    timeSlot: session ? `${new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(session.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : "N/A"
+                };
+            }),
+            ...implicitAbsentees.map(async (a) => {
+                // Find session active when assignment was created (assignedAt)
+                const session = await prisma.labsession.findFirst({
+                    where: {
+                        facultyId: a.facultyId,
+                        scopeId: a.scopeId,
+                        startTime: { lte: a.assignedAt },
+                        endTime: { gte: a.assignedAt }
+                    },
+                    include: { venue: true }
+                });
+
+                return {
+                    ...a,
+                    sessionName: session?.title || "Missed Deadline",
+                    venue: session?.venue?.name || "N/A",
+                    timeSlot: session ? `${new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(session.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : "N/A"
+                };
+            })
+        ]);
+
+        res.json(report);
+    } catch (e) {
+        next(e);
+    }
+});
+
+// AUTO-ASSIGN REVIEWS
+router.post('/auto-assign-reviews', authenticate, authorize(['ADMIN']), async (req, res, next) => {
+    const { teamIds, manualAssignments = {} } = req.body;
+    try {
+        const results = [];
+        let successCount = 0;
+        let failCount = 0;
+
+        const now = new Date();
+
+        for (const teamId of teamIds) {
+            const team = await prisma.team.findUnique({
+                where: { id: teamId },
+                include: {
+                    members: { include: { user: true } },
+                    project: { include: { assignedFaculty: true } },
+                    reviews: true,
+                }
+            });
+
+            if (!team) {
+                results.push({ teamId, message: 'Team not found', status: 'failed' });
+                failCount++;
+                continue;
+            }
+
+            let facultyIdToAssign = manualAssignments[teamId];
+            let assignedVia = 'manual override';
+
+            if (!facultyIdToAssign) {
+                // Find Active Session / Faculty
+                const studentIds = team.members.map(m => m.userId);
+
+                // Try to find session happening EXACTLY NOW
+                let activeSession = await prisma.labsession.findFirst({
+                    where: {
+                        user_sessionstudents: { some: { id: { in: studentIds } } },
+                        startTime: { lte: now },
+                        endTime: { gte: now }
+                    },
+                    include: { user_labsession_facultyIdTouser: true },
+                    orderBy: { startTime: 'desc' }
+                });
+
+                // Fallback: Find earliest future session today
+                if (!activeSession) {
+                    const endOfDay = new Date(now);
+                    endOfDay.setHours(23, 59, 59, 999);
+
+                    activeSession = await prisma.labsession.findFirst({
+                        where: {
+                            user_sessionstudents: { some: { id: { in: studentIds } } },
+                            startTime: { gt: now, lte: endOfDay }
+                        },
+                        include: { user_labsession_facultyIdTouser: true },
+                        orderBy: { startTime: 'asc' }
+                    });
+                }
+
+                if (activeSession) {
+                    facultyIdToAssign = activeSession.facultyId;
+                    assignedVia = `active session (${activeSession.user_labsession_facultyIdTouser.name})`;
+                }
+            }
+
+            if (!facultyIdToAssign) {
+                results.push({ teamId, teamName: team.project?.title || teamId, message: 'No active lab session found and no manual override provided', status: 'failed' });
+                failCount++;
+                continue;
+            }
+
+            // Determine Phase - account for missed phases
+            const passedPhases = new Set([
+                ...(team.reviews || []).filter(r => r.status && r.status !== 'PENDING').map(r => r.reviewPhase),
+                ...(team.project?.assignedFaculty || [])
+                    .filter(a => a.accessExpiresAt && new Date(a.accessExpiresAt) < now)
+                    .map(a => a.reviewPhase)
+            ]);
+            const nextPhase = Math.max(team.submissionPhase || 0, Math.max(0, ...Array.from(passedPhases)) + 1);
+
+            // 1. Check for EXISTING Pending Review for this phase
+            const existingReview = await prisma.review.findFirst({
+                where: {
+                    teamId: team.id,
+                    reviewPhase: nextPhase,
+                    status: 'PENDING'
+                }
+            });
+
+            // 2. Re-assignment Logic
+            if (existingReview) {
+                if (existingReview.facultyId !== facultyIdToAssign) {
+                    // Transfer the review to the new faculty
+                    await prisma.review.update({
+                        where: { id: existingReview.id },
+                        data: { facultyId: facultyIdToAssign }
+                    });
+
+                    // Expire access for the OLD faculty
+                    await prisma.reviewassignment.updateMany({
+                        where: {
+                            projectId: team.projectId,
+                            facultyId: existingReview.facultyId,
+                            reviewPhase: nextPhase
+                        },
+                        data: { accessExpiresAt: now } // Expire immediately
+                    });
+
+                    assignedVia += ` (Transferred from previous faculty)`;
+                }
+                // If same faculty, we just refresh access below
+            } else {
+                // Create Review if it doesn't exist
+                await prisma.review.create({
+                    data: {
+                        teamId: team.id,
+                        facultyId: facultyIdToAssign,
+                        reviewPhase: nextPhase,
+                        status: 'PENDING',
+                        content: "",
+                        projectId: team.projectId || ''
+                    }
+                });
+            }
+
+            // Upsert Review Assignment to ensure faculty can see it in their dashboard
+            // EXPIRE IN 24 HOURS (1 Day)
+            const accessExpiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+            if (team.projectId) {
+                // We use updateMany + create approach or similar because reviewassignment has its own ID and we want to find by project + faculty + phase
+                await prisma.reviewassignment.upsert({
+                    where: {
+                        projectId_facultyId_reviewPhase: {
+                            projectId: team.projectId,
+                            facultyId: facultyIdToAssign,
+                            reviewPhase: nextPhase
+                        }
+                    },
+                    update: {
+                        mode: 'OFFLINE',
+                        assignedAt: now,
+                        accessExpiresAt // Refresh expiration
+                    },
+                    create: {
+                        projectId: team.projectId,
+                        facultyId: facultyIdToAssign,
+                        reviewPhase: nextPhase,
+                        mode: 'OFFLINE',
+                        assignedBy: req.user.id,
+                        accessStartsAt: now,
+                        accessExpiresAt
+                    }
+                });
+            }
+
+            // Update Team Status
+            await prisma.team.update({
+                where: { id: team.id },
+                data: { status: 'IN_PROGRESS' }
+            });
+
+            results.push({ teamId, teamName: team.project?.title || team.id, message: `Assigned via ${assignedVia} (Phase ${nextPhase})`, status: 'success' });
+            successCount++;
+        }
+
+        res.json({ success: true, successCount, failCount, results });
+    } catch (e) {
+        next(e);
+    }
+});
+
+// AUTO-ASSIGN GUIDE REVIEWS (New Route)
+router.post('/auto-assign-guide-reviews', authenticate, authorize(['ADMIN']), async (req, res, next) => {
+    const { scopeId, phase } = req.body;
+
+    if (!scopeId || !phase) {
+        return res.status(400).json({ error: "Scope ID and Phase are required" });
+    }
+
+    try {
+        // Find teams with project and guide assigned
+        const teams = await prisma.team.findMany({
+            where: {
+                scopeId: scopeId === 'ALL' ? undefined : scopeId,
+                projectId: { not: null },
+                guideId: { not: null }
+            },
+            include: {
+                project: true,
+                reviews: {
+                    where: { reviewPhase: parseInt(phase) }
+                }
+            }
+        });
+
+        const results = [];
+        let successCount = 0;
+        let failCount = 0;
+        const now = new Date();
+
+        for (const team of teams) {
+            // Skip if review for this phase already exists
+            if (team.reviews.length > 0) {
+                results.push({ teamId: team.id, teamName: team.project?.title || team.id, message: `Review for Phase ${phase} already exists`, status: 'skipped' });
+                continue;
+            }
+
+            try {
+                // 1. Create Review Entry
+                await prisma.review.create({
+                    data: {
+                        teamId: team.id,
+                        facultyId: team.guideId,
+                        reviewPhase: parseInt(phase),
+                        status: 'PENDING',
+                        content: "",
+                        projectId: team.projectId
+                    }
+                });
+
+                // 2. Upsert Review Assignment (Enforce OFFLINE mode)
+                await prisma.reviewassignment.upsert({
+                    where: {
+                        projectId_facultyId_reviewPhase: {
+                            projectId: team.projectId,
+                            facultyId: team.guideId,
+                            reviewPhase: parseInt(phase)
+                        }
+                    },
+                    update: {
+                        mode: 'OFFLINE', // Ensure offline mode
+                        assignedAt: now
+                    },
+                    create: {
+                        projectId: team.projectId,
+                        facultyId: team.guideId,
+                        reviewPhase: parseInt(phase),
+                        mode: 'OFFLINE', // Ensure offline mode
+                        assignedBy: req.user.id,
+                        accessStartsAt: now,
+                        accessExpiresAt: null
+                    }
+                });
+
+                // 3. Update Team Status to IN_PROGRESS (not REVIEW_IN_PROGRESS which is invalid)
+                await prisma.team.update({
+                    where: { id: team.id },
+                    data: { status: 'IN_PROGRESS' }
+                });
+
+                results.push({ teamId: team.id, teamName: team.project?.title || team.id, message: "Assigned to Guide", status: 'success' });
+                successCount++;
+            } catch (err) {
+                console.error(`Error assigning to team ${team.id}:`, err);
+                results.push({ teamId: team.id, teamName: team.project?.title || team.id, message: err.message, status: 'failed' });
+                failCount++;
+            }
+        }
+
+        res.json({ success: true, message: `Processed ${teams.length} teams. Success: ${successCount}, Failed: ${failCount}`, results });
+    } catch (e) {
+        next(e);
+    }
+});
+
+// GET TEAMS ELIGIBLE FOR MANUAL PHASE ASSIGNMENT
+router.get('/eligible-review-teams', authenticate, authorize(['ADMIN']), async (req, res, next) => {
+    const { scopeId, phase } = req.query;
+
+    if (!scopeId || !phase) {
+        return res.status(400).json({ error: "Scope ID and Phase are required" });
+    }
+
+    try {
+        const phaseNum = parseInt(phase);
+
+        let where = {};
+        if (scopeId && scopeId !== 'ALL') {
+            where = {
+                OR: [
+                    { scopeId: scopeId },
+                    { project: { scopeId: scopeId } },
+                    { projectRequests: { some: { project: { scopeId: scopeId } } } }
+                ]
+            };
+        }
+
+        // Find all teams in this scope
+        const allTeams = await prisma.team.findMany({
+            where,
+            include: {
+                project: true,
+                projectRequests: {
+                    include: { project: true },
+                    where: { status: 'PENDING' }
+                },
+                members: {
+                    include: { user: true },
+                    where: { approved: true }
+                },
+                reviews: {
+                    where: {
+                        reviewPhase: phaseNum,
+                        status: 'COMPLETED'
+                    }
+                }
+            }
+        });
+
+        // Filter for teams that do NOT have a completed review for this phase
+        // AND are NOT already marked as READY_FOR_REVIEW (since they show up in the standard tab)
+        const eligibleTeams = allTeams.filter(team =>
+            team.reviews.length === 0 && team.status !== 'READY_FOR_REVIEW'
+        );
+
+        res.json(eligibleTeams);
     } catch (e) {
         next(e);
     }
@@ -343,47 +1122,149 @@ router.post('/assign-faculty', authenticate, authorize(['ADMIN']), adminValidati
 
 // Admin: Bulk Assign Faculty to Projects
 router.post('/bulk-assign-faculty', authenticate, authorize(['ADMIN']), adminValidation.bulkAssignFaculty, async (req, res, next) => {
-    const { projectIds, facultyIds, accessDurationHours, reviewPhase = 1, distributeEvenly = false, mode = 'OFFLINE', accessStartsAt } = req.body;
+    let { projectIds, facultyIds, accessDurationHours, reviewPhase = 1, distributeEvenly = false, mode = 'OFFLINE', accessStartsAt, useVenueFaculty, scopeId, studentRollNumbers } = req.body;
 
     try {
-        // Find all faculty users and verify they are actually faculty
-        const facultyUsers = await prisma.user.findMany({
-            where: {
-                id: { in: facultyIds },
-                role: 'FACULTY'
-            }
-        });
+        // Deduplicate input arrays
+        projectIds = Array.isArray(projectIds) ? [...new Set(projectIds)] : [];
+        facultyIds = Array.isArray(facultyIds) ? [...new Set(facultyIds)] : [];
 
-        if (facultyUsers.length !== facultyIds.length) {
-            return res.status(400).json({
-                error: "Invalid faculty members",
-                details: "One or more faculty IDs are either invalid or not assigned the FACULTY role."
+        // If student roll numbers provided, resolve them to project IDs
+        if (studentRollNumbers && Array.isArray(studentRollNumbers) && studentRollNumbers.length > 0) {
+            const students = await prisma.user.findMany({
+                where: {
+                    rollNumber: { in: studentRollNumbers },
+                    role: 'STUDENT'
+                },
+                include: {
+                    teamMemberships: {
+                        where: { approved: true },
+                        include: { team: true }
+                    }
+                }
             });
+
+            const resolvedProjectIds = new Set();
+            const notFoundRolls = [];
+            const noProjectRolls = [];
+
+            // Create a lookup for quick verification
+            const foundRolls = new Set(students.map(s => s.rollNumber));
+            studentRollNumbers.forEach(roll => {
+                if (!foundRolls.has(roll)) notFoundRolls.push(roll);
+            });
+
+            students.forEach(student => {
+                const team = student.teamMemberships[0]?.team;
+                if (team && team.projectId) {
+                    resolvedProjectIds.add(team.projectId);
+                } else {
+                    noProjectRolls.push(student.rollNumber);
+                }
+            });
+
+            projectIds = [...new Set([...projectIds, ...resolvedProjectIds])];
+
+            if (notFoundRolls.length > 0 || noProjectRolls.length > 0) {
+                // We can choose to return warnings or fail. Let's return warnings in the response if possible,
+                // but since this is a void/status response, maybe we just log it or fail if CRITICAL.
+                // For now, let's proceed with valid ones but maybe log/warn.
+                // Or better, if NO projects are resolved and projectIds is empty, error out.
+                console.warn(`Bulk Assign: Some roll numbers skipped. Not Found: ${notFoundRolls.length}, No Project: ${noProjectRolls.length}`);
+            }
         }
+
+        let assignmentPairs = [];
+
+        if (useVenueFaculty === true || useVenueFaculty === 'true') {
+            if (!scopeId) {
+                return res.status(400).json({ error: "Scope ID is required for venue-based assignment" });
+            }
+
+            // For each project, find the faculty assigned to the team's lab sessions
+            for (const projectId of projectIds) {
+                const team = await prisma.team.findFirst({
+                    where: {
+                        OR: [
+                            { projectId: projectId },
+                            { projectRequests: { some: { projectId: projectId, status: 'PENDING' } } }
+                        ]
+                    },
+                    include: { members: true }
+                });
+
+                if (team) {
+                    const memberIds = team.members.map(m => m.userId);
+                    // Find session in this scope that includes any of these members
+                    const session = await prisma.labsession.findFirst({
+                        where: {
+                            scopeId: scopeId,
+                            user_sessionstudents: { some: { id: { in: memberIds } } }
+                        },
+                        select: { facultyId: true }
+                    });
+
+                    if (session) {
+                        assignmentPairs.push({ projectId, facultyId: session.facultyId });
+                    }
+                }
+            }
+
+            if (assignmentPairs.length === 0) {
+                return res.status(400).json({
+                    error: "No matching lab sessions found for the selected teams in this batch. Please assign faculty manually."
+                });
+            }
+        } else {
+            // Find all faculty users and verify they are actually faculty
+            const facultyUsers = await prisma.user.findMany({
+                where: {
+                    id: { in: facultyIds },
+                    role: 'FACULTY'
+                }
+            });
+
+            if (facultyUsers.length !== facultyIds.length) {
+                return res.status(400).json({
+                    error: "Invalid faculty members",
+                    details: "One or more faculty IDs are either invalid, duplicates, or not assigned the FACULTY role."
+                });
+            }
+
+            if (distributeEvenly) {
+                // Round-robin distribution
+                assignmentPairs = projectIds.map((projectId, index) => ({
+                    projectId,
+                    facultyId: facultyIds[index % facultyIds.length]
+                }));
+            } else {
+                // Many-to-many distribution
+                assignmentPairs = projectIds.flatMap(projectId =>
+                    facultyIds.map(facultyId => ({
+                        projectId,
+                        facultyId
+                    }))
+                );
+            }
+        }
+
+        // Final deduplication of assignment pairs to prevent transaction conflicts
+        const uniqueAssignments = [];
+        const seenPairs = new Set();
+        for (const pair of assignmentPairs) {
+            const key = `${pair.projectId}-${pair.facultyId}`;
+            if (!seenPairs.has(key)) {
+                uniqueAssignments.push(pair);
+                seenPairs.add(key);
+            }
+        }
+        assignmentPairs = uniqueAssignments;
 
         let accessExpiresAt = null;
         const startTime = accessStartsAt ? new Date(accessStartsAt) : new Date();
 
         if (accessDurationHours && accessDurationHours > 0) {
             accessExpiresAt = new Date(startTime.getTime() + accessDurationHours * 60 * 60 * 1000);
-        }
-
-        // Determine assignment pairs based on distribution mode
-        let assignmentPairs = [];
-        if (distributeEvenly) {
-            // Round-robin distribution: each project gets exactly one faculty member from the pool
-            assignmentPairs = projectIds.map((projectId, index) => ({
-                projectId,
-                facultyId: facultyIds[index % facultyIds.length]
-            }));
-        } else {
-            // Many-to-many distribution: every project gets every faculty member
-            assignmentPairs = projectIds.flatMap(projectId =>
-                facultyIds.map(facultyId => ({
-                    projectId,
-                    facultyId
-                }))
-            );
         }
 
         // Use transaction to perform bulk upserts
@@ -465,8 +1346,29 @@ router.get('/faculty-assignments', authenticate, authorize(['ADMIN']), commonVal
         const limit = Math.min(parseInt(req.query.limit) || DEFAULT_LIMIT, MAX_LIMIT);
         const skip = (page - 1) * limit;
 
+        const { search, expired } = req.query;
+        const now = new Date();
+
+        const whereClause = {
+            AND: [
+                search ? {
+                    OR: [
+                        { faculty: { name: { contains: search } } },
+                        { faculty: { rollNumber: { contains: search } } },
+                        { project: { title: { contains: search } } },
+                        { project: { teams: { some: { members: { some: { user: { name: { contains: search } } } } } } } },
+                        { project: { teams: { some: { members: { some: { user: { rollNumber: { contains: search } } } } } } } }
+                    ]
+                } : {},
+                expired === 'true' ? {
+                    accessExpiresAt: { lt: now }
+                } : {}
+            ]
+        };
+
         const [assignments, total] = await Promise.all([
             prisma.reviewassignment.findMany({
+                where: whereClause,
                 skip,
                 take: limit,
                 include: {
@@ -486,7 +1388,7 @@ router.get('/faculty-assignments', authenticate, authorize(['ADMIN']), commonVal
                 },
                 orderBy: { assignedAt: 'desc' }
             }),
-            prisma.reviewassignment.count()
+            prisma.reviewassignment.count({ where: whereClause })
         ]);
 
         res.json({
@@ -503,8 +1405,65 @@ router.get('/faculty-assignments', authenticate, authorize(['ADMIN']), commonVal
     }
 });
 
+// Admin: Select faculty assignments by student roll numbers (across ALL pages)
+router.post('/faculty-assignments/select-by-roll', authenticate, authorize(['ADMIN']), async (req, res, next) => {
+    try {
+        const { rollNumbers, expired } = req.body;
+
+        if (!rollNumbers || !Array.isArray(rollNumbers) || rollNumbers.length === 0) {
+            return res.status(400).json({ error: 'rollNumbers array is required' });
+        }
+
+        const normalizedRolls = rollNumbers.map(r => r.trim().toLowerCase()).filter(Boolean);
+        if (normalizedRolls.length === 0) {
+            return res.status(400).json({ error: 'No valid roll numbers provided' });
+        }
+
+        const now = new Date();
+
+        // Include both original and uppercased versions for practical case-insensitive matching
+        const allVariants = [...new Set([...normalizedRolls, ...normalizedRolls.map(r => r.toUpperCase())])];
+
+        // Build where clause - optionally filter by expired status too
+        const whereClause = {
+            AND: [
+                {
+                    project: {
+                        teams: {
+                            some: {
+                                members: {
+                                    some: {
+                                        approved: true,
+                                        user: {
+                                            rollNumber: { in: allVariants }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                expired === true ? { accessExpiresAt: { lt: now } } : {}
+            ]
+        };
+
+        const matchingAssignments = await prisma.reviewassignment.findMany({
+            where: whereClause,
+            select: { id: true }
+        });
+
+        res.json({
+            ids: matchingAssignments.map(a => a.id),
+            count: matchingAssignments.length
+        });
+    } catch (e) {
+        next(e);
+    }
+});
+
 // Admin: Toggle Temporary Admin Access for Faculty (REAL ADMINS ONLY)
 router.post('/toggle-temp-admin', authenticate, adminValidation.toggleTempAdmin, async (req, res, next) => {
+
     const { userId, grant, allowedTabs } = req.body;
 
     // Only real admins can grant/revoke temp admin access
@@ -526,8 +1485,10 @@ router.post('/toggle-temp-admin', authenticate, adminValidation.toggleTempAdmin,
         // Prepare update data
         const updateData = {
             isTemporaryAdmin: grant,
-            // Store allowed tabs as JSON string, or null if revoking
-            tempAdminTabs: grant && allowedTabs && allowedTabs.length > 0
+            // Store allowed tabs as JSON string
+            // meaningful change: if allowedTabs is provided (even empty), store it. 
+            // Only store null if it's strictly undefined or we want legacy behavior (which we don't for new toggles)
+            tempAdminTabs: grant && Array.isArray(allowedTabs)
                 ? JSON.stringify(allowedTabs)
                 : null
         };
@@ -1121,20 +2082,52 @@ router.post('/assign-solo-project', authenticate, authorize(['ADMIN']), adminVal
 // GET PROJECT REQUESTS (Admin)
 router.get('/project-requests', authenticate, authorize(['ADMIN']), commonValidations.pagination, async (req, res, next) => {
     try {
-        const { status, scopeId } = req.query;
+        const { status, scopeId, search, category, department } = req.query;
         const page = parseInt(req.query.page) || DEFAULT_PAGE;
         const limit = Math.min(parseInt(req.query.limit) || DEFAULT_LIMIT, MAX_LIMIT);
         const skip = (page - 1) * limit;
 
         const where = {};
+        const conditions = [];
+
         if (status && status !== 'ALL') {
-            where.status = status;
+            conditions.push({ status });
         }
         if (scopeId && scopeId !== 'ALL') {
-            where.project = { scopeId };
+            conditions.push({ project: { scopeId } });
+        }
+        if (category) {
+            conditions.push({ project: { category: { equals: category } } });
+        }
+        if (department) {
+            conditions.push({
+                team: {
+                    members: {
+                        some: {
+                            user: { department: { equals: department } }
+                        }
+                    }
+                }
+            });
+        }
+        if (search) {
+            conditions.push({
+                OR: [
+                    { project: { title: { contains: search } } },
+                    { team: { members: { some: { user: { name: { contains: search } } } } } },
+                    { team: { members: { some: { user: { rollNumber: { contains: search } } } } } }
+                ]
+            });
         }
 
-        const [requests, total] = await Promise.all([
+        if (conditions.length > 0) {
+            where.AND = conditions;
+        }
+
+        // Base where for counts (everything except status)
+        const countsWhere = { AND: conditions.filter(c => !c.status) };
+
+        const [requests, total, statusCounts] = await Promise.all([
             prisma.projectrequest.findMany({
                 where,
                 skip,
@@ -1156,11 +2149,24 @@ router.get('/project-requests', authenticate, authorize(['ADMIN']), commonValida
                 },
                 orderBy: { requestedAt: 'desc' }
             }),
-            prisma.projectrequest.count({ where })
+            prisma.projectrequest.count({ where }),
+            prisma.projectrequest.groupBy({
+                by: ['status'],
+                where: countsWhere,
+                _count: { _all: true }
+            })
         ]);
+
+        const counts = {
+            PENDING: statusCounts.find(c => c.status === 'PENDING')?._count._all || 0,
+            APPROVED: statusCounts.find(c => c.status === 'APPROVED')?._count._all || 0,
+            REJECTED: statusCounts.find(c => c.status === 'REJECTED')?._count._all || 0,
+            ALL: statusCounts.reduce((acc, c) => acc + c._count._all, 0)
+        };
 
         res.json({
             requests,
+            counts,
             pagination: {
                 total,
                 page,
@@ -1398,33 +2404,40 @@ router.post('/bulk-reject-project-requests', authenticate, authorize(['ADMIN']),
             return res.status(400).json({ error: 'No request IDs provided' });
         }
 
-        const results = await prisma.$transaction(async (tx) => {
-            const processed = [];
-            for (const requestId of requestIds) {
-                const request = await tx.projectrequest.findUnique({
-                    where: { id: requestId }
-                });
+        const BATCH_SIZE = 100;
+        const results = [];
 
-                if (request && request.status === 'PENDING') {
-                    await tx.projectrequest.update({
-                        where: { id: requestId },
-                        data: {
-                            status: 'REJECTED',
-                            reviewedBy: req.user.id,
-                            reviewedAt: new Date(),
-                            rejectionReason: rejectionReason || 'Bulk rejection by Admin'
-                        }
+        for (let i = 0; i < requestIds.length; i += BATCH_SIZE) {
+            const batch = requestIds.slice(i, i + BATCH_SIZE);
+            const batchResults = await prisma.$transaction(async (tx) => {
+                const processed = [];
+                for (const requestId of batch) {
+                    const request = await tx.projectrequest.findUnique({
+                        where: { id: requestId }
                     });
 
-                    await tx.project.update({
-                        where: { id: request.projectId },
-                        data: { status: 'AVAILABLE' }
-                    });
-                    processed.push(requestId);
+                    if (request && request.status === 'PENDING') {
+                        await tx.projectrequest.update({
+                            where: { id: requestId },
+                            data: {
+                                status: 'REJECTED',
+                                reviewedBy: req.user.id,
+                                reviewedAt: new Date(),
+                                rejectionReason: rejectionReason || 'Bulk rejection by Admin'
+                            }
+                        });
+
+                        await tx.project.update({
+                            where: { id: request.projectId },
+                            data: { status: 'AVAILABLE' }
+                        });
+                        processed.push(requestId);
+                    }
                 }
-            }
-            return processed;
-        });
+                return processed;
+            });
+            results.push(...batchResults);
+        }
 
         res.json({ success: true, message: `Successfully rejected ${results.length} requests`, rejectedCount: results.length });
     } catch (e) {
@@ -1435,8 +2448,19 @@ router.post('/bulk-reject-project-requests', authenticate, authorize(['ADMIN']),
 // GET Detailed Faculty Stats
 router.get('/faculty-stats', authenticate, authorize(['ADMIN']), async (req, res, next) => {
     try {
+        const { search } = req.query;
+        const where = { role: 'FACULTY' };
+
+        if (search) {
+            where.OR = [
+                { name: { contains: search } },
+                { email: { contains: search } },
+                { rollNumber: { contains: search } }
+            ];
+        }
+
         const facultyMembers = await prisma.user.findMany({
-            where: { role: 'FACULTY' },
+            where,
             include: {
                 guidedTeams: {
                     where: { guideStatus: 'APPROVED' },
@@ -1497,7 +2521,8 @@ router.get('/faculty-stats', authenticate, authorize(['ADMIN']), async (req, res
                 assignmentsCount: f.assignedReviews.length,
                 quotaStatus: (f.guidedTeams.length + f.expertTeams.length) + '/4',
                 role: 'FACULTY',
-                isTemporaryAdmin: f.isTemporaryAdmin
+                isTemporaryAdmin: f.isTemporaryAdmin,
+                tempAdminTabs: f.tempAdminTabs
             };
         });
 
@@ -1586,6 +2611,90 @@ router.post('/auto-assign-guide-reviews', authenticate, authorize(['ADMIN']), as
             message: `Successfully released reviews for ${results.length} guides in this batch.`
         });
 
+    } catch (e) {
+        next(e);
+    }
+});
+
+// GET Student Project Request Status Categorization
+router.get('/student-project-status', authenticate, authorize(['ADMIN']), async (req, res, next) => {
+    try {
+        const { scopeId } = req.query;
+        const where = { role: 'STUDENT' };
+
+        // Fetch all students with their team memberships and requests
+        const students = await prisma.user.findMany({
+            where,
+            include: {
+                teamMemberships: {
+                    include: {
+                        team: {
+                            include: {
+                                project: true,
+                                projectRequests: {
+                                    include: {
+                                        project: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            orderBy: { name: 'asc' }
+        });
+
+        // Filter by scope if provided
+        let filteredStudents = students;
+        if (scopeId && scopeId !== 'ALL') {
+            filteredStudents = students.filter(student => {
+                // Check if student is assigned to this scope (direct link)
+                if (student.scopes?.some(s => s.id === scopeId)) return true;
+
+                // Check if student's team is in this scope
+                const teamMembership = student.teamMemberships[0];
+                if (teamMembership?.team?.scopeId === scopeId) return true;
+                if (teamMembership?.team?.project?.scopeId === scopeId) return true;
+
+                return false;
+            });
+        }
+
+        const categorized = {
+            accepted: [],
+            requested: [],
+            notRequested: []
+        };
+
+        filteredStudents.forEach(student => {
+            const teamMembership = student.teamMemberships[0];
+            const team = teamMembership?.team;
+
+            const studentData = {
+                id: student.id,
+                name: student.name,
+                email: student.email,
+                rollNumber: student.rollNumber,
+                department: student.department,
+                year: student.year,
+                teamId: team?.id || null,
+                projectTitle: team?.project?.title || null
+            };
+
+            if (team?.projectId) {
+                categorized.accepted.push(studentData);
+            } else if (team?.projectRequests?.some(r => r.status === 'PENDING')) {
+                const pendingRequest = team.projectRequests.find(r => r.status === 'PENDING');
+                categorized.requested.push({
+                    ...studentData,
+                    requestedProject: pendingRequest.project?.title || 'Unknown'
+                });
+            } else {
+                categorized.notRequested.push(studentData);
+            }
+        });
+
+        res.json(categorized);
     } catch (e) {
         next(e);
     }

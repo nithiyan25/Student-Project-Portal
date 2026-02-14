@@ -1,10 +1,12 @@
 import React, { useContext, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 
 export default function Login() {
   const { login } = useContext(AuthContext);
+  const { addToast } = useToast();
   const navigate = useNavigate();
 
 
@@ -13,7 +15,7 @@ export default function Login() {
       const user = await login(credentialResponse.credential);
       redirectUser(user);
     } catch (err) {
-      alert("Login Failed. Ensure your email is registered in the system.");
+      addToast("Login Failed. Ensure your email is registered in the system.", 'error');
     }
   };
 
@@ -38,7 +40,7 @@ export default function Login() {
             onSuccess={handleSuccess}
             onError={(error) => {
               console.error('Google Login Error Details:', error);
-              alert('Google Login Failed. Check browser console (F12) for details.');
+              addToast('Google Login Failed. Check browser console (F12) for details.', 'error');
             }}
             useOneTap
             theme="filled_blue"

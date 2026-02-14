@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { X, CheckCircle2, Briefcase, Clock } from 'lucide-react';
+import { useToast } from '../../context/ToastContext';
 
 export default function ReleaseReviewsModal({ isOpen, onClose, scopes, onRelease }) {
+    const { addToast } = useToast();
     const [selectedScopeId, setSelectedScopeId] = useState('');
     const [reviewPhase, setReviewPhase] = useState('1');
     const [duration, setDuration] = useState('0'); // 0 for permanent
@@ -16,7 +18,7 @@ export default function ReleaseReviewsModal({ isOpen, onClose, scopes, onRelease
 
     const handleSubmit = async () => {
         if (!selectedScopeId) {
-            alert("Please select a Student Batch (Scope).");
+            addToast("Please select a Student Batch (Scope).", 'warning');
             return;
         }
 
@@ -30,7 +32,7 @@ export default function ReleaseReviewsModal({ isOpen, onClose, scopes, onRelease
             });
             onClose();
         } catch (e) {
-            alert(e.response?.data?.error || "Error releasing reviews");
+            addToast(e.response?.data?.error || "Error releasing reviews", 'error');
         } finally {
             setIsSubmitting(false);
         }

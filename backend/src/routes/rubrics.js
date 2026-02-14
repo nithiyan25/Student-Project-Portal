@@ -85,10 +85,6 @@ router.post('/', authenticate, authorize(['ADMIN']), rubricValidation.create, as
         const criteriaList = JSON.parse(JSON.stringify(criteria)); // Ensure it's treated as data
         const totalMarks = criteriaList.reduce((sum, c) => sum + c.maxMarks, 0);
 
-        if (totalMarks !== 100) {
-            return res.status(400).json({ error: `Total marks must be 100. Current total: ${totalMarks}` });
-        }
-
         const rubric = await prisma.rubric.create({
             data: {
                 name,
@@ -123,9 +119,6 @@ router.put('/:id', authenticate, authorize(['ADMIN']), rubricValidation.update, 
             const criteriaList = JSON.parse(JSON.stringify(criteria));
             const totalMarks = criteriaList.reduce((sum, c) => sum + c.maxMarks, 0);
 
-            if (totalMarks !== 100) {
-                return res.status(400).json({ error: `Total marks must be 100. Current total: ${totalMarks}` });
-            }
             updateData.criteria = JSON.stringify(criteria);
             updateData.totalMarks = totalMarks;
         }

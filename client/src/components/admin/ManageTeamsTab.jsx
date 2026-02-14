@@ -27,7 +27,8 @@ export default function ManageTeamsTab({
     unassignFacultyFromTeam,
     assignFacultyToTeam,
     facultyList = [],
-    scopes = []
+    scopes = [],
+
 }) {
     const [selectedTeam, setSelectedTeam] = useState(null);
     const [teamSearchTerm, setTeamSearchTerm] = useState('');
@@ -42,6 +43,7 @@ export default function ManageTeamsTab({
 
     // State for Manual Team Creation
     const [selectedBatchId, setSelectedBatchId] = useState('');
+    const [projectAssignSearch, setProjectAssignSearch] = useState('');
 
     const findProjectBatch = (projId) => {
         const p = projects.find(proj => proj.id === projId);
@@ -156,10 +158,10 @@ export default function ManageTeamsTab({
                         {selectedTeam && (
                             <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-4 animate-in fade-in slide-in-from-top-2 duration-200">
                                 <div className="flex justify-between items-start mb-4">
-                                    <div>
-                                        <h3 className="font-bold text-indigo-900">Team Details</h3>
-                                        <div className="flex gap-2 items-center">
-                                            <p className="text-xs text-indigo-600">ID: {selectedTeam.id.split('-')[0]}...</p>
+                                    <div className="space-y-1">
+                                        <h3 className="font-bold text-indigo-900 leading-tight">Team Details</h3>
+                                        <div className="flex flex-wrap gap-1 items-center">
+                                            <p className="text-[10px] text-indigo-400 font-mono">ID: {selectedTeam.id.split('-')[0]}...</p>
                                             <span className="bg-white/50 px-1.5 py-0.5 rounded text-[10px] font-black text-indigo-500 border border-indigo-200 uppercase tracking-tighter">
                                                 {scopes.find(s => s.id === selectedTeam.scopeId)?.name || 'Default Batch'}
                                             </span>
@@ -167,6 +169,8 @@ export default function ManageTeamsTab({
                                     </div>
                                     <StatusBadge status={selectedTeam.status} size="xs" />
                                 </div>
+
+
 
                                 {(() => {
                                     const currentScope = scopes.find(s => s.id === selectedTeam.scopeId);
@@ -185,7 +189,7 @@ export default function ManageTeamsTab({
                                                             <div className="flex flex-col">
                                                                 <span className="text-xs font-bold text-gray-800">{selectedTeam.guide.name}</span>
                                                                 <span className={`text-[8px] font-black uppercase tracking-wider ${selectedTeam.guideStatus === 'APPROVED' ? 'text-green-600' :
-                                                                        selectedTeam.guideStatus === 'REJECTED' ? 'text-red-600' : 'text-yellow-600'
+                                                                    selectedTeam.guideStatus === 'REJECTED' ? 'text-red-600' : 'text-yellow-600'
                                                                     }`}>
                                                                     {selectedTeam.guideStatus}
                                                                 </span>
@@ -234,7 +238,7 @@ export default function ManageTeamsTab({
                                                             <div className="flex flex-col">
                                                                 <span className="text-xs font-bold text-gray-800">{selectedTeam.subjectExpert.name}</span>
                                                                 <span className={`text-[8px] font-black uppercase tracking-wider ${selectedTeam.expertStatus === 'APPROVED' ? 'text-green-600' :
-                                                                        selectedTeam.expertStatus === 'REJECTED' ? 'text-red-600' : 'text-yellow-600'
+                                                                    selectedTeam.expertStatus === 'REJECTED' ? 'text-red-600' : 'text-yellow-600'
                                                                     }`}>
                                                                     {selectedTeam.expertStatus}
                                                                 </span>
@@ -510,6 +514,13 @@ export default function ManageTeamsTab({
                     <form onSubmit={assignProjectToTeam} className="space-y-4">
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-2">Select Project</label>
+                            <SearchInput
+                                value={projectAssignSearch}
+                                onChange={setProjectAssignSearch}
+                                placeholder="Search projects..."
+                                className="mb-2"
+                                disabled={!selectedTeam || selectedTeam.projectId}
+                            />
                             <select
                                 required
                                 disabled={!selectedTeam || selectedTeam.projectId}
@@ -521,6 +532,7 @@ export default function ManageTeamsTab({
                                 {projects
                                     .filter(p => p.status === 'AVAILABLE')
                                     .filter(p => selectedTeam?.scopeId ? p.scopeId === selectedTeam.scopeId : true)
+                                    .filter(p => p.title.toLowerCase().includes(projectAssignSearch.toLowerCase()))
                                     .map(p => (
                                         <option key={p.id} value={p.id}>
                                             {p.title} (Max: {p.maxTeamSize})

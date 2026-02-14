@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { X, Upload, Info, RefreshCw } from 'lucide-react';
+import { useToast } from '../../context/ToastContext';
 
 export default function BulkImportModal({ isOpen, onClose, type, onImport }) {
     const [input, setInput] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
+    const { addToast } = useToast();
 
     if (!isOpen) return null;
 
@@ -26,7 +28,7 @@ export default function BulkImportModal({ isOpen, onClose, type, onImport }) {
     const getPlaceholder = () => {
         switch (type) {
             case 'STUDENT':
-                return "21BCS101, John Doe, john@example.com, CSE, 3\n21BCS102, Jane Smith, jane@example.com, ECE, 2";
+                return "7376232AL172, NITHIYAN K, nithiyan.al23@bitsathy.ac.in, Artificial Intelligence and Machine Learning, 3,\n...";
             case 'FACULTY':
                 return "FAC001, Dr. Robert Wilson, robert@university.edu, Yes, No\nFAC002, Prof. Sarah Connor, sarah@university.edu, No, Yes";
             case 'GUIDE_LIST':
@@ -41,7 +43,7 @@ export default function BulkImportModal({ isOpen, onClose, type, onImport }) {
 
     const handleImport = async () => {
         const lines = input.split('\n').filter(line => line.trim() !== '');
-        if (lines.length === 0) return alert("Please enter some data.");
+        if (lines.length === 0) return addToast("Please enter some data.", 'warning');
 
         setIsProcessing(true);
         try {
@@ -89,7 +91,7 @@ export default function BulkImportModal({ isOpen, onClose, type, onImport }) {
             onClose();
         } catch (err) {
             console.error(err);
-            alert("Errors during parsing or import. Check format.");
+            addToast(err.message || "Errors during parsing or import. Check format.", 'error');
         } finally {
             setIsProcessing(false);
         }

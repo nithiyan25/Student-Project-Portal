@@ -1,6 +1,8 @@
 import React, { useContext } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, AuthContext } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
+import { ConfirmProvider } from './context/ConfirmContext';
 import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
 import FacultyDashboard from './pages/FacultyDashboard';
@@ -38,33 +40,37 @@ const LoginWrapper = () => {
 export default function App() {
   return (
     <AuthProvider>
-      <Routes>
-        <Route path="/" element={<LoginWrapper />} />
+      <ToastProvider>
+        <ConfirmProvider>
+          <Routes>
+            <Route path="/" element={<LoginWrapper />} />
 
-        <Route path="/admin" element={
-          <ProtectedRoute roles={['ADMIN']}>
-            <AdminDashboard />
-          </ProtectedRoute>
-        } />
+            <Route path="/admin" element={
+              <ProtectedRoute roles={['ADMIN']}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } />
 
-        <Route path="/student" element={
-          <ProtectedRoute roles={['STUDENT']}>
-            <StudentDashboard />
-          </ProtectedRoute>
-        } />
+            <Route path="/student" element={
+              <ProtectedRoute roles={['STUDENT']}>
+                <StudentDashboard />
+              </ProtectedRoute>
+            } />
 
-        <Route path="/student/batch/:scopeId" element={
-          <ProtectedRoute roles={['STUDENT']}>
-            <StudentBatchDetail />
-          </ProtectedRoute>
-        } />
+            <Route path="/student/batch/:scopeId" element={
+              <ProtectedRoute roles={['STUDENT']}>
+                <StudentBatchDetail />
+              </ProtectedRoute>
+            } />
 
-        <Route path="/faculty" element={
-          <ProtectedRoute roles={['FACULTY', 'ADMIN']}>
-            <FacultyDashboard />
-          </ProtectedRoute>
-        } />
-      </Routes>
+            <Route path="/faculty" element={
+              <ProtectedRoute roles={['FACULTY', 'ADMIN']}>
+                <FacultyDashboard />
+              </ProtectedRoute>
+            } />
+          </Routes>
+        </ConfirmProvider>
+      </ToastProvider>
     </AuthProvider>
   );
 }

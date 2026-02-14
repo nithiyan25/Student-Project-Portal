@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import api from '../../api';
 import BulkImportModal from '../ui/BulkImportModal';
 import { Save, UserCheck, Shield, Search } from 'lucide-react';
+import { useToast } from '../../context/ToastContext';
 
 export default function SettingsTab() {
+    const { addToast } = useToast();
     const [settings, setSettings] = useState({
         requireGuide: 'false',
         requireSubjectExpert: 'false'
@@ -51,9 +53,9 @@ export default function SettingsTab() {
     const saveSettings = async () => {
         try {
             await api.put('/settings', { settings });
-            alert("Settings saved successfully!");
+            addToast("Settings saved successfully!", 'success');
         } catch (e) {
-            alert("Failed to save settings");
+            addToast("Failed to save settings", 'error');
         }
     };
 
@@ -72,7 +74,7 @@ export default function SettingsTab() {
                 [roleType]: !currentValue // Toggle
             });
         } catch (e) {
-            alert("Error updating faculty role");
+            addToast("Error updating faculty role", 'error');
             fetchFaculty(); // Revert on error
         }
     };
@@ -92,12 +94,11 @@ export default function SettingsTab() {
             // Extract emails from data (format: [{email: '...'}, ...])
             const emails = data.map(d => d.email).filter(e => e);
 
-            const res = await api.post('/users/bulk-roles', { emails, roleType });
-            alert(`Success! ${res.data.message}`);
+            addToast(`Success! ${res.data.message}`, 'success');
             fetchFaculty(); // Refresh list to see updates
         } catch (e) {
             console.error(e);
-            alert("Failed to update roles.");
+            throw e; // Let modal handle error toast
         }
     };
 

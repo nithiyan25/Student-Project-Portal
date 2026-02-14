@@ -14,6 +14,7 @@ const adminRoutes = require('./routes/admin');
 const exportRoutes = require('./routes/export');
 const settingsRoutes = require('./routes/settings');
 const scopesRoutes = require('./routes/scopes');
+
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 
 const app = express();
@@ -62,6 +63,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/scopes', scopesRoutes);
 app.use('/api/rubrics', require('./routes/rubrics'));
 app.use('/api/faculty', require('./routes/faculty'));
+app.use('/api/venues', require('./routes/venue'));
 
 
 const { authenticate, authorize } = require('./middleware/auth');

@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { Trash2, Clock, AlertTriangle, Edit2, Check, X, Search, Layers } from 'lucide-react';
+import { Trash2, Clock, AlertTriangle, Edit2, Check, X, Search, Layers, ChevronLeft, ChevronRight, User } from 'lucide-react';
 import SearchInput from '../ui/SearchInput';
 import BulkAssignModal from './BulkAssignModal';
+import ManualPhaseAssignModal from './ManualPhaseAssignModal';
+import { useToast } from '../../context/ToastContext';
+import { useConfirm } from '../../context/ConfirmContext';
 
 export default function FacultyAssignmentsTab({
     projects,
@@ -20,6 +23,8 @@ export default function FacultyAssignmentsTab({
     users,
     assignmentSearch,
     setAssignmentSearch,
+    pagination,
+    setPagination,
     reviewPhase,
     setReviewPhase,
     reviewMode,
@@ -29,12 +34,20 @@ export default function FacultyAssignmentsTab({
     api,
     loadData,
     onOpenReleaseReviews,
-    scopes
+    scopes,
+    expiredFilter,
+    setExpiredFilter
 }) {
+    const { addToast } = useToast();
+    const { confirm } = useConfirm();
     const [editingId, setEditingId] = useState(null);
     const [tempDuration, setTempDuration] = useState(null);
     const [isBulkAssignOpen, setIsBulkAssignOpen] = useState(false);
+    const [isManualPhaseOpen, setIsManualPhaseOpen] = useState(false);
     const [selectedIds, setSelectedIds] = useState([]);
+    const [bulkDuration, setBulkDuration] = useState(24);
+    const [rollNumbersInput, setRollNumbersInput] = useState('');
+    const [isBulkSelectVisible, setIsBulkSelectVisible] = useState(false);
 
     const facultyUsers = users.filter(u => u.role === 'FACULTY');
     const assignedProjects = projects.filter(p => p.status === 'ASSIGNED');
@@ -48,30 +61,30 @@ export default function FacultyAssignmentsTab({
         try {
             await api.post('/admin/bulk-assign-faculty', payload);
             loadData();
-            alert("Bulk assignment successful!");
+            addToast("Bulk assignment successful!", 'success');
         } catch (e) {
-            alert(e.response?.data?.error || "Error during bulk assignment");
+            addToast(e.response?.data?.error || "Error during bulk assignment", 'error');
             throw e;
         }
     };
 
     const handleBulkRemove = async () => {
         if (selectedIds.length === 0) return;
-        if (!window.confirm(`Are you sure you want to remove ${selectedIds.length} selected assignments?`)) return;
+        if (!await confirm(`Are you sure you want to remove ${selectedIds.length} selected assignments?`)) return;
 
         try {
             await api.post('/admin/bulk-unassign-faculty', { assignmentIds: selectedIds });
             setSelectedIds([]);
             loadData();
-            alert("Bulk removal successful!");
+            addToast("Bulk removal successful!", 'success');
         } catch (e) {
-            alert(e.response?.data?.error || "Error during bulk removal");
+            addToast(e.response?.data?.error || "Error during bulk removal", 'error');
         }
     };
 
     const handleBulkAccessUpdate = async (duration) => {
         if (selectedIds.length === 0) return;
-        if (!window.confirm(`Update access duration for ${selectedIds.length} assignments?`)) return;
+        if (!await confirm(`Update access duration for ${selectedIds.length} assignments?`)) return;
 
         await bulkUpdateFacultyAccess(selectedIds, parseInt(duration));
         setSelectedIds([]);
@@ -89,6 +102,43 @@ export default function FacultyAssignmentsTab({
         setSelectedIds(prev =>
             prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
         );
+    };
+
+    const handleRollNumberSelect = async () => {
+        if (!rollNumbersInput.trim()) {
+            addToast("Please enter roll numbers", 'warning');
+            return;
+        }
+
+        const inputRolls = rollNumbersInput
+            .split(/[\s,]+/) // Split by space, comma, or newline
+            .map(r => r.trim())
+            .filter(Boolean);
+
+        if (inputRolls.length === 0) return;
+
+        try {
+            const res = await api.post('/admin/faculty-assignments/select-by-roll', {
+                rollNumbers: inputRolls,
+                expired: expiredFilter || false
+            });
+
+            const matchedIds = res.data.ids || [];
+            if (matchedIds.length === 0) {
+                addToast(`No assignments found for the given roll numbers.`, 'warning');
+                return;
+            }
+
+            setSelectedIds(prev => {
+                const merged = new Set([...prev, ...matchedIds]);
+                return Array.from(merged);
+            });
+            addToast(`Matched and selected ${matchedIds.length} assignments across all pages.`, 'success');
+            setRollNumbersInput('');
+            setIsBulkSelectVisible(false);
+        } catch (e) {
+            addToast(e.response?.data?.error || "Error selecting by roll numbers", 'error');
+        }
     };
 
     // Helper to check if access is expired
@@ -184,16 +234,14 @@ export default function FacultyAssignmentsTab({
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Hours</label>
-                            <select
+                            <input
+                                type="number"
+                                min="0"
+                                placeholder="∞ hrs"
                                 className="w-full border rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                                value={accessDurationHours || ''}
-                                onChange={(e) => setAccessDurationHours(e.target.value ? parseInt(e.target.value) : null)}
-                            >
-                                <option value="">∞ hrs</option>
-                                <option value="24">24h</option>
-                                <option value="48">48h</option>
-                                <option value="168">1wk</option>
-                            </select>
+                                value={accessDurationHours === null ? '' : accessDurationHours}
+                                onChange={(e) => setAccessDurationHours(e.target.value === '' ? null : parseInt(e.target.value))}
+                            />
                         </div>
                     </div>
                     <div>
@@ -211,14 +259,14 @@ export default function FacultyAssignmentsTab({
                             <button
                                 type="button"
                                 onClick={() => setReviewMode('OFFLINE')}
-                                className={`flex-1 py-1 px-2 rounded-md text-[10px] font-bold uppercase transition-all ${reviewMode === 'OFFLINE' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400'}`}
+                                className={`flex - 1 py - 1 px - 2 rounded - md text - [10px] font - bold uppercase transition - all ${reviewMode === 'OFFLINE' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400'} `}
                             >
                                 Offline
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setReviewMode('ONLINE')}
-                                className={`flex-1 py-1 px-2 rounded-md text-[10px] font-bold uppercase transition-all ${reviewMode === 'ONLINE' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400'}`}
+                                className={`flex - 1 py - 1 px - 2 rounded - md text - [10px] font - bold uppercase transition - all ${reviewMode === 'ONLINE' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400'} `}
                             >
                                 Online
                             </button>
@@ -237,57 +285,148 @@ export default function FacultyAssignmentsTab({
 
             {/* Current Assignments */}
             < div className="bg-white p-6 rounded-lg shadow-sm border" >
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-                    <div className="flex items-center gap-4">
-                        <h2 className="text-lg font-bold text-gray-800">Current Assignments ({facultyAssignments.length})</h2>
-                        <button
-                            onClick={() => setIsBulkAssignOpen(true)}
-                            className="bg-indigo-600 text-white px-4 py-1.5 rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-md shadow-indigo-100"
-                        >
-                            <Layers size={14} />
-                            Bulk Assign
-                        </button>
-                        <button
-                            onClick={onOpenReleaseReviews}
-                            className="bg-purple-600 text-white px-4 py-1.5 rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-purple-700 transition-all flex items-center gap-2 shadow-md shadow-purple-100"
-                        >
-                            <Check size={14} />
-                            Release Guide Reviews
-                        </button>
-                        {selectedIds.length > 0 && (
-                            <>
-                                <div className="relative group">
-                                    <button className="bg-amber-500 text-white px-4 py-1.5 rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-amber-600 transition-all flex items-center gap-2 shadow-md shadow-amber-100">
-                                        <Clock size={14} />
-                                        Extend Access
-                                    </button>
-                                    <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden hidden group-hover:block z-20">
-                                        <div className="py-1">
-                                            <button onClick={() => handleBulkAccessUpdate(0)} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium hover:text-indigo-600 transition-colors">Permanent Access</button>
-                                            <button onClick={() => handleBulkAccessUpdate(24)} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium hover:text-indigo-600 transition-colors">24 Hours</button>
-                                            <button onClick={() => handleBulkAccessUpdate(48)} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium hover:text-indigo-600 transition-colors">48 Hours</button>
-                                            <button onClick={() => handleBulkAccessUpdate(168)} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium hover:text-indigo-600 transition-colors">1 Week</button>
-                                            <button onClick={() => handleBulkAccessUpdate(720)} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 font-medium hover:text-indigo-600 transition-colors">1 Month</button>
-                                        </div>
-                                    </div>
-                                </div>
+                <div className="flex flex-col gap-4 mb-6">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <h2 className="text-lg font-bold text-gray-800">
+                            Current Assignments
+                            <span className="ml-2 text-xs font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{facultyAssignments.length} total</span>
+                        </h2>
+
+                        <div className="flex flex-wrap items-center gap-2">
+                            <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-lg border mr-2">
                                 <button
-                                    onClick={handleBulkRemove}
-                                    className="bg-red-600 text-white px-4 py-1.5 rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-red-700 transition-all flex items-center gap-2 shadow-md shadow-red-100 animate-in fade-in slide-in-from-left-2"
+                                    onClick={() => setExpiredFilter(!expiredFilter)}
+                                    className={`px-3 py-1.5 rounded-md font-bold text-[10px] uppercase tracking-wider transition-all flex items-center gap-2 ${expiredFilter ? 'bg-red-600 text-white shadow-sm' : 'hover:bg-gray-200 text-gray-500'}`}
                                 >
-                                    <Trash2 size={14} />
-                                    Bulk Remove ({selectedIds.length})
+                                    <Clock size={12} />
+                                    {expiredFilter ? 'Filter: Expired' : 'All Assignments'}
                                 </button>
-                            </>
+                                <button
+                                    onClick={() => setIsBulkSelectVisible(!isBulkSelectVisible)}
+                                    className={`px-3 py-1.5 rounded-md font-bold text-[10px] uppercase tracking-wider transition-all flex items-center gap-2 ${isBulkSelectVisible ? 'bg-blue-600 text-white shadow-sm' : 'hover:bg-gray-200 text-gray-500'}`}
+                                >
+                                    <User size={12} />
+                                    Bulk Select Roll#
+                                </button>
+                            </div>
+
+                            <SearchInput
+                                value={assignmentSearch}
+                                onChange={setAssignmentSearch}
+                                placeholder="Search faculty or project..."
+                                className="w-full sm:w-64"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 border-t pt-4">
+                        <div className="flex flex-wrap items-center gap-2 flex-1">
+                            <button
+                                onClick={() => setIsBulkAssignOpen(true)}
+                                className="bg-white border border-gray-200 text-gray-700 px-4 py-1.5 rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-gray-50 transition-all flex items-center gap-2"
+                            >
+                                <Layers size={14} className="text-indigo-600" />
+                                Bulk Assign
+                            </button>
+                            <button
+                                onClick={onOpenReleaseReviews}
+                                className="bg-white border border-gray-200 text-gray-700 px-4 py-1.5 rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-gray-50 transition-all flex items-center gap-2"
+                            >
+                                <Check size={14} className="text-purple-600" />
+                                Release Guide Reviews
+                            </button>
+                            <button
+                                onClick={() => setIsManualPhaseOpen(true)}
+                                className="bg-white border border-gray-200 text-gray-700 px-4 py-1.5 rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-gray-50 transition-all flex items-center gap-2"
+                            >
+                                <AlertTriangle size={14} className="text-orange-600" />
+                                Lagging Teams
+                            </button>
+                        </div>
+
+                        {selectedIds.length > 0 && (
+                            <div className="flex items-center gap-3 bg-amber-50 px-4 py-1.5 rounded-full border border-amber-200 shadow-sm animate-in fade-in slide-in-from-right-2">
+                                <span className="text-[10px] font-black text-amber-700 uppercase">{selectedIds.length} Selected</span>
+                                <div className="h-4 w-px bg-amber-200" />
+                                <div className="flex items-center gap-2">
+                                    <Clock size={14} className="text-amber-600" />
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        className="w-16 border border-amber-200 rounded px-2 py-0.5 text-xs font-bold focus:ring-1 ring-amber-500 outline-none bg-white"
+                                        value={bulkDuration}
+                                        onChange={(e) => setBulkDuration(e.target.value === '' ? '' : parseInt(e.target.value))}
+                                        placeholder="Hrs"
+                                    />
+                                    <button
+                                        onClick={() => handleBulkAccessUpdate(bulkDuration)}
+                                        className="bg-amber-600 text-white px-3 py-1 rounded-md text-[10px] font-bold uppercase hover:bg-amber-700 transition shadow-sm"
+                                    >
+                                        Update
+                                    </button>
+                                </div>
+                                <div className="h-4 w-px bg-amber-200" />
+                                <button
+                                    onClick={() => handleBulkRemove()}
+                                    className="text-red-600 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition-colors"
+                                    title="Unassign Selected"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                                <button
+                                    onClick={() => setSelectedIds([])}
+                                    className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
+                                    title="Clear Selection"
+                                >
+                                    <X size={16} />
+                                </button>
+                            </div>
                         )}
                     </div>
-                    <SearchInput
-                        value={assignmentSearch}
-                        onChange={setAssignmentSearch}
-                        placeholder="Search faculty or project..."
-                        className="w-full sm:w-64"
-                    />
                 </div>
+
+                {/* Bulk Select Input Panel */}
+                {isBulkSelectVisible && (
+                    <div className="mb-6 bg-blue-50/50 p-5 rounded-xl border border-blue-100 shadow-sm animate-in slide-in-from-top-4 duration-300">
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <div className="p-1.5 bg-blue-100 rounded-lg text-blue-600">
+                                        <User size={16} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-sm font-bold text-gray-800">Select Students per Roll Number</h3>
+                                        <p className="text-[11px] text-gray-500">Paste roll numbers separated by comma, space or new line to batch select their project assignments.</p>
+                                    </div>
+                                </div>
+                                <textarea
+                                    className="w-full border-2 border-blue-100 rounded-xl p-3 text-sm font-mono focus:ring-2 ring-blue-500/20 focus:border-blue-500 outline-none h-24 transition-all bg-white"
+                                    placeholder="e.g. 21CS001, 21CS042, 21CS099..."
+                                    value={rollNumbersInput}
+                                    onChange={(e) => setRollNumbersInput(e.target.value)}
+                                />
+                            </div>
+                            <div className="flex flex-col gap-2 pt-8">
+                                <button
+                                    onClick={handleRollNumberSelect}
+                                    className="bg-blue-600 text-white px-6 py-2.5 rounded-lg text-xs font-bold uppercase hover:bg-blue-700 transition shadow-lg shadow-blue-200 flex items-center gap-2"
+                                >
+                                    <Check size={14} />
+                                    Select Matches
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setIsBulkSelectVisible(false);
+                                        setRollNumbersInput('');
+                                    }}
+                                    className="bg-white text-gray-500 border border-gray-200 px-6 py-2.5 rounded-lg text-xs font-bold uppercase hover:bg-gray-50 transition"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <BulkAssignModal
                     isOpen={isBulkAssignOpen}
@@ -296,6 +435,15 @@ export default function FacultyAssignmentsTab({
                     faculty={facultyUsers}
                     onAssign={handleBulkAssign}
                     scopes={scopes}
+                />
+
+                <ManualPhaseAssignModal
+                    isOpen={isManualPhaseOpen}
+                    onClose={() => setIsManualPhaseOpen(false)}
+                    faculty={facultyUsers}
+                    scopes={scopes}
+                    api={api}
+                    onAssign={handleBulkAssign}
                 />
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
@@ -322,7 +470,7 @@ export default function FacultyAssignmentsTab({
                             {facultyAssignments.map(a => (
                                 <tr
                                     key={a.id}
-                                    className={`hover:bg-gray-50 text-sm transition-colors ${isExpired(a.accessExpiresAt) ? 'bg-red-50' : ''} ${selectedIds.includes(a.id) ? 'bg-indigo-50/50' : ''}`}
+                                    className={`hover: bg - gray - 50 text - sm transition - colors ${isExpired(a.accessExpiresAt) ? 'bg-red-50' : ''} ${selectedIds.includes(a.id) ? 'bg-indigo-50/50' : ''} `}
                                 >
                                     <td className="p-3">
                                         <input
@@ -361,7 +509,7 @@ export default function FacultyAssignmentsTab({
                                         </span>
                                     </td>
                                     <td className="p-3">
-                                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${a.mode === 'ONLINE' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}`}>
+                                        <span className={`text - [10px] px - 2 py - 0.5 rounded - full font - bold uppercase ${a.mode === 'ONLINE' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'} `}>
                                             {a.mode || 'OFFLINE'}
                                         </span>
                                     </td>
@@ -390,16 +538,14 @@ export default function FacultyAssignmentsTab({
                                                     <span className="text-[9px] font-bold text-gray-400 uppercase">Status: </span>
                                                     {editingId === a.id ? (
                                                         <div className="flex items-center gap-1 animate-in fade-in duration-200">
-                                                            <select
-                                                                className="border text-[10px] p-0.5 rounded bg-white focus:ring-1 ring-blue-500 outline-none"
-                                                                value={tempDuration || ''}
-                                                                onChange={e => setTempDuration(e.target.value ? parseInt(e.target.value) : null)}
-                                                            >
-                                                                <option value="">Perm</option>
-                                                                <option value="1">1h</option>
-                                                                <option value="24">1d</option>
-                                                                <option value="168">1w</option>
-                                                            </select>
+                                                            <input
+                                                                type="number"
+                                                                min="0"
+                                                                placeholder="Hrs"
+                                                                className="w-14 border text-[10px] p-0.5 rounded bg-white focus:ring-1 ring-blue-500 outline-none font-bold"
+                                                                value={tempDuration === null ? '' : tempDuration}
+                                                                onChange={e => setTempDuration(e.target.value === '' ? null : parseInt(e.target.value))}
+                                                            />
                                                             <button onClick={() => { updateFacultyAccess(a.id, tempDuration); setEditingId(null); }} className="p-0.5 text-green-600 hover:bg-green-50 rounded"><Check size={12} /></button>
                                                             <button onClick={() => setEditingId(null)} className="p-0.5 text-gray-400 hover:bg-gray-100 rounded"><X size={12} /></button>
                                                         </div>
@@ -438,6 +584,37 @@ export default function FacultyAssignmentsTab({
                     </table>
                 </div>
             </div >
+
+            {/* Pagination Controls */}
+            {pagination && pagination.totalPages > 1 && (
+                <div className="flex items-center justify-between mt-4 bg-white p-4 rounded-lg shadow-sm border">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+                        Page {pagination.page} of {pagination.totalPages}
+                    </span>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => {
+                                setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }));
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            disabled={pagination.page === 1}
+                            className="p-2 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-gray-600"
+                        >
+                            <ChevronLeft size={20} />
+                        </button>
+                        <button
+                            onClick={() => {
+                                setPagination(prev => ({ ...prev, page: Math.min(pagination.totalPages, prev.page + 1) }));
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            disabled={pagination.page === pagination.totalPages}
+                            className="p-2 border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-gray-600"
+                        >
+                            <ChevronRight size={20} />
+                        </button>
+                    </div>
+                </div>
+            )}
         </div >
     );
 }

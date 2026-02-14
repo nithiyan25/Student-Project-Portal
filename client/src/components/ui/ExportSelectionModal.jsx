@@ -10,7 +10,8 @@ export default function ExportSelectionModal({ isOpen, onClose, onExport }) {
         teams: true,
         facultyAssignments: true,
         reviewHistory: true,
-        studentScores: true
+        studentScores: true,
+        venueSchedule: true
     });
 
     const sheets = [
@@ -21,7 +22,8 @@ export default function ExportSelectionModal({ isOpen, onClose, onExport }) {
         { key: 'teams', label: 'Teams', description: 'All team information' },
         { key: 'facultyAssignments', label: 'Faculty Assignments', description: 'Faculty-project assignments' },
         { key: 'reviewHistory', label: 'Review History', description: 'All review records' },
-        { key: 'studentScores', label: 'Student Scores', description: 'Individual student marks' }
+        { key: 'studentScores', label: 'Student Scores', description: 'Individual student marks' },
+        { key: 'venueSchedule', label: 'Venue Schedule', description: 'Lab session schedules and venue assignments' }
     ];
 
     const handleToggle = (key) => {
@@ -94,8 +96,8 @@ export default function ExportSelectionModal({ isOpen, onClose, onExport }) {
                             <label
                                 key={sheet.key}
                                 className={`flex items-start gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all ${selectedSheets[sheet.key]
-                                        ? 'bg-green-50 border-green-200 shadow-sm'
-                                        : 'bg-gray-50 border-gray-100 hover:border-gray-200'
+                                    ? 'bg-green-50 border-green-200 shadow-sm'
+                                    : 'bg-gray-50 border-gray-100 hover:border-gray-200'
                                     }`}
                             >
                                 <input

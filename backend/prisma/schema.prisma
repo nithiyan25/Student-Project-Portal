@@ -8,22 +8,22 @@ datasource db {
 }
 
 model project {
-  id               String             @id @default(cuid())
-  title            String
-  category         String
-  maxTeamSize      Int
-  status           project_status     @default(AVAILABLE)
-  session          String?
-  description      String?            @db.Text
-  createdAt        DateTime           @default(now())
-  scopeId          String?
-  scope            projectscope?      @relation(fields: [scopeId], references: [id], map: "Project_scopeId_fkey")
-  projectRequests  projectrequest[]
-  reviews          review[]
-  assignedFaculty  reviewassignment[]
-  teams            team[]
-  techStack        String?            @db.Text
-  srs              String?            @db.Text
+  id              String             @id @default(cuid())
+  title           String
+  category        String
+  maxTeamSize     Int
+  status          project_status     @default(AVAILABLE)
+  session         String?
+  description     String?            @db.Text
+  createdAt       DateTime           @default(now())
+  scopeId         String?
+  techStack       String?            @db.Text
+  srs             String?            @db.Text
+  scope           projectscope?      @relation(fields: [scopeId], references: [id], map: "Project_scopeId_fkey")
+  projectRequests projectrequest[]
+  reviews         review[]
+  assignedFaculty reviewassignment[]
+  teams           team[]
 
   @@index([category], map: "Project_category_idx")
   @@index([scopeId], map: "Project_scopeId_fkey")
@@ -52,19 +52,39 @@ model projectrequest {
 }
 
 model projectscope {
-  id                   String    @id @default(cuid())
-  name                 String
-  description          String?   @db.Text
-  isActive             Boolean   @default(true)
-  type                 String?
-  requireGuide         Boolean   @default(false)
-  requireSubjectExpert Boolean   @default(false)
-  numberOfPhases       Int       @default(4)
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime
-  projects             project[]
-  teams                team[]
-  students             user[]    @relation("projectscopetouser")
+  id                    String          @id @default(cuid())
+  name                  String
+  description           String?         @db.Text
+  isActive              Boolean         @default(true)
+  type                  String?
+  requireGuide          Boolean         @default(false)
+  requireSubjectExpert  Boolean         @default(false)
+  numberOfPhases        Int             @default(4)
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  resultsPublished      Boolean         @default(false)
+  isTimerRunning        Boolean         @default(false)
+  timerLastUpdated      DateTime?
+  timerRemainingSeconds Int?            @default(0)
+  timerTotalHours       Float?
+  labsession            labsession[]
+  projects              project[]
+  teams                 team[]
+  deadlines             PhaseDeadline[]
+  students              user[]          @relation("projectscopetouser")
+}
+
+model PhaseDeadline {
+  id        String       @id @default(cuid())
+  phase     Int
+  deadline  DateTime
+  scopeId   String
+  scope     projectscope @relation(fields: [scopeId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@unique([scopeId, phase])
+  @@index([scopeId])
 }
 
 model review {
@@ -90,17 +110,17 @@ model review {
 }
 
 model reviewassignment {
-  id              String       @id @default(cuid())
+  id              String      @id @default(cuid())
   projectId       String
   facultyId       String
-  assignedAt      DateTime     @default(now())
+  assignedAt      DateTime    @default(now())
   assignedBy      String
   accessStartsAt  DateTime?
   accessExpiresAt DateTime?
   reviewPhase     Int?
-  mode            review_mode  @default(OFFLINE)
-  faculty         user         @relation(fields: [facultyId], references: [id], onDelete: Cascade, map: "ReviewAssignment_facultyId_fkey")
-  project         project      @relation(fields: [projectId], references: [id], onDelete: Cascade, map: "ReviewAssignment_projectId_fkey")
+  mode            review_mode @default(OFFLINE)
+  faculty         user        @relation(fields: [facultyId], references: [id], onDelete: Cascade, map: "ReviewAssignment_facultyId_fkey")
+  project         project     @relation(fields: [projectId], references: [id], onDelete: Cascade, map: "ReviewAssignment_projectId_fkey")
 
   @@unique([projectId, facultyId, reviewPhase], map: "ReviewAssignment_projectId_facultyId_reviewPhase_key")
   @@index([facultyId], map: "ReviewAssignment_facultyId_idx")
@@ -113,6 +133,7 @@ model reviewmark {
   studentId      String
   marks          Int
   criterionMarks String? @db.LongText
+  isAbsent       Boolean @default(false)
   review         review  @relation(fields: [reviewId], references: [id], onDelete: Cascade, map: "ReviewMark_reviewId_fkey")
   student        user    @relation(fields: [studentId], references: [id], map: "ReviewMark_studentId_fkey")
 
@@ -140,26 +161,27 @@ model systemsettings {
   id        String   @id @default(cuid())
   key       String   @unique(map: "SystemSettings_key_key")
   value     String   @db.Text
-  updatedAt DateTime
+  updatedAt DateTime @updatedAt
 }
 
 model team {
-  id               String           @id @default(cuid())
-  projectId        String?
-  scopeId          String?
-  status           team_status      @default(PENDING)
-  createdAt        DateTime         @default(now())
-  guideId          String?
-  guideStatus      faculty_approval_status @default(PENDING)
-  subjectExpertId  String?
-  expertStatus     faculty_approval_status @default(PENDING)
-  projectRequests  projectrequest[]
-  reviews          review[]
-  guide            user?            @relation("team_guideIdTouser", fields: [guideId], references: [id], map: "Team_guideId_fkey")
-  project          project?         @relation(fields: [projectId], references: [id], map: "Team_projectId_fkey")
-  scope            projectscope?    @relation(fields: [scopeId], references: [id], map: "Team_scopeId_fkey")
-  subjectExpert    user?            @relation("team_subjectExpertIdTouser", fields: [subjectExpertId], references: [id], map: "Team_subjectExpertId_fkey")
-  members          teammember[]
+  id              String                  @id @default(cuid())
+  projectId       String?
+  scopeId         String?
+  status          team_status             @default(PENDING)
+  createdAt       DateTime                @default(now())
+  guideId         String?
+  guideStatus     faculty_approval_status @default(PENDING)
+  subjectExpertId String?
+  expertStatus    faculty_approval_status @default(PENDING)
+  submissionPhase Int?
+  projectRequests projectrequest[]
+  reviews         review[]
+  guide           user?                   @relation("team_guideIdTouser", fields: [guideId], references: [id], map: "Team_guideId_fkey")
+  project         project?                @relation(fields: [projectId], references: [id], map: "Team_projectId_fkey")
+  scope           projectscope?           @relation(fields: [scopeId], references: [id], map: "Team_scopeId_fkey")
+  subjectExpert   user?                   @relation("team_subjectExpertIdTouser", fields: [subjectExpertId], references: [id], map: "Team_subjectExpertId_fkey")
+  members         teammember[]
 
   @@index([guideId], map: "Team_guideId_idx")
   @@index([projectId], map: "Team_projectId_idx")
@@ -182,29 +204,63 @@ model teammember {
 }
 
 model user {
-  id                    String             @id @default(cuid())
-  email                 String             @unique(map: "User_email_key")
-  rollNumber            String?            @unique(map: "User_rollNumber_key")
-  name                  String
-  role                  user_role
-  department            String?
-  year                  Int?
-  isTemporaryAdmin      Boolean            @default(false)
-  tempAdminTabs         String?            @db.Text
-  createdAt             DateTime           @default(now())
-  isGuide               Boolean            @default(false)
-  isSubjectExpert       Boolean            @default(false)
-  reviews               review[]
-  assignedReviews       reviewassignment[]
-  reviewMarks           reviewmark[]
-  guidedTeams           team[]             @relation("team_guideIdTouser")
-  expertTeams           team[]             @relation("team_subjectExpertIdTouser")
-  teamMemberships       teammember[]
-  scopes                projectscope[]     @relation("projectscopetouser")
+  id                                    String             @id @default(cuid())
+  email                                 String             @unique(map: "User_email_key")
+  rollNumber                            String?            @unique(map: "User_rollNumber_key")
+  name                                  String
+  role                                  user_role
+  department                            String?
+  year                                  Int?
+  isTemporaryAdmin                      Boolean            @default(false)
+  createdAt                             DateTime           @default(now())
+  isGuide                               Boolean            @default(false)
+  isSubjectExpert                       Boolean            @default(false)
+  tempAdminTabs                         String?            @db.Text
+  labsession_labsession_facultyIdTouser labsession[]       @relation("labsession_facultyIdTouser")
+  reviews                               review[]
+  assignedReviews                       reviewassignment[]
+  reviewMarks                           reviewmark[]
+  guidedTeams                           team[]             @relation("team_guideIdTouser")
+  expertTeams                           team[]             @relation("team_subjectExpertIdTouser")
+  teamMemberships                       teammember[]
+  scopes                                projectscope[]     @relation("projectscopetouser")
+  labsession_sessionstudents            labsession[]       @relation("sessionstudents")
 
   @@index([department], map: "User_department_idx")
   @@index([role], map: "User_role_idx")
   @@index([year], map: "User_year_idx")
+}
+
+model labsession {
+  id                              String       @id @default(cuid())
+  venueId                         String
+  facultyId                       String
+  scopeId                         String
+  startTime                       DateTime
+  endTime                         DateTime
+  title                           String?
+  createdAt                       DateTime     @default(now())
+  updatedAt                       DateTime     @updatedAt
+  user_labsession_facultyIdTouser user         @relation("labsession_facultyIdTouser", fields: [facultyId], references: [id], map: "LabSession_facultyId_fkey")
+  projectscope                    projectscope @relation(fields: [scopeId], references: [id], map: "LabSession_scopeId_fkey")
+  venue                           venue        @relation(fields: [venueId], references: [id], map: "LabSession_venueId_fkey")
+  user_sessionstudents            user[]       @relation("sessionstudents")
+
+  @@index([facultyId], map: "LabSession_facultyId_idx")
+  @@index([scopeId], map: "LabSession_scopeId_idx")
+  @@index([startTime], map: "LabSession_startTime_idx")
+  @@index([venueId], map: "LabSession_venueId_idx")
+}
+
+
+model venue {
+  id         String       @id @default(cuid())
+  name       String
+  location   String?
+  capacity   Int?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  labsession labsession[]
 }
 
 enum review_status {

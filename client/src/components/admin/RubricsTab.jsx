@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api';
 import { Plus, Trash2, Edit2, CheckCircle, AlertCircle, LayoutList, ChevronDown, ChevronUp } from 'lucide-react';
+import { useToast } from '../../context/ToastContext';
+import { useConfirm } from '../../context/ConfirmContext';
 
 export default function RubricsTab() {
     const [rubrics, setRubrics] = useState([]);
@@ -8,6 +10,9 @@ export default function RubricsTab() {
     const [loading, setLoading] = useState(true);
     const [filterCategory, setFilterCategory] = useState('');
     const [filterPhase, setFilterPhase] = useState('');
+
+    const { addToast } = useToast();
+    const { confirm } = useConfirm();
 
     // Modal State
     const [showModal, setShowModal] = useState(false);
@@ -95,33 +100,31 @@ export default function RubricsTab() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         const total = calculateTotal();
-        if (total !== 100) {
-            alert(`Total marks must be exactly 100. Current total: ${total}`);
-            return;
-        }
+        const formDataWithTotal = { ...formData, totalMarks: total };
 
         try {
             if (editingRubric) {
-                await api.put(`/rubrics/${editingRubric.id}`, formData);
-                alert('Rubric updated successfully');
+                await api.put(`/rubrics/${editingRubric.id}`, formDataWithTotal);
+                addToast('Rubric updated successfully', 'success');
             } else {
-                await api.post('/rubrics', formData);
-                alert('Rubric created successfully');
+                await api.post('/rubrics', formDataWithTotal);
+                addToast('Rubric created successfully', 'success');
             }
             setShowModal(false);
             fetchRubrics();
         } catch (error) {
-            alert(error.response?.data?.error || "Failed to save rubric");
+            addToast(error.response?.data?.error || "Failed to save rubric", 'error');
         }
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this rubric?')) return;
+        if (!await confirm('Are you sure you want to delete this rubric?', 'Delete Rubric', 'danger')) return;
         try {
             await api.delete(`/rubrics/${id}`);
+            addToast('Rubric deleted successfully', 'success');
             fetchRubrics();
         } catch (error) {
-            alert(error.response?.data?.error || "Failed to delete rubric");
+            addToast(error.response?.data?.error || "Failed to delete rubric", 'error');
         }
     };
 
@@ -272,9 +275,9 @@ export default function RubricsTab() {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-1">Total Marks</label>
-                                    <div className={`w-full px-3 py-2 border rounded-lg font-mono font-bold flex justify-between ${totalMarks === 100 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-600 border-red-200'}`}>
+                                    <div className="w-full px-3 py-2 border rounded-lg font-mono font-bold flex justify-between bg-blue-50 text-blue-700 border-blue-200">
                                         <span>Current Total:</span>
-                                        <span>{totalMarks} / 100</span>
+                                        <span>{totalMarks}</span>
                                     </div>
                                 </div>
                                 <div>
@@ -402,8 +405,7 @@ export default function RubricsTab() {
                             </button>
                             <button
                                 onClick={handleSubmit}
-                                disabled={totalMarks !== 100}
-                                className={`px-6 py-2 text-white font-bold rounded-lg shadow-lg transition flex items-center gap-2 ${totalMarks === 100 ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-200' : 'bg-gray-400 cursor-not-allowed'}`}
+                                className="px-6 py-2 text-white font-bold rounded-lg shadow-lg transition flex items-center gap-2 bg-blue-600 hover:bg-blue-700 shadow-blue-200"
                             >
                                 {editingRubric ? 'Update Rubric' : 'Create Rubric'}
                             </button>

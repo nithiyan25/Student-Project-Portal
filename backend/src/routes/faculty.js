@@ -17,7 +17,20 @@ router.get('/requests', authenticate, authorize(['FACULTY']), async (req, res, n
             },
             include: {
                 project: true,
-                members: { include: { user: true } },
+                members: {
+                    include: {
+                        user: {
+                            include: {
+                                labsession_sessionstudents: {
+                                    where: { endTime: { gte: new Date(new Date().setHours(0, 0, 0, 0)) } },
+                                    include: { venue: true },
+                                    orderBy: { startTime: 'asc' },
+                                    take: 1
+                                }
+                            }
+                        }
+                    }
+                },
                 subjectExpert: true
             }
         });
@@ -30,7 +43,20 @@ router.get('/requests', authenticate, authorize(['FACULTY']), async (req, res, n
             },
             include: {
                 project: true,
-                members: { include: { user: true } },
+                members: {
+                    include: {
+                        user: {
+                            include: {
+                                labsession_sessionstudents: {
+                                    where: { endTime: { gte: new Date(new Date().setHours(0, 0, 0, 0)) } },
+                                    include: { venue: true },
+                                    orderBy: { startTime: 'asc' },
+                                    take: 1
+                                }
+                            }
+                        }
+                    }
+                },
                 guide: true
             }
         });
@@ -136,7 +162,20 @@ router.get('/my-teams', authenticate, authorize(['FACULTY']), async (req, res, n
             },
             include: {
                 project: { include: { scope: true } },
-                members: { include: { user: true } },
+                members: {
+                    include: {
+                        user: {
+                            include: {
+                                labsession_sessionstudents: {
+                                    where: { endTime: { gte: new Date(new Date().setHours(0, 0, 0, 0)) } },
+                                    include: { venue: true },
+                                    orderBy: { startTime: 'asc' },
+                                    take: 1
+                                }
+                            }
+                        }
+                    }
+                },
                 guide: true,
                 subjectExpert: true,
                 reviews: {

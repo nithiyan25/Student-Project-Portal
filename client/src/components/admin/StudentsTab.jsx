@@ -123,7 +123,10 @@ export default function StudentsTab({
     setPagination,
     sortConfig,
     onSort,
-    updateUser
+    updateUser,
+    studentScopeFilter,
+    setStudentScopeFilter,
+    scopes
 }) {
     const [editingStudent, setEditingStudent] = React.useState(null);
 
@@ -244,6 +247,16 @@ export default function StudentsTab({
                         placeholder="Search..."
                         className="w-64"
                     />
+                    <select
+                        className="border rounded-md p-2 text-sm bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none"
+                        value={studentScopeFilter}
+                        onChange={(e) => setStudentScopeFilter(e.target.value)}
+                    >
+                        <option value="ALL">All Batches</option>
+                        {scopes?.map(scope => (
+                            <option key={scope.id} value={scope.id}>{scope.name}</option>
+                        ))}
+                    </select>
                 </div>
                 <div className="overflow-x-auto min-h-[400px]">
                     <table className="w-full text-left border-collapse">
@@ -340,6 +353,7 @@ export default function StudentsTab({
                             <option value="50">50 / page</option>
                             <option value="100">100 / page</option>
                             <option value="500">500 / page</option>
+                            <option value="10000">All</option>
                         </select>
                     </div>
                     <div className="flex gap-2">

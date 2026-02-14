@@ -10,7 +10,7 @@ const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <GoogleOAuthProvider clientId={clientId}>
-    <BrowserRouter basename="/projectportal">
+    <BrowserRouter basename="/projectportal/">
       <App />
     </BrowserRouter>
   </GoogleOAuthProvider>,

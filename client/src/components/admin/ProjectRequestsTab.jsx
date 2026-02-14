@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api';
 import { CheckCircle, XCircle, Clock, Search, Filter, MessageSquare, AlertCircle } from 'lucide-react';
+import { useToast } from '../../context/ToastContext';
+import { useConfirm } from '../../context/ConfirmContext';
 
 export default function ProjectRequestsTab({ scopes = [] }) {
     const [requests, setRequests] = useState([]);
@@ -9,10 +11,14 @@ export default function ProjectRequestsTab({ scopes = [] }) {
     const [filterStatus, setFilterStatus] = useState('PENDING');
     const [selectedScope, setSelectedScope] = useState('ALL');
     const [searchQuery, setSearchQuery] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
     const [selectedDepartment, setSelectedDepartment] = useState('');
+    const [counts, setCounts] = useState({ PENDING: 0, APPROVED: 0, REJECTED: 0, ALL: 0 });
 
-    // Pagination State
+    const { addToast } = useToast();
+    const { confirm } = useConfirm();
+
     const [pagination, setPagination] = useState({
         total: 0,
         page: 1,
@@ -20,11 +26,21 @@ export default function ProjectRequestsTab({ scopes = [] }) {
         totalPages: 1
     });
 
+    // Debounce search
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchQuery);
+            setPagination(prev => ({ ...prev, page: 1 }));
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+
     // Rejection Modal State
     const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
     const [selectedRequestId, setSelectedRequestId] = useState(null);
     const [rejectionReason, setRejectionReason] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isBulkReject, setIsBulkReject] = useState(false);
 
     // Bulk action state
     const [selectedIds, setSelectedIds] = useState([]);
@@ -36,11 +52,15 @@ export default function ProjectRequestsTab({ scopes = [] }) {
                 params: {
                     status: filterStatus,
                     scopeId: selectedScope,
+                    search: debouncedSearch,
+                    category: selectedCategory,
+                    department: selectedDepartment,
                     page: pagination.page,
                     limit: pagination.limit
                 }
             });
             setRequests(response.data.requests);
+            setCounts(response.data.counts || { PENDING: 0, APPROVED: 0, REJECTED: 0, ALL: 0 });
             setPagination(response.data.pagination);
             setError(null);
         } catch (err) {
@@ -53,47 +73,54 @@ export default function ProjectRequestsTab({ scopes = [] }) {
 
     useEffect(() => {
         fetchRequests();
-    }, [filterStatus, selectedScope, pagination.page]);
+    }, [filterStatus, selectedScope, debouncedSearch, selectedCategory, selectedDepartment, pagination.page, pagination.limit]);
 
     const handlePageChange = (newPage) => {
         setPagination(prev => ({ ...prev, page: newPage }));
     };
 
     const handleApprove = async (requestId) => {
-        if (!window.confirm('Are you sure you want to approve this project request? This will assign the project to the team and reject other pending requests for the same project.')) return;
+        if (!await confirm('Are you sure you want to approve this project request? This will assign the project to the team and reject other pending requests for the same project.', 'Confirm Approval')) return;
 
         try {
             const res = await api.post('/admin/approve-project-request', { requestId });
-            alert(res.data.message || 'Project request approved successfully!');
+            addToast(res.data.message || 'Project request approved successfully!', 'success');
             fetchRequests();
         } catch (err) {
-            alert(err.response?.data?.error || 'Failed to approve request');
+            addToast(err.response?.data?.error || 'Failed to approve request', 'error');
         }
     };
 
     const openRejectModal = (requestId) => {
         setSelectedRequestId(requestId);
         setRejectionReason('');
+        setIsBulkReject(false);
         setIsRejectModalOpen(true);
     };
 
     const handleReject = async () => {
         if (!rejectionReason.trim()) {
-            alert('Please provide a reason for rejection');
+            addToast('Please provide a reason for rejection', 'warning');
             return;
         }
 
         setIsSubmitting(true);
         try {
-            await api.post('/admin/reject-project-request', {
-                requestId: selectedRequestId,
-                rejectionReason
-            });
-            alert('Project request rejected');
+            if (isBulkReject) {
+                await api.post('/admin/bulk-reject-project-requests', { requestIds: selectedIds, rejectionReason });
+                addToast(`Successfully rejected ${selectedIds.length} requests`, 'success');
+                setSelectedIds([]);
+            } else {
+                await api.post('/admin/reject-project-request', {
+                    requestId: selectedRequestId,
+                    rejectionReason
+                });
+                addToast('Project request rejected', 'success');
+            }
             setIsRejectModalOpen(false);
             fetchRequests();
         } catch (err) {
-            alert(err.response?.data?.error || 'Failed to reject request');
+            addToast(err.response?.data?.error || 'Failed to reject request', 'error');
         } finally {
             setIsSubmitting(false);
         }
@@ -101,16 +128,16 @@ export default function ProjectRequestsTab({ scopes = [] }) {
 
     const handleBulkApprove = async () => {
         if (selectedIds.length === 0) return;
-        if (!window.confirm(`Are you sure you want to approve ${selectedIds.length} selected requests?`)) return;
+        if (!await confirm(`Are you sure you want to approve ${selectedIds.length} selected requests?`, 'Confirm Bulk Approval')) return;
 
         setIsSubmitting(true);
         try {
             const res = await api.post('/admin/bulk-approve-project-requests', { requestIds: selectedIds });
-            alert(res.data.message || `Successfully approved ${selectedIds.length} requests`);
+            addToast(res.data.message || `Successfully approved ${selectedIds.length} requests`, 'success');
             setSelectedIds([]);
             fetchRequests();
         } catch (err) {
-            alert(err.response?.data?.error || 'Failed to bulk approve');
+            addToast(err.response?.data?.error || 'Failed to bulk approve', 'error');
         } finally {
             setIsSubmitting(false);
         }
@@ -118,20 +145,9 @@ export default function ProjectRequestsTab({ scopes = [] }) {
 
     const handleBulkReject = async () => {
         if (selectedIds.length === 0) return;
-        const reason = window.prompt(`Reason for bulk rejection of ${selectedIds.length} requests:`, "Bulk rejection by Admin");
-        if (reason === null) return;
-
-        setIsSubmitting(true);
-        try {
-            await api.post('/admin/bulk-reject-project-requests', { requestIds: selectedIds, rejectionReason: reason });
-            alert(`Successfully rejected ${selectedIds.length} requests`);
-            setSelectedIds([]);
-            fetchRequests();
-        } catch (err) {
-            alert(err.response?.data?.error || 'Failed to bulk reject');
-        } finally {
-            setIsSubmitting(false);
-        }
+        setRejectionReason('');
+        setIsBulkReject(true);
+        setIsRejectModalOpen(true);
     };
 
     const toggleSelect = (id) => {
@@ -143,23 +159,11 @@ export default function ProjectRequestsTab({ scopes = [] }) {
     const categories = [...new Set(requests.map(req => req.project?.category).filter(Boolean))];
     const departments = [...new Set(requests.flatMap(req => req.team?.members?.map(m => m.user?.department)).filter(Boolean))];
 
-    const filteredRequests = requests.filter(req => {
-        const matchesSearch = req.project?.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            req.team?.members?.some(m => m.user?.name.toLowerCase().includes(searchQuery.toLowerCase()));
-
-        const matchesCategory = !selectedCategory || req.project?.category === selectedCategory;
-
-        const matchesDepartment = !selectedDepartment ||
-            req.team?.members?.some(m => m.user?.department === selectedDepartment);
-
-        return matchesSearch && matchesCategory && matchesDepartment;
-    });
-
     const toggleSelectAll = () => {
-        if (selectedIds.length === filteredRequests.length && filteredRequests.length > 0) {
+        if (selectedIds.length === requests.length && requests.length > 0) {
             setSelectedIds([]);
         } else {
-            setSelectedIds(filteredRequests.map(r => r.id));
+            setSelectedIds(requests.map(r => r.id));
         }
     };
 
@@ -194,16 +198,22 @@ export default function ProjectRequestsTab({ scopes = [] }) {
                                 onClick={() => {
                                     setFilterStatus(status);
                                     setSelectedIds([]);
-                                    setSelectedCategory('');
-                                    setSelectedDepartment('');
                                     setPagination(prev => ({ ...prev, page: 1 }));
                                 }}
-                                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${filterStatus === status
+                                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${filterStatus === status
                                     ? 'bg-white text-blue-600 shadow-sm border border-gray-100'
                                     : 'text-gray-500 hover:text-gray-700'
                                     }`}
                             >
                                 {status}
+                                {counts[status] > 0 && (
+                                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${filterStatus === status
+                                        ? 'bg-blue-100 text-blue-600'
+                                        : (status === 'PENDING' ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-500')
+                                        }`}>
+                                        {counts[status]}
+                                    </span>
+                                )}
                             </button>
                         ))}
                     </div>
@@ -248,7 +258,10 @@ export default function ProjectRequestsTab({ scopes = [] }) {
 
                 <select
                     value={selectedDepartment}
-                    onChange={(e) => setSelectedDepartment(e.target.value)}
+                    onChange={(e) => {
+                        setSelectedDepartment(e.target.value);
+                        setPagination(prev => ({ ...prev, page: 1 }));
+                    }}
                     className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-xs font-bold text-gray-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                 >
                     <option value="">All Departments</option>
@@ -256,6 +269,19 @@ export default function ProjectRequestsTab({ scopes = [] }) {
                         <option key={dept} value={dept}>{dept}</option>
                     ))}
                 </select>
+
+                <div className="flex items-center gap-2 px-3 border-l ml-2">
+                    <span className="text-[10px] font-black text-gray-400 uppercase">Limit:</span>
+                    <select
+                        value={pagination.limit}
+                        onChange={(e) => setPagination(prev => ({ ...prev, limit: parseInt(e.target.value), page: 1 }))}
+                        className="bg-gray-50 border border-gray-200 rounded-xl px-2 py-1 text-xs font-bold text-gray-600 outline-none transition-all"
+                    >
+                        {[12, 24, 50, 100, 500].map(l => (
+                            <option key={l} value={l}>{l}</option>
+                        ))}
+                    </select>
+                </div>
 
                 {(selectedCategory || selectedDepartment || searchQuery || selectedScope !== 'ALL') && (
                     <button
@@ -274,16 +300,16 @@ export default function ProjectRequestsTab({ scopes = [] }) {
 
                 <div className="flex-1"></div>
 
-                {filteredRequests.length > 0 && (
+                {requests.length > 0 && (
                     <button
                         onClick={toggleSelectAll}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border ${selectedIds.length === filteredRequests.length && filteredRequests.length > 0
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border ${selectedIds.length === requests.length && requests.length > 0
                             ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-100'
                             : 'bg-white border-gray-200 text-gray-600 hover:border-blue-400'
                             }`}
                     >
                         <CheckCircle size={14} />
-                        {selectedIds.length === filteredRequests.length ? 'Deselect All' : `Select All Visible (${filteredRequests.length})`}
+                        {selectedIds.length === requests.length ? 'Deselect All' : `Select All Visible (${requests.length})`}
                     </button>
                 )}
             </div>
@@ -296,8 +322,8 @@ export default function ProjectRequestsTab({ scopes = [] }) {
                             onClick={toggleSelectAll}
                             className="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition-colors"
                         >
-                            <div className={`w-5 h-5 border-2 rounded flex items-center justify-center ${selectedIds.length === filteredRequests.length ? 'bg-white border-white' : 'border-white'}`}>
-                                {selectedIds.length === filteredRequests.length && <CheckCircle size={14} className="text-blue-600" />}
+                            <div className={`w-5 h-5 border-2 rounded flex items-center justify-center ${selectedIds.length === requests.length ? 'bg-white border-white' : 'border-white'}`}>
+                                {selectedIds.length === requests.length && <CheckCircle size={14} className="text-blue-600" />}
                             </div>
                         </button>
                         <span className="font-bold">{selectedIds.length} items selected</span>
@@ -344,7 +370,7 @@ export default function ProjectRequestsTab({ scopes = [] }) {
             ) : (
                 <>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredRequests.map((req) => (
+                        {requests.map((req) => (
                             <div key={req.id} className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col">
                                 {/* Card Header */}
                                 <div className="p-6 pb-4">

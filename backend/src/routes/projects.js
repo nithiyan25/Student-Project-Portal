@@ -57,6 +57,19 @@ router.post('/bulk', authenticate, authorize(['ADMIN']), projectValidation.bulkC
     }
 });
 
+// GET ALL UNIQUE CATEGORIES
+router.get('/categories', authenticate, async (req, res, next) => {
+    try {
+        const categories = await prisma.project.findMany({
+            select: { category: true },
+            distinct: ['category']
+        });
+        res.json(categories.map(c => c.category));
+    } catch (e) {
+        next(e);
+    }
+});
+
 // GET ALL PROJECTS (with pagination and filtering)
 router.get('/', authenticate, commonValidations.pagination, async (req, res, next) => {
     try {
@@ -65,17 +78,46 @@ router.get('/', authenticate, commonValidations.pagination, async (req, res, nex
         const skip = (page - 1) * limit;
 
         // Optional filters and Sorting
-        const { status, category, session, search, sortBy = 'createdAt', order = 'desc', scopeId } = req.query;
+        const { status, category, session, search, sortBy = 'createdAt', order = 'desc', scopeId, hasSRS } = req.query;
         const where = {};
 
         if (status && status !== 'ALL') where.status = status;
         if (scopeId && scopeId !== 'ALL') where.scopeId = scopeId;
-        if (category) where.category = category;
+        if (category && category !== 'ALL') where.category = category;
         if (session) where.session = session;
+
+        if (hasSRS === 'true') {
+            where.AND = [
+                ...(where.AND || []),
+                { srs: { not: null } },
+                { srs: { not: "" } }
+            ];
+        } else if (hasSRS === 'false') {
+            where.OR = [
+                { srs: null },
+                { srs: "" }
+            ];
+        }
         if (search) {
             where.OR = [
                 { title: { contains: search } },
-                { description: { contains: search } }
+                { description: { contains: search } },
+                {
+                    teams: {
+                        some: {
+                            members: {
+                                some: {
+                                    user: {
+                                        OR: [
+                                            { name: { contains: search } },
+                                            { rollNumber: { contains: search } }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             ];
         }
 
@@ -263,19 +305,79 @@ router.post('/bulk-delete', authenticate, authorize(['ADMIN']), projectValidatio
 });
 
 // UPDATE PROJECT
-router.patch('/:id', authenticate, authorize(['ADMIN']), projectValidation.update, async (req, res, next) => {
+router.patch('/:id', authenticate, authorize(['ADMIN', 'FACULTY']), projectValidation.update, async (req, res, next) => {
     const { id } = req.params;
     try {
-        const { title, category, maxTeamSize, description, status } = req.body;
+        const { title, category, maxTeamSize, description, status, techStack, srs, scopeId } = req.body;
         const updateData = {};
-        if (title !== undefined) updateData.title = title;
-        if (category !== undefined) updateData.category = category;
-        if (maxTeamSize !== undefined) updateData.maxTeamSize = parseInt(maxTeamSize);
-        if (description !== undefined) updateData.description = description;
-        if (status !== undefined) updateData.status = status;
-        if (req.body.techStack !== undefined) updateData.techStack = req.body.techStack;
-        if (req.body.srs !== undefined) updateData.srs = req.body.srs;
-        if (req.body.scopeId !== undefined) updateData.scopeId = req.body.scopeId;
+
+        // ADMIN Access: Allow all fields
+        if (req.user.role === 'ADMIN') {
+            if (title !== undefined) updateData.title = title;
+            if (category !== undefined) updateData.category = category;
+            if (maxTeamSize !== undefined) updateData.maxTeamSize = parseInt(maxTeamSize);
+            if (description !== undefined) updateData.description = description;
+            if (status !== undefined) updateData.status = status;
+            if (techStack !== undefined) updateData.techStack = techStack;
+            if (srs !== undefined) updateData.srs = srs;
+            if (scopeId !== undefined) updateData.scopeId = scopeId;
+        }
+        // FACULTY Access: Check Role/Schedule & Restrict Fields
+        else if (req.user.role === 'FACULTY') {
+            // 1. Check if Guide/Expert for any team assigned to this project
+            const isMentor = await prisma.team.findFirst({
+                where: {
+                    projectId: id,
+                    OR: [
+                        { guideId: req.user.id },
+                        { subjectExpertId: req.user.id }
+                    ]
+                }
+            });
+
+            // 2. Check if Assigned Reviewer for this project
+            const isReviewer = await prisma.reviewassignment.findFirst({
+                where: {
+                    projectId: id,
+                    facultyId: req.user.id
+                }
+            });
+
+            // 3. Check for Active Lab Session TODAY with any student from this project
+            const todayStart = new Date();
+            todayStart.setHours(0, 0, 0, 0);
+            const todayEnd = new Date();
+            todayEnd.setHours(23, 59, 59, 999);
+
+            const session = await prisma.labsession.findFirst({
+                where: {
+                    facultyId: req.user.id,
+                    startTime: { gte: todayStart },
+                    endTime: { lte: todayEnd },
+                    students: {
+                        some: {
+                            teamMemberships: {
+                                some: {
+                                    team: { projectId: id }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            if (!isMentor && !isReviewer && !session) {
+                return res.status(403).json({ error: "Access denied. You must be a guide, expert, reviewer, or scheduled supervisor to edit this project." });
+            }
+
+            // Allow only SRS and Tech Stack
+            if (techStack !== undefined) updateData.techStack = techStack;
+            if (srs !== undefined) updateData.srs = srs;
+
+            if (Object.keys(updateData).length === 0) {
+                return res.status(400).json({ error: "No allowed fields to update. Faculty can only edit SRS and Tech Stack." });
+            }
+        }
 
         const updatedProject = await prisma.project.update({
             where: { id },

@@ -1,6 +1,8 @@
 import React from 'react';
-import { FolderPlus, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Edit2, X, Save, ExternalLink, Users, Code, Info } from 'lucide-react';
+import { FolderPlus, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Edit2, X, Save, ExternalLink, Users, Code, Info, Download } from 'lucide-react';
+import api from '../../api';
 import SearchInput from '../ui/SearchInput';
+import { useToast } from '../../context/ToastContext';
 
 const EditProjectModal = ({ project, isOpen, onClose, onSave, scopes }) => {
     const [formData, setFormData] = React.useState({
@@ -33,97 +35,102 @@ const EditProjectModal = ({ project, isOpen, onClose, onSave, scopes }) => {
 
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
-                <div className="flex justify-between items-center p-6 border-b">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[calc(100vh-2rem)] animate-in fade-in zoom-in duration-200">
+                <div className="flex justify-between items-center p-6 border-b shrink-0">
                     <h3 className="text-xl font-bold text-gray-800">Edit Project</h3>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
                         <X size={24} />
                     </button>
                 </div>
-                <form onSubmit={(e) => { e.preventDefault(); onSave(project.id, formData); }} className="p-6 space-y-4">
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1">Project Title</label>
-                        <input
-                            required
-                            className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 outline-none transition-all"
-                            value={formData.title}
-                            onChange={e => setFormData({ ...formData, title: e.target.value })}
-                        />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
+                <form
+                    onSubmit={(e) => { e.preventDefault(); onSave(project.id, formData); }}
+                    className="flex flex-col overflow-hidden"
+                >
+                    <div className="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1">
                         <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">Category</label>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">Project Title</label>
                             <input
                                 required
                                 className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 outline-none transition-all"
-                                value={formData.category}
-                                onChange={e => setFormData({ ...formData, category: e.target.value })}
+                                value={formData.title}
+                                onChange={e => setFormData({ ...formData, title: e.target.value })}
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">Category</label>
+                                <input
+                                    required
+                                    className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 outline-none transition-all"
+                                    value={formData.category}
+                                    onChange={e => setFormData({ ...formData, category: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1">Max Team Size</label>
+                                <input
+                                    required
+                                    type="number"
+                                    className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 outline-none transition-all"
+                                    value={formData.maxTeamSize}
+                                    onChange={e => setFormData({ ...formData, maxTeamSize: parseInt(e.target.value) })}
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">Project Scope (Batch)</label>
+                            <select
+                                className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 outline-none transition-all"
+                                value={formData.scopeId}
+                                onChange={e => setFormData({ ...formData, scopeId: e.target.value })}
+                            >
+                                <option value="">No Scope (General)</option>
+                                {scopes?.map(scope => (
+                                    <option key={scope.id} value={scope.id}>{scope.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">Status</label>
+                            <select
+                                className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 outline-none transition-all"
+                                value={formData.status}
+                                onChange={e => setFormData({ ...formData, status: e.target.value })}
+                            >
+                                <option value="AVAILABLE">Available</option>
+                                <option value="REQUESTED">Requested</option>
+                                <option value="ASSIGNED">Assigned</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">Tech Stack</label>
+                            <input
+                                className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 outline-none transition-all"
+                                placeholder="e.g. React, Node.js, MongoDB"
+                                value={formData.techStack}
+                                onChange={e => setFormData({ ...formData, techStack: e.target.value })}
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">Max Team Size</label>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">SRS / Document Link</label>
                             <input
-                                required
-                                type="number"
                                 className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 outline-none transition-all"
-                                value={formData.maxTeamSize}
-                                onChange={e => setFormData({ ...formData, maxTeamSize: parseInt(e.target.value) })}
+                                placeholder="Link to project documentation"
+                                value={formData.srs}
+                                onChange={e => setFormData({ ...formData, srs: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">Description</label>
+                            <textarea
+                                className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 outline-none transition-all"
+                                rows={3}
+                                value={formData.description}
+                                onChange={e => setFormData({ ...formData, description: e.target.value })}
                             />
                         </div>
                     </div>
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1">Project Scope (Batch)</label>
-                        <select
-                            className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 outline-none transition-all"
-                            value={formData.scopeId}
-                            onChange={e => setFormData({ ...formData, scopeId: e.target.value })}
-                        >
-                            <option value="">No Scope (General)</option>
-                            {scopes?.map(scope => (
-                                <option key={scope.id} value={scope.id}>{scope.name}</option>
-                            ))}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1">Status</label>
-                        <select
-                            className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 outline-none transition-all"
-                            value={formData.status}
-                            onChange={e => setFormData({ ...formData, status: e.target.value })}
-                        >
-                            <option value="AVAILABLE">Available</option>
-                            <option value="REQUESTED">Requested</option>
-                            <option value="ASSIGNED">Assigned</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1">Tech Stack</label>
-                        <input
-                            className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 outline-none transition-all"
-                            placeholder="e.g. React, Node.js, MongoDB"
-                            value={formData.techStack}
-                            onChange={e => setFormData({ ...formData, techStack: e.target.value })}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1">SRS / Document Link</label>
-                        <input
-                            className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 outline-none transition-all"
-                            placeholder="Link to project documentation"
-                            value={formData.srs}
-                            onChange={e => setFormData({ ...formData, srs: e.target.value })}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1">Description</label>
-                        <textarea
-                            className="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 outline-none transition-all"
-                            rows={3}
-                            value={formData.description}
-                            onChange={e => setFormData({ ...formData, description: e.target.value })}
-                        />
-                    </div>
-                    <div className="flex gap-3 pt-4">
+                    <div className="flex gap-3 p-6 border-t bg-gray-50 shrink-0">
                         <button
                             type="button"
                             onClick={onClose}
@@ -185,10 +192,10 @@ const ProjectDetailModal = ({ project, isOpen, onClose }) => {
                     <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
                         <span className="text-sm font-bold text-gray-500 uppercase tracking-wider text-[10px]">Current Status</span>
                         <span className={`px-4 py-1.5 rounded-full text-xs font-black uppercase border shadow-sm ${project.status === 'AVAILABLE'
-                                ? 'bg-green-100 border-green-200 text-green-700'
-                                : project.status === 'REQUESTED'
-                                    ? 'bg-orange-100 border-orange-200 text-orange-700'
-                                    : 'bg-red-100 border-red-200 text-red-700'
+                            ? 'bg-green-100 border-green-200 text-green-700'
+                            : project.status === 'REQUESTED'
+                                ? 'bg-orange-100 border-orange-200 text-orange-700'
+                                : 'bg-red-100 border-red-200 text-red-700'
                             }`}>
                             {project.status}
                         </span>
@@ -294,8 +301,14 @@ export default function ProjectsTab({
     updateProject,
     scopes,
     scopeFilter,
-    setScopeFilter
+    setScopeFilter,
+    categories,
+    categoryFilter,
+    setCategoryFilter,
+    srsFilter,
+    setSrsFilter
 }) {
+    const { addToast } = useToast();
     const [editingProject, setEditingProject] = React.useState(null);
     const [detailProject, setDetailProject] = React.useState(null);
 
@@ -334,6 +347,31 @@ export default function ProjectsTab({
         }
     };
 
+    const handleExport = async () => {
+        try {
+            const params = new URLSearchParams({
+                status: projectFilter,
+                scopeId: scopeFilter,
+                category: categoryFilter,
+                hasSRS: srsFilter,
+                search: projectSearch
+            });
+            const response = await api.get(`/export/projects?${params.toString()}`, {
+                responseType: 'blob'
+            });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `projects_export_${new Date().toISOString().split('T')[0]}.xlsx`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (error) {
+            console.error("Export failed", error);
+            addToast("Failed to export projects", 'error');
+        }
+    };
+
     return (
         <div className="w-full">
             <div className="bg-white p-6 rounded-lg shadow-sm border">
@@ -348,6 +386,12 @@ export default function ProjectsTab({
                                 <Trash2 size={14} /> Delete Selected ({selectedIds.length})
                             </button>
                         )}
+                        <button
+                            onClick={handleExport}
+                            className="flex items-center gap-2 px-3 py-1 bg-indigo-600 text-white rounded text-sm font-bold transition-all hover:bg-indigo-700 shadow-md"
+                        >
+                            <Download size={14} /> Export
+                        </button>
                     </div>
                     <div className="flex gap-2">
                         <select
@@ -369,6 +413,25 @@ export default function ProjectsTab({
                             {scopes?.map(s => (
                                 <option key={s.id} value={s.id}>{s.name}</option>
                             ))}
+                        </select>
+                        <select
+                            className="border p-2 rounded text-sm bg-white outline-none focus:ring-2 ring-blue-500"
+                            value={categoryFilter}
+                            onChange={e => setCategoryFilter(e.target.value)}
+                        >
+                            <option value="ALL">All Categories</option>
+                            {categories?.map(cat => (
+                                <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                        </select>
+                        <select
+                            className="border p-2 rounded text-sm bg-white outline-none focus:ring-2 ring-blue-500"
+                            value={srsFilter}
+                            onChange={e => setSrsFilter(e.target.value)}
+                        >
+                            <option value="ALL">All Documentation</option>
+                            <option value="HAS_SRS">With SRS</option>
+                            <option value="NO_SRS">Without SRS</option>
                         </select>
                         <SearchInput
                             value={projectSearch}

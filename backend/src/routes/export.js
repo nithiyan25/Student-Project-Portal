@@ -16,7 +16,7 @@ router.get('/all', authenticate, authorize(['ADMIN']), async (req, res, next) =>
         ];
 
         // Validate sheet names
-        const validSheets = ['students', 'faculty', 'admins', 'projects', 'teams', 'facultyAssignments', 'reviewHistory', 'studentScores'];
+        const validSheets = ['students', 'faculty', 'admins', 'projects', 'teams', 'facultyAssignments', 'reviewHistory', 'studentScores', 'venueSchedule'];
         const sheets = selectedSheets.filter(s => validSheets.includes(s));
 
         if (sheets.length === 0) {
@@ -57,7 +57,6 @@ router.get('/all', authenticate, authorize(['ADMIN']), async (req, res, next) =>
                     teams: {
                         include: {
                             members: {
-                                where: { approved: true },
                                 include: { user: true }
                             }
                         }
@@ -113,6 +112,36 @@ router.get('/all', authenticate, authorize(['ADMIN']), async (req, res, next) =>
                 orderBy: { createdAt: 'desc' }
             }));
             dataKeys.push('reviews');
+        }
+
+        if (sheets.includes('venueSchedule')) {
+            fetchPromises.push(prisma.labsession.findMany({
+                include: {
+                    venue: true,
+                    user_labsession_facultyIdTouser: { select: { id: true, name: true, email: true, rollNumber: true } },
+                    user_sessionstudents: {
+                        select: {
+                            id: true,
+                            name: true,
+                            email: true,
+                            rollNumber: true,
+                            teamMemberships: {
+                                where: { approved: true },
+                                include: {
+                                    team: {
+                                        include: {
+                                            project: { select: { title: true, category: true } }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    projectscope: { select: { id: true, name: true } }
+                },
+                orderBy: { startTime: 'asc' }
+            }));
+            dataKeys.push('venueSchedule');
         }
 
         // Fetch all selected data
@@ -241,6 +270,33 @@ router.get('/all', authenticate, authorize(['ADMIN']), async (req, res, next) =>
             });
             const scoresSheet = XLSX.utils.json_to_sheet(scoresData.length > 0 ? scoresData : [{ 'Info': 'No scores recorded yet' }]);
             XLSX.utils.book_append_sheet(workbook, scoresSheet, 'Student Scores');
+        }
+
+        // Sheet 9: Venue Schedule
+        if (sheets.includes('venueSchedule') && data.venueSchedule) {
+            const venueData = [];
+            data.venueSchedule.forEach(session => {
+                session.user_sessionstudents?.forEach(student => {
+                    const project = student.teamMemberships?.[0]?.team?.project;
+                    venueData.push({
+                        'Date': new Date(session.startTime).toLocaleDateString(),
+                        'Start Time': new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        'End Time': new Date(session.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        'Venue': session.venue?.name || 'N/A',
+                        'Location': session.venue?.location || 'N/A',
+                        'Faculty': session.user_labsession_facultyIdTouser?.name || 'N/A',
+                        'Faculty ID': session.user_labsession_facultyIdTouser?.rollNumber || 'N/A',
+                        'Scope': session.projectscope?.name || 'N/A',
+                        'Student Name': student.name,
+                        'Student Roll': student.rollNumber || 'N/A',
+                        'Student Email': student.email,
+                        'Project Title': project?.title || 'No Project',
+                        'Project Category': project?.category || 'N/A'
+                    });
+                });
+            });
+            const venueSheet = XLSX.utils.json_to_sheet(venueData.length > 0 ? venueData : [{ 'Info': 'No venue schedules found' }]);
+            XLSX.utils.book_append_sheet(workbook, venueSheet, 'Venue Schedule');
         }
 
         // Generate buffer
@@ -416,6 +472,95 @@ router.get('/student-stats', authenticate, authorize(['ADMIN']), async (req, res
         res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 
+        res.send(buffer);
+    } catch (e) {
+        next(e);
+    }
+});
+
+// Export Projects with Filters
+router.get('/projects', authenticate, authorize(['ADMIN']), async (req, res, next) => {
+    try {
+        const { status, scopeId, category, search, hasSRS } = req.query;
+
+        const where = {};
+        if (status && status !== 'ALL') where.status = status;
+        if (scopeId && scopeId !== 'ALL') where.scopeId = scopeId;
+        if (category && category !== 'ALL') where.category = category;
+
+        if (hasSRS === 'true' || hasSRS === 'HAS_SRS') {
+            where.AND = [
+                ...(where.AND || []),
+                { srs: { not: null } },
+                { srs: { not: "" } }
+            ];
+        } else if (hasSRS === 'false' || hasSRS === 'NO_SRS') {
+            where.OR = [
+                { srs: null },
+                { srs: "" }
+            ];
+        }
+
+        if (search) {
+            where.OR = [
+                ...(where.OR || []),
+                { title: { contains: search } },
+                { description: { contains: search } },
+                { category: { contains: search } },
+                {
+                    teams: {
+                        some: {
+                            members: {
+                                some: {
+                                    user: {
+                                        OR: [
+                                            { name: { contains: search } },
+                                            { rollNumber: { contains: search } }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ];
+        }
+
+        const projects = await prisma.project.findMany({
+            where,
+            include: {
+                scope: true,
+                teams: {
+                    include: {
+                        members: {
+                            include: { user: true }
+                        }
+                    }
+                }
+            },
+            orderBy: { title: 'asc' }
+        });
+
+        const workbook = XLSX.utils.book_new();
+        const projectsData = projects.map(p => ({
+            'Title': p.title,
+            'Tech Stack': p.techStack || 'N/A',
+            'SRS Document': p.srs || 'N/A',
+            'Category': p.category,
+            'Size': p.maxTeamSize,
+            'Scope': p.scope?.name || 'General',
+            'Status': p.status,
+            'Assigned To': p.teams.flatMap(t => t.members.map(m => `${m.user.name} (${m.user.rollNumber || 'N/A'})`)).join(', ') || 'Unassigned'
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(projectsData.length > 0 ? projectsData : [{ 'Info': 'No projects found' }]);
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Projects');
+
+        const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+        const filename = `projects_export_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.send(buffer);
     } catch (e) {
         next(e);
