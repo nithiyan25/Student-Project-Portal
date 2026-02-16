@@ -3,6 +3,7 @@ const prisma = require('../utils/prisma');
 const { authenticate, authorize } = require('../middleware/auth');
 const { adminValidation, commonValidations } = require('../middleware/validation');
 const { DEFAULT_PAGE, DEFAULT_LIMIT, MAX_LIMIT } = require('../utils/constants');
+const { addDurationExcludingSundays } = require('../utils/timerUtils');
 
 const router = express.Router();
 
@@ -86,6 +87,52 @@ router.get('/teams', authenticate, authorize(['ADMIN', 'FACULTY']), commonValida
     }
 });
 
+// RE-OPEN COMPLETED REVIEW
+router.post('/reviews/:id/reopen', authenticate, authorize(['ADMIN']), async (req, res, next) => {
+    const { id } = req.params;
+    try {
+        const review = await prisma.review.findUnique({
+            where: { id },
+            include: { team: true }
+        });
+
+        if (!review) return res.status(404).json({ error: "Review not found" });
+
+        // Reset review 
+        await prisma.review.update({
+            where: { id },
+            data: {
+                completedAt: null,
+                status: 'IN_PROGRESS'
+            }
+        });
+
+        // Also update team status back to IN_PROGRESS if it was COMPLETED
+        if (review.team.status === 'COMPLETED') {
+            await prisma.team.update({
+                where: { id: review.teamId },
+                data: { status: 'IN_PROGRESS' }
+            });
+        }
+
+        // Extend faculty access by 24 hours to ensure they can edit it
+        await prisma.reviewassignment.updateMany({
+            where: {
+                projectId: review.projectId,
+                facultyId: review.facultyId,
+                reviewPhase: review.reviewPhase
+            },
+            data: {
+                accessExpiresAt: addDurationExcludingSundays(Date.now(), 24 * 60 * 60 * 1000)
+            }
+        });
+
+        res.json({ message: "Review re-opened successfully" });
+    } catch (e) {
+        next(e);
+    }
+});
+
 // BULK UPDATE TEAM STATUS
 router.post('/teams/bulk-status', authenticate, authorize(['ADMIN']), async (req, res, next) => {
     const { teamIds, status } = req.body;
@@ -147,7 +194,7 @@ router.post('/teams/bulk-status', authenticate, authorize(['ADMIN']), async (req
 
                 // Changes Required Extension
                 if (status === 'CHANGES_REQUIRED' && team.projectId) {
-                    const newExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                    const newExpiry = addDurationExcludingSundays(Date.now(), 24 * 60 * 60 * 1000);
 
                     const latestReview = await tx.review.findFirst({
                         where: { teamId: id },
@@ -639,7 +686,7 @@ router.post('/auto-assign-reviews', authenticate, authorize(['ADMIN']), async (r
 
             // Upsert Review Assignment to ensure faculty can see it in their dashboard
             // EXPIRE IN 24 HOURS (1 Day)
-            const accessExpiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+            const accessExpiresAt = addDurationExcludingSundays(now, 24 * 60 * 60 * 1000);
 
             if (team.projectId) {
                 // We use updateMany + create approach or similar because reviewassignment has its own ID and we want to find by project + faculty + phase

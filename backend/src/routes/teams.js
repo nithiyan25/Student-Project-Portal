@@ -2,6 +2,7 @@ const express = require('express');
 const prisma = require('../utils/prisma');
 const { authenticate, authorize } = require('../middleware/auth');
 const { teamValidation } = require('../middleware/validation');
+const { addDurationExcludingSundays } = require('../utils/timerUtils');
 
 const router = express.Router();
 
@@ -614,9 +615,8 @@ router.post('/submit-for-review', authenticate, authorize(['STUDENT']), async (r
                 });
 
                 // AUTO-REASSIGN: Refresh the same faculty's assignment for 24 hours
-                // This ensures the faculty who gave "Changes Required" can immediately review the resubmission
                 if (team.projectId && latestFeedback.facultyId) {
-                    const newExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 1 day (24 hours) from now
+                    const newExpiry = addDurationExcludingSundays(Date.now(), 24 * 60 * 60 * 1000); // 1 day (24 hours) from now
 
                     // Find existing assignment for this faculty and project (Matching the Phase)
                     const existingAssignment = await tx.reviewassignment.findFirst({
@@ -849,7 +849,7 @@ router.patch('/:id/status', authenticate, authorize(['ADMIN']), async (req, res,
             if (status === 'CHANGES_REQUIRED') {
                 // Targeted Extension: Only extend assignments for the CURRENT phase
                 if (team.projectId) {
-                    const newExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+                    const newExpiry = addDurationExcludingSundays(Date.now(), 24 * 60 * 60 * 1000);
 
                     // Determine which phase to extend: latest review or latest assignment
                     const latestReview = await tx.review.findFirst({

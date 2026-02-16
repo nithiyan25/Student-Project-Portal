@@ -3,6 +3,7 @@ const prisma = require('../utils/prisma');
 const { authenticate, authorize } = require('../middleware/auth');
 const { reviewValidation, commonValidations } = require('../middleware/validation');
 const { DEFAULT_PAGE, DEFAULT_LIMIT, MAX_LIMIT } = require('../utils/constants');
+const { addDurationExcludingSundays } = require('../utils/timerUtils');
 const crypto = require('crypto');
 
 
@@ -422,7 +423,7 @@ router.post('/', authenticate, authorize(['FACULTY', 'ADMIN']), reviewValidation
                             reviewPhase: phaseToRecord
                         },
                         data: {
-                            accessExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // Extend by 24 hours
+                            accessExpiresAt: addDurationExcludingSundays(Date.now(), 24 * 60 * 60 * 1000) // Extend by 24 hours
                         }
                     });
                 }

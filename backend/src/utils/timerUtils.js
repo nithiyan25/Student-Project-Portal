@@ -48,8 +48,36 @@ function getCollegeSecondsBetween(start, end) {
     return Math.max(0, Math.floor(totalSeconds));
 }
 
+/**
+ * Adds a duration (in ms) to a start date, skipping Sundays.
+ * If the resulting end date falls on a Sunday, it is pushed to Monday.
+ * If the period spans a Sunday, an extra 24 hours is added.
+ * @param {Date|number} startDate 
+ * @param {number} durationMs 
+ * @returns {Date}
+ */
+function addDurationExcludingSundays(startDate, durationMs) {
+    const start = new Date(startDate);
+    let end = new Date(start.getTime() + durationMs);
+
+    // Iterate through days to find Sundays
+    let iterationDate = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+
+    // We check each day from start to end (inclusive of end)
+    while (iterationDate <= end) {
+        if (iterationDate.getDay() === 0) { // Sunday
+            // Found a Sunday, extend the end date by 24h
+            end = new Date(end.getTime() + 24 * 60 * 60 * 1000);
+        }
+        iterationDate.setDate(iterationDate.getDate() + 1);
+    }
+
+    return end;
+}
+
 module.exports = {
     getCollegeSecondsBetween,
+    addDurationExcludingSundays,
     COLLEGE_START_HOUR,
     COLLEGE_START_MINUTE,
     COLLEGE_END_HOUR,

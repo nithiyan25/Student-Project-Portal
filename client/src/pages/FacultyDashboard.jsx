@@ -35,7 +35,7 @@ export default function FacultyDashboard() {
   // Review Form States (for Assignments)
   const [expandedId, setExpandedId] = useState(null);
   const [reviewText, setReviewText] = useState("");
-  const [reviewStatus, setReviewStatus] = useState("NOT_COMPLETED");
+  const [reviewStatus, setReviewStatus] = useState("COMPLETED");
   const [individualMarks, setIndividualMarks] = useState({});
   const [isPresentState, setIsPresentState] = useState({}); // { studentId: boolean }
   const [rubric, setRubric] = useState(null); // Active rubric for current expanded assignment
@@ -226,8 +226,8 @@ export default function FacultyDashboard() {
           }
         }
 
-        const currentStatus = item.status || "NOT_COMPLETED";
-        setReviewStatus(['COMPLETED', 'CHANGES_REQUIRED', 'IN_PROGRESS'].includes(currentStatus) ? currentStatus : (currentStatus === 'NOT_COMPLETED' ? 'NOT_COMPLETED' : 'IN_PROGRESS'));
+        const currentStatus = item.status || "COMPLETED";
+        setReviewStatus(['COMPLETED', 'CHANGES_REQUIRED'].includes(currentStatus) ? currentStatus : 'COMPLETED');
         // Fetch Rubric
         const phase = type === 'ASSIGNMENT' ? item.assignedPhase : ((item.reviews?.length || 0) + 1);
         const category = item.project?.category;
@@ -237,7 +237,7 @@ export default function FacultyDashboard() {
         if (existingReview) {
           setReviewText(existingReview.content || "");
           const currentStatus = existingReview.status || item.status;
-          setReviewStatus(['COMPLETED', 'CHANGES_REQUIRED', 'IN_PROGRESS'].includes(currentStatus) ? currentStatus : (currentStatus === 'NOT_COMPLETED' ? 'NOT_COMPLETED' : 'IN_PROGRESS'));
+          setReviewStatus(['COMPLETED', 'CHANGES_REQUIRED'].includes(currentStatus) ? currentStatus : 'COMPLETED');
 
           const marksMap = {};
           const absMap = {};
@@ -267,14 +267,16 @@ export default function FacultyDashboard() {
               params: { category, phase }
             });
             setRubric(res.data);
-            // Initialize rubric marks structure
-            const initialRubricMarks = {};
-            item.members.forEach(m => {
-              if (m.approved) {
-                initialRubricMarks[m.user.id] = {};
-              }
-            });
-            setRubricMarks(initialRubricMarks);
+            // Initialize rubric marks structure only if NOT loading an existing review
+            if (!existingReview) {
+              const initialRubricMarks = {};
+              item.members.forEach(m => {
+                if (m.approved) {
+                  initialRubricMarks[m.user.id] = {};
+                }
+              });
+              setRubricMarks(initialRubricMarks);
+            }
           } catch (e) {
             setRubric(null);
           }
@@ -295,17 +297,6 @@ export default function FacultyDashboard() {
 
       if (!reviewText.trim() && anyPresent) {
         return addToast("Please write a review.", 'warning');
-      }
-
-      // WARNING: Check if marks are entered but status is not COMPLETED
-      const hasMarks = approvedMembers.some(m => (parseInt(individualMarks[m.user.id]) || 0) > 0);
-      if (hasMarks && reviewStatus === 'NOT_COMPLETED') {
-        const proceed = await confirm(
-          "You have entered marks but the review status is set to 'Not Completed'. This might hide the results from students. Do you want to proceed anyway?",
-          "Status Warning",
-          "warning"
-        );
-        if (!proceed) return;
       }
 
       const marksPayload = approvedMembers.map(m => {
@@ -890,20 +881,13 @@ export default function FacultyDashboard() {
                               return null;
                             })()}
                             <select
-                              className={`w-full p-2 border rounded ${Object.values(individualMarks).some(m => (parseInt(m) || 0) > 0) && reviewStatus === 'NOT_COMPLETED' ? 'border-orange-500 bg-orange-50' : ''}`}
+                              className={`w-full p-2 border rounded ${Object.values(individualMarks).some(m => (parseInt(m) || 0) > 0) && reviewStatus !== 'COMPLETED' ? 'border-orange-500 bg-orange-50' : ''}`}
                               value={reviewStatus}
                               onChange={e => setReviewStatus(e.target.value)} disabled={!team.members?.filter(m => m.approved).some(m => isPresentState[m.user.id])}
                             >
-                              <option value="NOT_COMPLETED">Not Completed</option>
-                              <option value="IN_PROGRESS">In Progress</option>
                               <option value="CHANGES_REQUIRED">Changes Required</option>
                               <option value="COMPLETED">Completed</option>
                             </select>
-                            {Object.values(individualMarks).some(m => (parseInt(m) || 0) > 0) && reviewStatus === 'NOT_COMPLETED' && (
-                              <p className="text-[10px] text-orange-600 font-bold bg-orange-100/50 p-2 rounded border border-orange-200">
-                                ⚠️ You have entered marks. Consider changing status to "Completed" so students can see their results once published.
-                              </p>
-                            )}
                             <textarea
                               className="w-full p-2 border rounded h-24"
                               placeholder="Feedback..."
@@ -1343,8 +1327,6 @@ export default function FacultyDashboard() {
                                 onChange={e => setReviewStatus(e.target.value)}
                                 disabled={!team.members?.filter(m => m.approved).some(m => isPresentState[m.user.id])}
                               >
-                                <option value="NOT_COMPLETED">Not Completed</option>
-                                <option value="IN_PROGRESS">In Progress</option>
                                 <option value="CHANGES_REQUIRED">Changes Required</option>
                                 <option value="COMPLETED">Completed</option>
                               </select>

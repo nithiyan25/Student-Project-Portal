@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, MessageSquare, CheckCircle, Clock, AlertCircle, Users, Trash2 } from 'lucide-react';
+import { Search, MessageSquare, CheckCircle, Clock, AlertCircle, Users, Trash2, RotateCcw } from 'lucide-react';
 import SearchInput from '../ui/SearchInput';
 import StatusBadge from '../ui/StatusBadge';
 import { useToast } from '../../context/ToastContext';
@@ -229,6 +229,21 @@ export default function ReviewsTab({
         } catch (err) {
             console.error("Error deleting review:", err);
             addToast(err.response?.data?.error || "Error deleting review", 'error');
+        }
+    };
+
+    const handleReopenReview = async (reviewId) => {
+        if (!await confirm("Are you sure you want to re-open this review? This will reset the completed status and extend faculty access by 24 hours.", 'Re-open Review')) {
+            return;
+        }
+
+        try {
+            await api.post(`/admin/reviews/${reviewId}/reopen`);
+            fetchReviews();
+            addToast("Review re-opened successfully!", 'success');
+        } catch (err) {
+            console.error("Error re-opening review:", err);
+            addToast(err.response?.data?.error || "Error re-opening review", 'error');
         }
     };
 
@@ -543,13 +558,24 @@ export default function ReviewsTab({
                                                                                                     </p>
                                                                                                     <span className="text-[9px] text-gray-400">{new Date(r.createdAt).toLocaleDateString()}</span>
                                                                                                 </div>
-                                                                                                <button
-                                                                                                    onClick={() => handleDeleteReview(r.id)}
-                                                                                                    className="opacity-0 group-hover:opacity-100 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                                                                                                    title="Delete Review"
-                                                                                                >
-                                                                                                    <Trash2 size={14} />
-                                                                                                </button>
+                                                                                                <div className="flex items-center gap-1">
+                                                                                                    {r.status === 'COMPLETED' && (
+                                                                                                        <button
+                                                                                                            onClick={() => handleReopenReview(r.id)}
+                                                                                                            className="opacity-0 group-hover:opacity-100 p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all"
+                                                                                                            title="Re-open Review"
+                                                                                                        >
+                                                                                                            <RotateCcw size={14} />
+                                                                                                        </button>
+                                                                                                    )}
+                                                                                                    <button
+                                                                                                        onClick={() => handleDeleteReview(r.id)}
+                                                                                                        className="opacity-0 group-hover:opacity-100 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                                                                                                        title="Delete Review"
+                                                                                                    >
+                                                                                                        <Trash2 size={14} />
+                                                                                                    </button>
+                                                                                                </div>
                                                                                             </div>
 
                                                                                             {/* Individual Marks Display */}
