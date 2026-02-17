@@ -21,6 +21,15 @@ export default function FacultyScheduleTab({ onViewProject, scopes = [] }) {
     const [selectedTechStackStatus, setSelectedTechStackStatus] = useState('ALL'); // ALL | DEFINED | NOT_DEFINED
     const [selectedPhaseCompletion, setSelectedPhaseCompletion] = useState('ALL'); // ALL | 0 | 1 | 2 | 3 | 4
 
+    const isSessionToday = (dateString) => {
+        if (!dateString) return false;
+        const sessionDate = new Date(dateString);
+        const today = new Date();
+        return sessionDate.getDate() === today.getDate() &&
+            sessionDate.getMonth() === today.getMonth() &&
+            sessionDate.getFullYear() === today.getFullYear();
+    };
+
     const fetchSessions = async () => {
         setLoading(true);
         try {

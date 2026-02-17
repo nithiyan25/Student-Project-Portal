@@ -1,0 +1,42 @@
+=== STUDENT: NITHISH KUMAR S P (7376231CS253) ===
+
+--- ALL SESSIONS FOR THIS STUDENT ---
+1. Venue: ME 102
+   Faculty: Ms. Haripriya (cml7utbtz000r7y503lbxz6s6)
+   Timing: 2026-02-09T03:15:00.000Z to 2026-02-09T10:50:00.000Z
+   Status: Past
+2. Venue: ME 102
+   Faculty: Ms. Haripriya (cml7utbtz000r7y503lbxz6s6)
+   Timing: 2026-02-10T03:15:00.000Z to 2026-02-10T10:50:00.000Z
+   Status: Past
+3. Venue: ME 102
+   Faculty: Ms. Haripriya (cml7utbtz000r7y503lbxz6s6)
+   Timing: 2026-02-11T03:15:00.000Z to 2026-02-11T10:50:00.000Z
+   Status: Past
+4. Venue: ME 102
+   Faculty: Ms. Haripriya (cml7utbtz000r7y503lbxz6s6)
+   Timing: 2026-02-12T03:15:00.000Z to 2026-02-12T10:50:00.000Z
+   Status: Past
+5. Venue: ME 102
+   Faculty: Ms. Eugene Berna (cml7utbpq000p7y50doe819fa)
+   Timing: 2026-02-13T03:15:00.000Z to 2026-02-13T10:50:00.000Z
+   Status: Past
+6. Venue: ME 102
+   Faculty: Ms. Eugene Berna (cml7utbpq000p7y50doe819fa)
+   Timing: 2026-02-14T03:15:00.000Z to 2026-02-14T10:50:00.000Z
+   Status: Past
+7. Venue: ME 102
+   Faculty: Ms. Haripriya (cml7utbtz000r7y503lbxz6s6)
+   Timing: 2026-02-16T03:15:00.000Z to 2026-02-16T10:50:00.000Z
+   Status: *** ACTIVE NOW ***
+
+--- TEAM: cml7sn7u403vz126sqqgan5mq ---
+Project: Smart Student Information System
+Team Status: IN_PROGRESS
+
+--- REVIEWS (from review table) ---
+Phase 1: PENDING | Faculty: Ms. Haripriya (cml7utbtz000r7y503lbxz6s6)
+
+--- REVIEW ASSIGNMENTS (from reviewassignment table) ---
+Phase 1: Faculty: Ms. Haripriya (cml7utbtz000r7y503lbxz6s6)
+   Access: 2026-02-16T03:49:00.709Z to 2026-02-17T03:49:00.709Z

@@ -4,6 +4,9 @@ const { authenticate, authorize } = require('../middleware/auth');
 const { adminValidation, commonValidations } = require('../middleware/validation');
 const { DEFAULT_PAGE, DEFAULT_LIMIT, MAX_LIMIT } = require('../utils/constants');
 const { addDurationExcludingSundays } = require('../utils/timerUtils');
+const { reassignPendingReview } = require('../utils/assignmentUtils');
+const { spawn } = require('child_process');
+const { URL } = require('url');
 
 const router = express.Router();
 
@@ -237,8 +240,11 @@ router.get('/teams/:id', authenticate, authorize(['ADMIN', 'FACULTY']), async (r
                 project: {
                     include: { scope: true }
                 },
-                scope: true,
-                deadlineGroup: { include: { deadlines: true } },
+                scope: {
+                    include: {
+                        deadlines: true
+                    }
+                },
                 guide: true,
                 subjectExpert: true,
                 reviews: {
@@ -639,81 +645,9 @@ router.post('/auto-assign-reviews', authenticate, authorize(['ADMIN']), async (r
             ]);
             const nextPhase = Math.max(team.submissionPhase || 0, Math.max(0, ...Array.from(passedPhases)) + 1);
 
-            // 1. Check for EXISTING Pending Review for this phase
-            const existingReview = await prisma.review.findFirst({
-                where: {
-                    teamId: team.id,
-                    reviewPhase: nextPhase,
-                    status: 'PENDING'
-                }
-            });
-
-            // 2. Re-assignment Logic
-            if (existingReview) {
-                if (existingReview.facultyId !== facultyIdToAssign) {
-                    // Transfer the review to the new faculty
-                    await prisma.review.update({
-                        where: { id: existingReview.id },
-                        data: { facultyId: facultyIdToAssign }
-                    });
-
-                    // Expire access for the OLD faculty
-                    await prisma.reviewassignment.updateMany({
-                        where: {
-                            projectId: team.projectId,
-                            facultyId: existingReview.facultyId,
-                            reviewPhase: nextPhase
-                        },
-                        data: { accessExpiresAt: now } // Expire immediately
-                    });
-
-                    assignedVia += ` (Transferred from previous faculty)`;
-                }
-                // If same faculty, we just refresh access below
-            } else {
-                // Create Review if it doesn't exist
-                await prisma.review.create({
-                    data: {
-                        teamId: team.id,
-                        facultyId: facultyIdToAssign,
-                        reviewPhase: nextPhase,
-                        status: 'PENDING',
-                        content: "",
-                        projectId: team.projectId || ''
-                    }
-                });
-            }
-
-            // Upsert Review Assignment to ensure faculty can see it in their dashboard
-            // EXPIRE IN 24 HOURS (1 Day)
-            const accessExpiresAt = addDurationExcludingSundays(now, 24 * 60 * 60 * 1000);
-
-            if (team.projectId) {
-                // We use updateMany + create approach or similar because reviewassignment has its own ID and we want to find by project + faculty + phase
-                await prisma.reviewassignment.upsert({
-                    where: {
-                        projectId_facultyId_reviewPhase: {
-                            projectId: team.projectId,
-                            facultyId: facultyIdToAssign,
-                            reviewPhase: nextPhase
-                        }
-                    },
-                    update: {
-                        mode: 'OFFLINE',
-                        assignedAt: now,
-                        accessExpiresAt // Refresh expiration
-                    },
-                    create: {
-                        projectId: team.projectId,
-                        facultyId: facultyIdToAssign,
-                        reviewPhase: nextPhase,
-                        mode: 'OFFLINE',
-                        assignedBy: req.user.id,
-                        accessStartsAt: now,
-                        accessExpiresAt
-                    }
-                });
-            }
+            // Perform assignment/reassignment using utility
+            const assignmentMethod = await reassignPendingReview(tx, team, facultyIdToAssign, nextPhase, now, req.user.id);
+            assignedVia += assignmentMethod;
 
             // Update Team Status
             await prisma.team.update({
@@ -2525,7 +2459,15 @@ router.get('/faculty-stats', authenticate, authorize(['ADMIN']), async (req, res
                 },
                 reviews: { // Reviews created by this faculty
                     include: {
-                        team: { include: { project: true } },
+                        team: {
+                            include: {
+                                project: true,
+                                members: {
+                                    include: { user: true },
+                                    where: { approved: true }
+                                }
+                            }
+                        },
                         reviewMarks: true
                     },
                     orderBy: { createdAt: 'desc' }
@@ -2552,6 +2494,33 @@ router.get('/faculty-stats', authenticate, authorize(['ADMIN']), async (req, res
                 });
             });
 
+            // Calculate average marks given
+            let totalMarksGiven = 0;
+            let totalMarksPossible = 0;
+            let reviewsWithMarks = 0;
+
+            f.reviews.forEach(r => {
+                if (r.reviewMarks && r.reviewMarks.length > 0) {
+                    reviewsWithMarks++;
+                    r.reviewMarks.forEach(m => {
+                        totalMarksGiven += m.marks;
+                        // Attempt to parse criterion marks to find total scale
+                        let scale = 100;
+                        if (m.criterionMarks) {
+                            try {
+                                const cm = typeof m.criterionMarks === 'string' ? JSON.parse(m.criterionMarks) : m.criterionMarks;
+                                if (cm._total) scale = cm._total;
+                            } catch (e) { }
+                        }
+                        totalMarksPossible += scale;
+                    });
+                }
+            });
+
+            const avgMarksPercentage = totalMarksPossible > 0
+                ? ((totalMarksGiven / totalMarksPossible) * 100).toFixed(1)
+                : 0;
+
             return {
                 id: f.id,
                 name: f.name,
@@ -2564,7 +2533,8 @@ router.get('/faculty-stats', authenticate, authorize(['ADMIN']), async (req, res
                 studentsCount: students.length,
                 studentsDetails: students,
                 reviewsCount: f.reviews.length,
-                latestReviews: f.reviews.slice(0, 5), // Top 5 recent
+                allReviews: f.reviews, // Full history
+                averageMarksPercentage: avgMarksPercentage,
                 assignmentsCount: f.assignedReviews.length,
                 quotaStatus: (f.guidedTeams.length + f.expertTeams.length) + '/4',
                 role: 'FACULTY',
@@ -2742,6 +2712,72 @@ router.get('/student-project-status', authenticate, authorize(['ADMIN']), async 
         });
 
         res.json(categorized);
+    } catch (e) {
+        next(e);
+    }
+});
+
+// DATABASE BACKUP DOWNLOAD
+router.get('/backup/download', authenticate, authorize(['ADMIN']), async (req, res, next) => {
+    try {
+        // Strict identity check for Super Admin
+        if (req.user.name !== 'Super Admin' || req.user.email !== 'nithiyan.al23@bitsathy.ac.in') {
+            return res.status(403).json({ error: "Access denied. Only the Super Admin can perform database backups." });
+        }
+
+        const dbUrl = process.env.DATABASE_URL;
+        if (!dbUrl) {
+            return res.status(500).json({ error: "DATABASE_URL not configured" });
+        }
+
+        // Parse connection string: mysql://user:pass@host:port/db
+        const url = new URL(dbUrl);
+        const username = url.username || 'root';
+        const password = url.password || '';
+        const host = url.hostname || 'localhost';
+        const port = url.port || '3306';
+        const database = url.pathname.replace('/', '');
+
+        if (!database) {
+            return res.status(500).json({ error: "Database name not found in URL" });
+        }
+
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const filename = `backup-${database}-${timestamp}.sql`;
+
+        res.setHeader('Content-Type', 'application/sql');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+        const mysqldump = spawn('mysqldump', [
+            `--user=${username}`,
+            `--password=${password}`,
+            `--host=${host}`,
+            `--port=${port}`,
+            '--column-statistics=0', // Handle older MySQL/MariaDB version differences if needed
+            '--single-transaction',
+            '--routines',
+            '--triggers',
+            database
+        ]);
+
+        mysqldump.stdout.pipe(res);
+
+        mysqldump.stderr.on('data', (data) => {
+            console.error(`mysqldump stderr: ${data}`);
+        });
+
+        mysqldump.on('close', (code) => {
+            if (code !== 0) {
+                console.error(`mysqldump exited with code ${code}`);
+                // If we haven't sent the headers yet (unlikely since we piped), we could send an error
+                // but since we piped, the response is already 200 and streaming.
+            }
+        });
+
+        req.on('close', () => {
+            mysqldump.kill();
+        });
+
     } catch (e) {
         next(e);
     }

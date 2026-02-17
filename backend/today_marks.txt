@@ -1,0 +1,1074 @@
+--- ALL MARKS RECORDED TODAY (Mon Feb 16 2026) ---
+Total Marks: 153
+
+1. Student: NITHISH KUMAR S P (7376231CS253)
+   Marks: 86 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Haripriya
+   Project: Smart Student Information System
+   Completed At: 2026-02-16T08:17:42.792Z
+
+2. Student: SOWKANDHIKA M (7376231EE154)
+   Marks: 82 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kavitha V
+   Project: Innovation Portal
+   Completed At: 2026-02-16T08:17:06.675Z
+
+3. Student: MAHILESH A (7376232CB129)
+   Marks: 82 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Mr Mohemmed Yousuf
+   Project: Mentorship Management System
+   Completed At: 2026-02-16T08:16:38.921Z
+
+4. Student: UDHAYADURGA D (7376232BT206)
+   Marks: 79 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kavitha V
+   Project: IT Risk Assessment System
+   Completed At: 2026-02-16T08:16:37.314Z
+
+5. Student: ABHISRI M (7376231EC102)
+   Marks: 81 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kavitha V
+   Project: Academic Sustainability Intelligence Portal
+   Completed At: 2026-02-16T08:16:02.664Z
+
+6. Student: VAISHNAVI K (7376232BT208)
+   Marks: 79 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kavitha V
+   Project: Donation & Charity Tracker App
+   Completed At: 2026-02-16T08:15:31.914Z
+
+7. Student: DHARSHANA M (7376232CB112)
+   Marks: 83 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Mr Mohemmed Yousuf
+   Project: Digital Workflow Visualization Tool
+   Completed At: 2026-02-16T08:15:16.393Z
+
+8. Student: INDUVADANI E R (7376232BT136)
+   Marks: 82 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kavitha V
+   Project: Scholarship Tracking App
+   Completed At: 2026-02-16T08:14:37.826Z
+
+9. Student: HARITHA N G (7376232BT131)
+   Marks: 80 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kavitha V
+   Project: Music Practice Tracker App
+   Completed At: 2026-02-16T08:13:44.946Z
+
+10. Student: GOKILA S (7376231CS154)
+   Marks: 85 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Manisha G
+   Project: Digital Notification History System
+   Completed At: 2026-02-16T08:10:47.366Z
+
+11. Student: PRITESH S (7376241CS511)
+   Marks: 93 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Manisha G
+   Project: Student Learning Momentum Tracker
+   Completed At: 2026-02-16T08:07:26.504Z
+
+12. Student: VRLRAINA E (7376231EC332)
+   Marks: 87 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kayalvizhi
+   Project: First Aid Quick Guide App
+   Completed At: 2026-02-16T08:02:48.632Z
+
+13. Student: DEEPIKA V (7376231CS131)
+   Marks: 87 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Manisha G
+   Project: Library Management System
+   Completed At: 2026-02-16T08:01:34.547Z
+
+14. Student: NITYA SHREE G S (7376232AG136)
+   Marks: 77 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kayalvizhi
+   Project: Unified Web Operations Management System
+   Completed At: 2026-02-16T08:01:34.419Z
+
+15. Student: RITHU SHRI  G K (7376232AD224)
+   Marks: 53 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Haripriya
+   Project: Web-Based User Engagement Tracker
+   Completed At: 2026-02-16T05:52:40.509Z
+
+16. Student: BHUPESH V (7376231CS124)
+   Marks: 85 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Manisha G
+   Project: Online Feedback Rating System
+   Completed At: 2026-02-16T05:51:23.045Z
+
+17. Student: ASWITHAA B (7376231CS118)
+   Marks: 90 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Manisha G
+   Project: Industry Mentor Portal
+   Completed At: 2026-02-16T05:48:51.864Z
+
+18. Student: MADHAN N (7376232IT189)
+   Marks: 97 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Janani  T
+   Project: Academic Policy Management
+   Completed At: 2026-02-16T05:48:18.449Z
+
+19. Student: JAIVANT N (7376231CS182)
+   Marks: 85 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Manisha G
+   Project: Alumni Industry Networking Portal
+   Completed At: 2026-02-16T05:45:47.905Z
+
+20. Student: CHRISVIN FELIX R (7376231EI108)
+   Marks: 83 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Dr Karthikeyan G
+   Project: Creative Writing Prompts App
+   Completed At: 2026-02-16T05:42:43.261Z
+
+21. Student: KAVIN  R (7376231EC185)
+   Marks: 80 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kayalvizhi
+   Project: Digital Academic Reporting System
+   Completed At: 2026-02-16T05:37:49.364Z
+
+22. Student: KAVYA  S (7376232IT179)
+   Marks: 97 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Janani  T
+   Project: Performance Monitoring Dashboard
+   Completed At: 2026-02-16T05:37:33.951Z
+
+23. Student: DINESH J (7376232AG114)
+   Marks: 80 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kayalvizhi
+   Project: Workflow Automation Platform
+   Completed At: 2026-02-16T05:33:27.345Z
+
+24. Student: HARSHAVARTHAN KARUNAKARAN (7376231CS176)
+   Marks: 92 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Mr. Gokul M S
+   Project: Faculty Teaching Outcome Sensitivity Analyzer
+   Completed At: 2026-02-16T05:31:05.862Z
+
+25. Student: DHARANEESH G L (7376231CS135)
+   Marks: 90 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Manisha G
+   Project: Alumni Management Portal
+   Completed At: 2026-02-16T05:27:15.515Z
+
+26. Student: SINDHUUJA S D (7376232CB148)
+   Marks: 85 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Mr Mohemmed Yousuf
+   Project: Fee Concession Portal
+   Completed At: 2026-02-16T05:23:04.986Z
+
+27. Student: VIKAS J (7376232CB162)
+   Marks: 75 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Mr Mohemmed Yousuf
+   Project: Smart Caption Generator App
+   Completed At: 2026-02-16T05:20:09.211Z
+
+28. Student: KAMALESH  K (7376231CS191)
+   Marks: 85 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Manisha G
+   Project: Intelligent Academic Fraud Detection System
+   Completed At: 2026-02-16T05:17:25.898Z
+
+29. Student: SANJAY SRI THANU MALAIYAAN C (7376231EC270)
+   Marks: 86 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Mr. Senthilnathan S
+   Project: Digital Operational Performance Tool
+   Completed At: 2026-02-16T05:14:25.253Z
+
+30. Student: SABARISH R T (7376231EC263)
+   Marks: 84 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Mr. Senthilnathan S
+   Project: Intelligent Academic Recommendation Engine
+   Completed At: 2026-02-16T05:13:17.205Z
+
+31. Student: ROHITH SRIRAM  M (7376231EC260)
+   Marks: 83 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Mr. Senthilnathan S
+   Project: IT Asset Tracker App
+   Completed At: 2026-02-16T05:12:27.397Z
+
+32. Student: JEBASTIN JOSEPH PAUL J (7376231EE121)
+   Marks: 79 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kavitha V
+   Project: Digital Approval Metrics System
+   Completed At: 2026-02-16T05:11:11.132Z
+
+33. Student: ASHWIN KUMARAN S (7376231EC119)
+   Marks: 82 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kavitha V
+   Project: Faculty Academic Contribution Monitor
+   Completed At: 2026-02-16T05:10:17.685Z
+
+34. Student: VARSAVARNIGA N M (7376232AL211)
+   Marks: 85 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kavitha V
+   Project: Online Approval Hierarchy System
+   Completed At: 2026-02-16T05:10:12.899Z
+
+35. Student: CHAKKRESH S K (7376232BT117)
+   Marks: 81 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kavitha V
+   Project: Student Learning Performance Index
+   Completed At: 2026-02-16T05:09:59.542Z
+
+36. Student: ANIS KARTHIK N E (7376232BT105)
+   Marks: 84 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kavitha V
+   Project: College Voting App
+   Completed At: 2026-02-16T05:09:30.887Z
+
+37. Student: VISVANATH  R (7376232AL220)
+   Marks: 81 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kavitha V
+   Project: Notification Management System
+   Completed At: 2026-02-16T05:09:25.081Z
+
+38. Student: RENUGADEVI R (7376232BT177)
+   Marks: 83 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kavitha V
+   Project: Sleep Routine Assistant App
+   Completed At: 2026-02-16T05:09:14.097Z
+
+39. Student: NAGGUL K (7376232BT164)
+   Marks: 82 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kavitha V
+   Project: Exposure Management System
+   Completed At: 2026-02-16T05:09:05.286Z
+
+40. Student: HEMALATHA G (7376231CS179)
+   Marks: 90 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Manisha G
+   Project: AI-Driven Course Recommendation System
+   Completed At: 2026-02-16T05:04:12.822Z
+
+41. Student: KIRUBA S (7376232IT182)
+   Marks: 97 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Janani  T
+   Project: Career Success Tracker
+   Completed At: 2026-02-16T04:55:30.924Z
+
+42. Student: HARSAVARTHAN J (7376231CS175)
+   Marks: 85 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Manisha G
+   Project: Campus Visitor Management
+   Completed At: 2026-02-16T04:54:48.524Z
+
+43. Student: BHAVATARINI S (7376232IT119)
+   Marks: 98 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Janani  T
+   Project: Personal Movie Watchlist App
+   Completed At: 2026-02-16T04:54:23.285Z
+
+44. Student: KARTHIKA  S (7376232IT172)
+   Marks: 97 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Janani  T
+   Project: Intelligent Attendance Fraud Detection
+   Completed At: 2026-02-16T04:53:30.616Z
+
+45. Student: DHANUSH P (7376232BT120)
+   Marks: 78 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kavitha V
+   Project: Internship Daily Logbook App
+   Completed At: 2026-02-16T04:49:25.441Z
+
+46. Student: KHARIZMA A (7376231EC191)
+   Marks: 86 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kayalvizhi
+   Project: Student Academic Development Platform
+   Completed At: 2026-02-16T04:47:28.332Z
+
+47. Student: SHANKAR NIDHISH P (7376231MZ147)
+   Marks: 90 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Chitradevi
+   Project: Online Operational Planning System
+   Completed At: 2026-02-16T04:46:59.974Z
+
+48. Student: VIVYN R R (7376232CB163)
+   Marks: 87 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Mr Mohemmed Yousuf
+   Project: Skill Development Platform
+   Completed At: 2026-02-16T04:46:40.294Z
+
+49. Student: SUDHARSAN P S (7376232IT263)
+   Marks: 88 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Mr. Gokul M S
+   Project: Employee Leave Request App
+   Completed At: 2026-02-16T04:45:53.448Z
+
+50. Student: NAVANEETHA KRISHNAN S (7376232AL163)
+   Marks: 74 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Mr Sathyaraj S
+   Project: AI-Based Productivity Intelligence Dashboard
+   Completed At: 2026-02-16T04:43:40.351Z
+
+51. Student: PRIYANKA B (7376232IT232)
+   Marks: 81 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Mr. Gokul M S
+   Project: Digital Learning Outcome Validation Platform
+   Completed At: 2026-02-16T04:41:53.859Z
+
+52. Student: RAKHUL PRANAV  R K (7376232BT175)
+   Marks: 85 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kavitha V
+   Project: Intelligent Student Doubt Resolution System
+   Completed At: 2026-02-16T04:41:53.040Z
+
+53. Student: SYED AL AZEEM A (7376232BT202)
+   Marks: 79 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kavitha V
+   Project: Collaboration Performance System
+   Completed At: 2026-02-16T04:41:06.312Z
+
+54. Student: SUDHARSAN R (7376231MZ151)
+   Marks: 92 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Chitradevi
+   Project: AI-Based Teaching Assistant for Formative Assessment
+   Completed At: 2026-02-16T04:38:39.390Z
+
+55. Student: VISHAL A (7376232AD277)
+   Marks: 81 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Faculty Recruitment System
+   Completed At: 2026-02-16T04:36:27.218Z
+
+56. Student: THRISHNA V (7376232IT273)
+   Marks: 83 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Mr. Gokul M S
+   Project: Smart Campus Resource Optimization System
+   Completed At: 2026-02-16T04:36:22.605Z
+
+57. Student: THARUNIKA  K P (7376232AD273)
+   Marks: 83 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Secure Examination Result Publishing System
+   Completed At: 2026-02-16T04:36:06.563Z
+
+58. Student: SUMAIYA F (7376232AD268)
+   Marks: 85 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: AI-Driven Platform for Detecting Depression Using Social Interaction Data
+   Completed At: 2026-02-16T04:35:31.907Z
+
+59. Student: NAVEEN KUMAR T (7376242AD506)
+   Marks: 83 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Personalized Movie Recommendation Engine for Amazon Prime Video
+   Completed At: 2026-02-16T04:35:04.785Z
+
+60. Student: KISHORE C J (7376232AL141)
+   Marks: 94 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Campus Recycling Rewards App
+   Completed At: 2026-02-16T04:34:24.707Z
+
+61. Student: DHAKSHIN RAGHAV A J (7376232IT127)
+   Marks: 98 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Janani  T
+   Project: Digital Campus Wallet App
+   Completed At: 2026-02-16T04:34:22.824Z
+
+62. Student: KALIVARATHAN A (7376232AL134)
+   Marks: 91 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Academic Well-Being Prediction System
+   Completed At: 2026-02-16T04:34:00.264Z
+
+63. Student: GREEVAN HARI K S (7376232AL120)
+   Marks: 87 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Institutional Analytics Platform
+   Completed At: 2026-02-16T04:33:20.237Z
+
+64. Student: KIRUTHIKA  T (7376232AL140)
+   Marks: 84 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Smart Academic Planning Assistant
+   Completed At: 2026-02-16T04:32:14.469Z
+
+65. Student: PAVIPRIYANKA  R (7376232IT219)
+   Marks: 78 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Mr. Gokul M S
+   Project: Student Academic Learning Outcome Mapping System
+   Completed At: 2026-02-16T04:31:37.402Z
+
+66. Student: DIVYADHARANI R (7376232AL115)
+   Marks: 93 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Performance Evaluation System
+   Completed At: 2026-02-16T04:31:33.917Z
+
+67. Student: HIMASHREE K (7376232AL126)
+   Marks: 76 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Online Resource Management Portal
+   Completed At: 2026-02-16T04:30:54.281Z
+
+68. Student: ARULVIJAY S (7376231EI104)
+   Marks: 84 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Dr Karthikeyan G
+   Project: Mood Tracking & Insights App
+   Completed At: 2026-02-16T04:30:23.589Z
+
+69. Student: KAVIN RAJA M (7376241EC511)
+   Marks: 79 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kayalvizhi
+   Project: Interview Scheduling App
+   Completed At: 2026-02-16T04:30:22.175Z
+
+70. Student: DHARSANA  K (7376231CS138)
+   Marks: 89 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Manisha G
+   Project: Smart Deadline Tracking System
+   Completed At: 2026-02-16T04:29:14.341Z
+
+71. Student: DARSANI T S (7376231EC130)
+   Marks: 91 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Dr Karthikeyan G
+   Project: Personalized Travel Recommendation System for MakeMyTrip
+   Completed At: 2026-02-16T04:27:01.169Z
+
+72. Student: VISWANATHAN P (7376231EI158)
+   Marks: 82 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Dr Karthikeyan G
+   Project: Smart Lifestyle Optimization Engine
+   Completed At: 2026-02-16T04:26:13.298Z
+
+73. Student: THAISEELAN C (7376231CD159)
+   Marks: 82 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Mr Sathyaraj S
+   Project: Intelligent CI/CD Health Monitor
+   Completed At: 2026-02-16T04:24:55.531Z
+
+74. Student: VINITH J (7376242IT511)
+   Marks: 81 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Mr. Gokul M S
+   Project: Offline Notes Vault App
+   Completed At: 2026-02-16T04:24:09.756Z
+
+75. Student: KALAIVENDHAN P (7376241EC510)
+   Marks: 80 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kayalvizhi
+   Project: Student Learning Outcome Mapping Tool
+   Completed At: 2026-02-16T04:22:17.613Z
+
+76. Student: PRADEEP KUMAR  V (7376232AD210)
+   Marks: 80 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Eugene Berna
+   Project: Web-Based Knowledge Repository
+   Completed At: 2026-02-16T04:21:43.104Z
+
+77. Student: LITHISH S (7376232IT188)
+   Marks: 98 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Janani  T
+   Project: Intelligent Chatbot for Airline Booking at Indigo Airlines
+   Completed At: 2026-02-16T04:21:21.606Z
+
+78. Student: PRASAANTH M (7376232AD215)
+   Marks: 79 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Eugene Berna
+   Project: Knowledge Hub Portal
+   Completed At: 2026-02-16T04:20:48.242Z
+
+79. Student: VIKASH P (7376231MZ157)
+   Marks: 89 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Chitradevi
+   Project: AI-Driven System for Monitoring Noise Pollution Levels
+   Completed At: 2026-02-16T04:19:06.023Z
+
+80. Student: PRAJIN M (7376231EI133)
+   Marks: 82 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Dr Karthikeyan G
+   Project: Safe Ride Verification App
+   Completed At: 2026-02-16T04:17:04.629Z
+
+81. Student: NITHIN CHANNDIR  A (7376231CS251)
+   Marks: 76 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Eugene Berna
+   Project: Examination History Portal
+   Completed At: 2026-02-16T04:16:58.193Z
+
+82. Student: HEMASHREE S (7376231CS180)
+   Marks: 90 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Manisha G
+   Project: Employee Management System
+   Completed At: 2026-02-16T04:15:32.315Z
+
+83. Student: MAHIVANTH G (7376231CS218)
+   Marks: 78 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Eugene Berna
+   Project: Academic Resource Utilization System
+   Completed At: 2026-02-16T04:14:56.610Z
+
+84. Student: INDHU S (7376231EC164)
+   Marks: 85 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Dr Karthikeyan G
+   Project: Intelligent Digital Teaching Framework
+   Completed At: 2026-02-16T04:14:45.225Z
+
+85. Student: NAVINKUMAR P (7376231CS248)
+   Marks: 75 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Eugene Berna
+   Project: Student Academic Performance Intelligence
+   Completed At: 2026-02-16T04:14:09.283Z
+
+86. Student: MANOJ  J (7376231EC208)
+   Marks: 82 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kayalvizhi
+   Project: Reminder with Location Triggers App
+   Completed At: 2026-02-16T04:14:01.167Z
+
+87. Student: ANANTHA PERUMAL K (7376231CD104)
+   Marks: 84 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Mr Mohemmed Yousuf
+   Project: Scholarship Management System
+   Completed At: 2026-02-16T04:12:53.063Z
+
+88. Student: MUKESH KANNA Y (7376232IT206)
+   Marks: 85 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Mr. Gokul M S
+   Project: Sustainable Academic Operations Platform
+   Completed At: 2026-02-16T04:11:52.819Z
+
+89. Student: GOKUL K (7376232IT145)
+   Marks: 97 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Janani  T
+   Project: Employee Onboarding System
+   Completed At: 2026-02-16T04:09:55.338Z
+
+90. Student: YOGESH KUMAR S (7376231ME161)
+   Marks: 95 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Chitradevi
+   Project: Enterprise Strategic Intelligence System
+   Completed At: 2026-02-16T04:08:57.745Z
+
+91. Student: GYANAHPRAKASH V  S (7376232AL121)
+   Marks: 94 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Smart System for Managing Community Water Resources
+   Completed At: 2026-02-16T04:08:40.400Z
+
+92. Student: GOKUL J (7376231EI112)
+   Marks: 85 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Dr Karthikeyan G
+   Project: Privacy Settings Checker App
+   Completed At: 2026-02-16T04:07:44.497Z
+
+93. Student: DHARANISH K (7376232IT131)
+   Marks: 97 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Janani  T
+   Project: Contract Management System
+   Completed At: 2026-02-16T04:07:40.567Z
+
+94. Student: HANSINI  M (7376231EI113)
+   Marks: 87 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Dr Karthikeyan G
+   Project: Web-Based Service Optimization Tool
+   Completed At: 2026-02-16T04:07:17.679Z
+
+95. Student: AKASH V (7376232IT108)
+   Marks: 97 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Janani  T
+   Project: Bug Tracking System
+   Completed At: 2026-02-16T04:06:39.338Z
+
+96. Student: KAVISH V S (7376231CE111)
+   Marks: 85 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Chitradevi
+   Project: Academic Reminder App
+   Completed At: 2026-02-16T04:06:21.319Z
+
+97. Student: JANANI SAKTHI L (7376232AL128)
+   Marks: 74 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Skill Progress Tracker
+   Completed At: 2026-02-16T04:05:32.310Z
+
+98. Student: GOPIKA T (7376232BT127)
+   Marks: 80 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kavitha V
+   Project: Intelligent Learning Progress Benchmarking Tool
+   Completed At: 2026-02-16T04:05:09.932Z
+
+99. Student: VARSHIKA S (7376231EC313)
+   Marks: 82 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Muthumeena S
+   Project: Secure Academic Policy Enforcement Tool
+   Completed At: 2026-02-16T04:04:49.954Z
+
+100. Student: NITHISH S (7376242AL506)
+   Marks: 83 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kavitha V
+   Project: Academic Event Calendar
+   Completed At: 2026-02-16T04:04:37.556Z
+
+101. Student: SUGASHINI M (7376231EC300)
+   Marks: 82 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Muthumeena S
+   Project: Secure Academic Audit Management Tool
+   Completed At: 2026-02-16T04:03:58.684Z
+
+102. Student: JEYASABARI S (7376231ME120)
+   Marks: 91 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Chitradevi
+   Project: Integrated Academic Learning Intelligence System
+   Completed At: 2026-02-16T04:03:37.988Z
+
+103. Student: SANTHOSH A (7376242AD507)
+   Marks: 87 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Expense Tracking App
+   Completed At: 2026-02-16T04:02:32.417Z
+
+104. Student: HEMA  K (7376231CS177)
+   Marks: 90 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Manisha G
+   Project: Smart Task Dependency Resolver
+   Completed At: 2026-02-16T04:02:05.668Z
+
+105. Student: GOVARSHINI S (7376232AL118)
+   Marks: 83 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Learning Progress Monitor
+   Completed At: 2026-02-16T04:01:35.470Z
+
+106. Student: KONDAMMAL C (7376232IT184)
+   Marks: 98 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Janani  T
+   Project: Smart Learning Outcome Visualizer
+   Completed At: 2026-02-16T03:57:53.520Z
+
+107. Student: AKSAYAGAYATHRI V (7376232IT109)
+   Marks: 97 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Janani  T
+   Project: Carbon Footprint Calculator App
+   Completed At: 2026-02-16T03:52:57.656Z
+
+108. Student: ROSHINI V (7376232IT242)
+   Marks: 82 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Mr. Gokul M S
+   Project: Career Development System
+   Completed At: 2026-02-16T03:52:34.583Z
+
+109. Student: ASMA SHAHIN M (7376232AL108)
+   Marks: 83 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Academic Progress Tracker
+   Completed At: 2026-02-16T03:52:32.785Z
+
+110. Student: ABIRAMI N M (7376242AD501)
+   Marks: 90 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Career Path Planner
+   Completed At: 2026-02-16T03:51:51.202Z
+
+111. Student: JOTHI SUHITHA A K (7376232AL132)
+   Marks: 93 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Academic Data Encryption & Audit System
+   Completed At: 2026-02-16T03:50:56.649Z
+
+112. Student: VISHNU  N (7376231EC328)
+   Marks: 81 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kayalvizhi
+   Project: Online Exam Mobile App
+   Completed At: 2026-02-16T03:50:11.920Z
+
+113. Student: THASHWANTH T K (7376241CS516)
+   Marks: 85 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Manisha G
+   Project: Digital Records Management System
+   Completed At: 2026-02-16T03:49:36.908Z
+
+114. Student: CHAITHANYA P (7376232AL111)
+   Marks: 83 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Green Campus Certification Management System
+   Completed At: 2026-02-16T03:48:50.126Z
+
+115. Student: SUMMANAVAISHNAVI S R (7376232AD269)
+   Marks: 90 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Student Health Engagement Analyzer
+   Completed At: 2026-02-16T03:47:58.674Z
+
+116. Student: SARAN  A (7376232AD243)
+   Marks: 78 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Eugene Berna
+   Project: AI-Based Early Detection of Parkinson??????s Disease Using Gait Analysis
+   Completed At: 2026-02-16T03:47:42.503Z
+
+117. Student: NIVETHA K (7376231CS255)
+   Marks: 82 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Haripriya
+   Project: Online Document Verification Portal
+   Completed At: 2026-02-16T03:47:31.793Z
+
+118. Student: SOUNTHARYA R (7376232AD263)
+   Marks: 84 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Web-Based User Support Analytics
+   Completed At: 2026-02-16T03:47:14.157Z
+
+119. Student: KAVIYARASU KANNUSAMY (7376232AL136)
+   Marks: 90 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Course Outcome Management System
+   Completed At: 2026-02-16T03:46:28.117Z
+
+120. Student: GIRIRAJ A (7376241EC506)
+   Marks: 80 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kayalvizhi
+   Project: Anti-Phishing Awareness App
+   Completed At: 2026-02-16T03:45:49.435Z
+
+121. Student: JEYA GANESH P (7376232AL131)
+   Marks: 80 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Train PNR Reminder App
+   Completed At: 2026-02-16T03:45:13.371Z
+
+122. Student: HARITHA R C (7376232AL123)
+   Marks: 87 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Career Intelligence System
+   Completed At: 2026-02-16T03:44:13.618Z
+
+123. Student: BHARANI L S (7376232AL110)
+   Marks: 84 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Academic Planner App
+   Completed At: 2026-02-16T03:43:33.051Z
+
+124. Student: HARIHARAN  A (7376231EI114)
+   Marks: 88 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Dr Karthikeyan G
+   Project: IIOT Industrial Monitoring System
+   Completed At: 2026-02-16T03:43:06.197Z
+
+125. Student: ARUN P (7376232AL104)
+   Marks: 94 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Student Health Monitoring App
+   Completed At: 2026-02-16T03:42:53.413Z
+
+126. Student: GOWSHIK  S (7376232AL119)
+   Marks: 80 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Academic Progress Dashboard App
+   Completed At: 2026-02-16T03:41:47.989Z
+
+127. Student: GANGA T (7376231EC145)
+   Marks: 87 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Dr Karthikeyan G
+   Project: Service Performance Evaluation System
+   Completed At: 2026-02-16T03:41:38.738Z
+
+128. Student: HARIKRISHNA N (7376231EE118)
+   Marks: 77 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kavitha V
+   Project: Digital Resource Utilization System
+   Completed At: 2026-02-16T03:41:08.309Z
+
+129. Student: NAGASUNDHARAM  P (7376231CS239)
+   Marks: 81 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Eugene Berna
+   Project: Deployment Tracking System
+   Completed At: 2026-02-16T03:40:41.748Z
+
+130. Student: YAJENTHAN  R (7376232AD283)
+   Marks: 90 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Online Admission Portal
+   Completed At: 2026-02-16T03:40:32.308Z
+
+131. Student: VARSHINI  M (7376232AL212)
+   Marks: 82 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kavitha V
+   Project: Smart Change Request Portal
+   Completed At: 2026-02-16T03:40:18.786Z
+
+132. Student: RITHANYA S (7376232IT238)
+   Marks: 81 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Mr. Gokul M S
+   Project: IT Budget Planning System
+   Completed At: 2026-02-16T03:39:58.017Z
+
+133. Student: VISHAL A (7376232AL216)
+   Marks: 82 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kavitha V
+   Project: Student Orientation Portal
+   Completed At: 2026-02-16T03:39:41.400Z
+
+134. Student: SUBASH RAJAN B (7376232AD265)
+   Marks: 85 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Smart Task Coordination System
+   Completed At: 2026-02-16T03:39:40.844Z
+
+135. Student: VISHAL P (7376232AL217)
+   Marks: 85 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kavitha V
+   Project: Web-Based User Feedback Analytics
+   Completed At: 2026-02-16T03:39:14.655Z
+
+136. Student: KRISHNA PRASATH M (7376242AD504)
+   Marks: 83 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Device Health Monitor App
+   Completed At: 2026-02-16T03:39:09.988Z
+
+137. Student: SRI BALAJI  S (7376231EE155)
+   Marks: 80 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kavitha V
+   Project: Smart User Interaction Analyzer
+   Completed At: 2026-02-16T03:38:18.383Z
+
+138. Student: DHIVYA DHARSHINI A (7376232AL113)
+   Marks: 84 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Intelligent Career Guidance Recommendation System
+   Completed At: 2026-02-16T03:38:09.586Z
+
+139. Student: MARISH M (7376231EC211)
+   Marks: 81 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kayalvizhi
+   Project: Student Performance Benchmarking System
+   Completed At: 2026-02-16T03:38:09.344Z
+
+140. Student: KOWSHIK ARAVIND K S P (7376231EE132)
+   Marks: 81 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kavitha V
+   Project: Academic Performance Tracking System for Teaching Assistants
+   Completed At: 2026-02-16T03:37:42.539Z
+
+141. Student: AYSHA PARVEEN  J (7376232AL109)
+   Marks: 91 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Intelligent Student Feedback Analyzer
+   Completed At: 2026-02-16T03:37:41.827Z
+
+142. Student: SUBIKSHA SHREE S (7376231EC295)
+   Marks: 86 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Mr. Senthilnathan S
+   Project: Online Process Automation System
+   Completed At: 2026-02-16T03:37:18.918Z
+
+143. Student: MITHUN  P P (7376231EE136)
+   Marks: 81 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kavitha V
+   Project: Digital Academic Record Analytics
+   Completed At: 2026-02-16T03:37:06.117Z
+
+144. Student: SUGANTHAN S V (7376231EC298)
+   Marks: 94 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Mr. Senthilnathan S
+   Project: Infrastructure Monitoring System
+   Completed At: 2026-02-16T03:36:59.895Z
+
+145. Student: SREEVARSHA S (7376232AD264)
+   Marks: 85 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Student Psychological Support Portal
+   Completed At: 2026-02-16T03:36:58.310Z
+
+146. Student: LIMITHA D (7376232BT149)
+   Marks: 85 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kavitha V
+   Project: Campus Emergency Alert App
+   Completed At: 2026-02-16T03:36:21.016Z
+
+147. Student: KERUTHIK S S (7376232AL138)
+   Marks: 85 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kanimozhi
+   Project: Digital Workflow Analytics Platform
+   Completed At: 2026-02-16T03:35:33.585Z
+
+148. Student: PADMA VISHNU PRIYA U (7376232BT168)
+   Marks: 81 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms. Kavitha V
+   Project: Student Academic Learning Trust Score System
+   Completed At: 2026-02-16T03:35:21.971Z
+
+149. Student: BAAVANA  M (7376231CS119)
+   Marks: 87 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Manisha G
+   Project: Campus Carbon Neutrality Tracker
+   Completed At: 2026-02-16T03:33:19.290Z
+
+150. Student: SANJAYKUMAR K (7376242IT508)
+   Marks: 78 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Mr. Gokul M S
+   Project: Smart Data Collection Portal
+   Completed At: 2026-02-16T03:16:51.654Z
+
+151. Student: NATISH G (7376241CS509)
+   Marks: 89 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Manisha G
+   Project: Faculty Pedagogical Effectiveness Dashboard
+   Completed At: 2026-02-16T03:05:53.657Z
+
+152. Student: DHIVINESH  K (7376231CS145)
+   Marks: 85 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Manisha G
+   Project: Online Ticket Reservation System
+   Completed At: 2026-02-16T02:50:46.625Z
+
+153. Student: ABISHEK HARIHARAN T (7376231CS105)
+   Marks: 86 | Absent: false
+   Review Phase: 1 | Status: COMPLETED
+   Faculty: Ms Manisha G
+   Project: Academic Emotional Support Portal
+   Completed At: 2026-02-16T02:47:24.916Z
+

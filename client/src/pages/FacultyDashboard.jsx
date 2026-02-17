@@ -79,7 +79,18 @@ export default function FacultyDashboard() {
     }).catch(err => console.error("Failed to load dashboard data", err));
   };
 
-  useEffect(() => { loadData(); }, [
+  useEffect(() => {
+    loadData();
+    // Background polling for live updates (60 seconds)
+    // Only fetch if no review form is currently expanded to prevent overwriting unsaved work
+    const pollInterval = setInterval(() => {
+      if (!expandedId) {
+        loadData();
+      }
+    }, 60000);
+    return () => clearInterval(pollInterval);
+  }, [
+    expandedId, // Re-run effect when expandedId changes to reset/start interval
     assignmentsPagination.page,
     assignmentsPagination.limit,
     searchTerm,
@@ -1521,7 +1532,7 @@ export default function FacultyDashboard() {
             team={selectedTeamForDetails}
             onClose={() => setSelectedTeamForDetails(null)}
             onUpdate={() => loadData()}
-            readOnly={activeDashboardTab === 'ASSIGNMENTS'}
+            readOnly={activeDashboardTab === 'ASSIGNMENTS' || activeDashboardTab === 'STUDENTS'}
           />
         )}
       </div>

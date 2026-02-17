@@ -22,7 +22,8 @@ import {
   Calendar,
   CheckCircle,
   AlertCircle,
-  UserX
+  UserX,
+  TrendingUp
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
@@ -44,6 +45,7 @@ import ExportSelectionModal from '../components/ui/ExportSelectionModal';
 import ReleaseReviewsModal from '../components/admin/ReleaseReviewsModal';
 import OverviewDashboardTab from '../components/admin/OverviewDashboardTab';
 import IndividualStatsTab from '../components/admin/IndividualStatsTab';
+import FacultyStatsTab from '../components/admin/FacultyStatsTab';
 import ProjectRequestsTab from '../components/admin/ProjectRequestsTab';
 import ProjectScopesTab from '../components/admin/ProjectScopesTab';
 import SettingsTab from '../components/admin/SettingsTab';
@@ -226,6 +228,7 @@ export default function AdminDashboard() {
       const isTeams = activeTab === 'teams';
       const isManageTeams = activeTab === 'manage-teams';
       const isStats = activeTab === 'individual-stats';
+      const isFacultyStats = activeTab === 'faculty-stats';
       const isFacultyAssignments = activeTab === 'faculty-assignments';
       const isReviews = activeTab === 'reviews';
 
@@ -252,7 +255,7 @@ export default function AdminDashboard() {
       }
 
       // Faculty data
-      if (isFaculty || isManageTeams || isFacultyAssignments || isReviews || isStats) {
+      if (isFaculty || isManageTeams || isFacultyAssignments || isReviews || isStats || isFacultyStats) {
         promises.push(api.get('/admin/faculty-stats', { params: { search: debouncedUserSearch } }));
         keys.push('faculty_stats');
       }
@@ -419,7 +422,12 @@ export default function AdminDashboard() {
     }
   };
 
-  useEffect(() => { refreshData(); }, [
+  useEffect(() => {
+    refreshData();
+    // Background polling for live updates (60 seconds)
+    const pollInterval = setInterval(refreshData, 60000);
+    return () => clearInterval(pollInterval);
+  }, [
     activeTab,
     studentPagination.page,
     studentPagination.limit,
@@ -1000,6 +1008,7 @@ export default function AdminDashboard() {
         { id: 'reviews', label: 'Reviews', icon: CheckSquare },
         { id: 'absentees', label: 'Absentees Report', icon: UserX },
         { id: 'individual-stats', label: 'Student Stats', icon: BarChart2 },
+        { id: 'faculty-stats', label: 'Faculty Stats', icon: TrendingUp },
       ]
     }
   ].map(group => ({
@@ -1186,10 +1195,18 @@ export default function AdminDashboard() {
                 <IndividualStatsTab
                   users={allStudents}
                   teams={teams}
+                  facultyList={faculty}
                   onBack={() => setActiveTab('overview')}
                   updateMark={updateMark}
                   updateReview={updateReview}
                   scopes={scopes}
+                />
+              )}
+
+              {activeTab === 'faculty-stats' && (
+                <FacultyStatsTab
+                  facultyMembers={faculty}
+                  onBack={() => setActiveTab('overview')}
                 />
               )}
 

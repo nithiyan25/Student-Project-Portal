@@ -1,0 +1,185 @@
+--- REVIEWS BY MS. HARIPRIYA (NOT PENDING OR WITH MARKS) ---
+Total Found: 26
+
+1. Project: Web-Based User Engagement Tracker | Phase: 1 | Status: COMPLETED
+   Review ID: cmloqwjlg00eim4lqmzmjrjl1
+   Created At: 2026-02-16T05:40:15.796Z
+   Team Members: RITHU SHRI  G K
+   Marks: 1
+     - RITHU SHRI  G K: 53
+
+2. Project: Smart Approval Intelligence System | Phase: 1 | Status: COMPLETED
+   Review ID: cmljas69r00bc119zm98spwqg
+   Created At: 2026-02-12T10:10:07.168Z
+   Team Members: SHANJAY DEV  B
+   Marks: 1
+     - SHANJAY DEV  B: 72
+
+3. Project: Quick Revision Notes App | Phase: 1 | Status: COMPLETED
+   Review ID: cmljas63a00b8119znywmfzvb
+   Created At: 2026-02-12T10:10:06.934Z
+   Team Members: SHAMYRAJ SM
+   Marks: 1
+     - SHAMYRAJ SM: 75
+
+4. Project: Campus Suggestion Box App | Phase: 1 | Status: COMPLETED
+   Review ID: cmljaaod90096119zqw315ncu
+   Created At: 2026-02-12T09:56:30.813Z
+   Team Members: PRAVEEN A
+   Marks: 1
+     - PRAVEEN A: 74
+
+5. Project: Customer Churn Prediction Model for Netflix Subscription Retention | Phase: 1 | Status: COMPLETED
+   Review ID: cmlj84v1i005x119z41iglj5o
+   Created At: 2026-02-12T08:56:00.294Z
+   Team Members: SANTHIYA S
+   Marks: 1
+     - SANTHIYA S: 76
+
+6. Project: AI-Driven Customer Satisfaction Prediction Model for Tata Steel | Phase: 1 | Status: COMPLETED
+   Review ID: cmlj84uvw005t119zp2lov3on
+   Created At: 2026-02-12T08:56:00.093Z
+   Team Members: SANDHYA  S
+   Marks: 1
+     - SANDHYA  S: 69
+
+7. Project: Academic Environmental Compliance Monitor | Phase: 1 | Status: COMPLETED
+   Review ID: cmlj81uvm0058119zahnbbetj
+   Created At: 2026-02-12T08:53:40.114Z
+   Team Members: MADHAN V
+   Marks: 1
+     - MADHAN V: 87
+
+8. Project: Student Mindfulness Activity Tracker | Phase: 1 | Status: COMPLETED
+   Review ID: cmlj81uqh0054119z6p00y78y
+   Created At: 2026-02-12T08:53:39.930Z
+   Team Members: LOGANATHAN M
+   Marks: 1
+     - LOGANATHAN M: 88
+
+9. Project: Skill Badge Wallet App | Phase: 1 | Status: COMPLETED
+   Review ID: cmlj7ycy7004q119zwgq228y1
+   Created At: 2026-02-12T08:50:56.912Z
+   Team Members: ROSHITHA D
+   Marks: 1
+     - ROSHITHA D: 74
+
+10. Project: Online Document Verification Portal | Phase: 1 | Status: COMPLETED
+   Review ID: cmlj1h8id00phtdlb9x1mgsm1
+   Created At: 2026-02-12T05:49:40.309Z
+   Team Members: NIVETHA K
+   Marks: 1
+     - NIVETHA K: 82
+
+11. Project: Sustainable Campus Planning Tool | Phase: 1 | Status: COMPLETED
+   Review ID: cmlj1h82l00pdtdlbux6q4tor
+   Created At: 2026-02-12T05:49:39.741Z
+   Team Members: NIVEDHITHA M
+   Marks: 1
+     - NIVEDHITHA M: 86
+
+12. Project: Real-Time Recommendation Engine for YouTube Video Suggestions | Phase: 1 | Status: COMPLETED
+   Review ID: cmlj1h7qt00p5tdlbqwddlzcp
+   Created At: 2026-02-12T05:49:39.317Z
+   Team Members: NAVEEN  C
+   Marks: 1
+     - NAVEEN  C: 52
+
+13. Project: AI-Based Platform for Monitoring School Meal Program Quality | Phase: 1 | Status: COMPLETED
+   Review ID: cmlj1h7m400p1tdlbakn9vasc
+   Created At: 2026-02-12T05:49:39.148Z
+   Team Members: NANDHITHA  K
+   Marks: 1
+     - NANDHITHA  K: 74
+
+14. Project: Career Recommendation System | Phase: 1 | Status: COMPLETED
+   Review ID: cmlj1h6yi00optdlb64va1nlt
+   Created At: 2026-02-12T05:49:38.299Z
+   Team Members: MOWNEESH S
+   Marks: 1
+     - MOWNEESH S: 86
+
+15. Project: Student Knowledge Retention Decay Analyzer | Phase: 1 | Status: COMPLETED
+   Review ID: cmlizg51m00l3tdlb22nxcjof
+   Created At: 2026-02-12T04:52:49.930Z
+   Team Members: SAKTHI SARAVANAN P
+   Marks: 1
+     - SAKTHI SARAVANAN P: 72
+
+16. Project: Predictive Academic Resource Planner | Phase: 1 | Status: COMPLETED
+   Review ID: cmlizfye400gntdlbahi41zki
+   Created At: 2026-02-12T04:52:41.309Z
+   Team Members: SANJAY M
+   Marks: 1
+     - SANJAY M: 77
+
+17. Project: Digital Peer Support Platform | Phase: 1 | Status: COMPLETED
+   Review ID: cmlizfw3i00f3tdlbtucs6ljx
+   Created At: 2026-02-12T04:52:38.335Z
+   Team Members: MANASHA  P
+   Marks: 1
+     - MANASHA  P: 58
+
+18. Project: Faculty Appraisal System | Phase: 1 | Status: COMPLETED
+   Review ID: cmlixvtqg0051tdlbgro5bjuo
+   Created At: 2026-02-12T04:09:02.537Z
+   Team Members: SIVAKAMI S
+   Marks: 1
+     - SIVAKAMI S: 64
+
+19. Project: Digital Service Tracking Portal | Phase: 1 | Status: COMPLETED
+   Review ID: cmlixvtkl004xtdlb5a1detvw
+   Created At: 2026-02-12T04:09:02.325Z
+   Team Members: SASTHIKA D
+   Marks: 1
+     - SASTHIKA D: 70
+
+20. Project: Customer Retention System | Phase: 1 | Status: COMPLETED
+   Review ID: cmlixvt9w004ptdlbkjvi086f
+   Created At: 2026-02-12T04:09:01.940Z
+   Team Members: SANDHYAA  K
+   Marks: 1
+     - SANDHYAA  K: 80
+
+21. Project: Knowledge Assessment System | Phase: 1 | Status: COMPLETED
+   Review ID: cmlixvt4v004ltdlbnt8zhtkm
+   Created At: 2026-02-12T04:09:01.760Z
+   Team Members: SAMSKRITI L
+   Marks: 1
+     - SAMSKRITI L: 78
+
+22. Project: Water Intake Reminder App | Phase: 1 | Status: COMPLETED
+   Review ID: cmlixvs36003xtdlbyvhdxm8y
+   Created At: 2026-02-12T04:09:00.402Z
+   Team Members: PRATHEEP S
+   Marks: 1
+     - PRATHEEP S: 76
+
+23. Project: Smart Online Voting System | Phase: 1 | Status: COMPLETED
+   Review ID: cmlixvrm2003ltdlbktf5ppny
+   Created At: 2026-02-12T04:08:59.786Z
+   Team Members: MONIKA R
+   Marks: 1
+     - MONIKA R: 79
+
+24. Project: Sponsored Scholarship Portal | Phase: 1 | Status: COMPLETED
+   Review ID: cmlixvr7g003dtdlb2t8tlw76
+   Created At: 2026-02-12T04:08:59.260Z
+   Team Members: MANIKANDAN S
+   Marks: 1
+     - MANIKANDAN S: 81
+
+25. Project: College Election Voting System | Phase: 1 | Status: COMPLETED
+   Review ID: cmlixvqqh0031tdlbf1lkmtl6
+   Created At: 2026-02-12T04:08:58.650Z
+   Team Members: LAKSHAYA S
+   Marks: 1
+     - LAKSHAYA S: 70
+
+26. Project: Smart Appointment Booking System | Phase: 1 | Status: COMPLETED
+   Review ID: cmlhsf9wh00dxi6md67ukh2d0
+   Created At: 2026-02-11T08:48:26.081Z
+   Team Members: MONIGASRI M
+   Marks: 1
+     - MONIGASRI M: 79
+

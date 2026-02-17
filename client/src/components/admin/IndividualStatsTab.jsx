@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Users, UserCheck, UserX, Search, Filter, Crown, Folder, X, Edit2, Save, Award, History, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, CheckCircle2, Clock, Download, Eye, RotateCcw, AlertCircle, MessageSquare } from 'lucide-react';
 import SearchInput from '../ui/SearchInput';
+import SearchableDropdown from '../ui/SearchableDropdown';
 import api from '../../api';
 import { useToast } from '../../context/ToastContext';
 
@@ -299,9 +300,10 @@ const StudentDetailView = ({ student, onClose, updateMark, updateReview, addToas
     );
 };
 
-export default function IndividualStatsTab({ users, teams, onBack, updateMark, updateReview, scopes }) {
+export default function IndividualStatsTab({ users, teams, onBack, updateMark, updateReview, scopes, facultyList = [] }) {
     const { addToast } = useToast();
     const [search, setSearch] = useState('');
+    const [facultySearch, setFacultySearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
     const [deptFilter, setDeptFilter] = useState('ALL');
     const [yearFilter, setYearFilter] = useState('ALL');
@@ -323,6 +325,7 @@ export default function IndividualStatsTab({ users, teams, onBack, updateMark, u
 
     const resetFilters = () => {
         setSearch('');
+        setFacultySearch('');
         setStatusFilter('ALL');
         setDeptFilter('ALL');
         setYearFilter('ALL');
@@ -421,8 +424,16 @@ export default function IndividualStatsTab({ users, teams, onBack, updateMark, u
 
     const filteredStudents = useMemo(() => {
         const searchLower = search.toLowerCase();
+        const facSearchLower = facultySearch.toLowerCase();
+
         return students.filter(s => {
             const matchesSearch = s.name.toLowerCase().includes(searchLower) || s.email.toLowerCase().includes(searchLower) || (s.rollNumber && s.rollNumber.toLowerCase().includes(searchLower)) || (s.department && s.department.toLowerCase().includes(searchLower));
+
+            // Faculty Search - check if any review in this student's team was given by the searched faculty
+            const matchesFaculty = !facultySearch || (s.teamData?.reviews || []).some(r =>
+                r.faculty?.name?.toLowerCase().includes(facSearchLower)
+            );
+
             const matchesStatus = statusFilter === 'ALL' || (statusFilter === 'IN_TEAM' && s.isInTeam) || (statusFilter === 'NO_TEAM' && !s.isInTeam);
             const matchesDept = deptFilter === 'ALL' || (s.department || 'Unassigned') === deptFilter;
             const matchesYear = yearFilter === 'ALL' || String(s.year) === yearFilter;
@@ -434,9 +445,10 @@ export default function IndividualStatsTab({ users, teams, onBack, updateMark, u
                 s.teamData?.project?.scopeId === batchFilter ||
                 s.scopes?.some(sc => sc.id === batchFilter);
 
-            return matchesSearch && matchesStatus && matchesDept && matchesYear && matchesPhase && matchesBatch;
+            return matchesSearch && matchesFaculty && matchesStatus && matchesDept && matchesYear && matchesPhase && matchesBatch;
         });
-    }, [students, search, statusFilter, deptFilter, yearFilter, phaseFilter, batchFilter]);
+    }, [students, search, facultySearch, statusFilter, deptFilter, yearFilter, phaseFilter, batchFilter]);
+
 
     const selectedStudent = useMemo(() => {
         if (!selectedStudentId) return null;
@@ -573,8 +585,18 @@ export default function IndividualStatsTab({ users, teams, onBack, updateMark, u
                         </select>
                     </div>
                     <SearchInput value={search} onChange={(v) => { setSearch(v); setLocalPage(1); }} placeholder="Search students..." className="w-full md:w-64" />
+
+                    <SearchableDropdown
+                        options={facultyList}
+                        value={facultySearch}
+                        onChange={(v) => { setFacultySearch(v); setLocalPage(1); }}
+                        placeholder="Filter by Faculty"
+                        searchPlaceholder="Search faculty name..."
+                        className="w-full md:w-80"
+                    />
                 </div>
             </div>
+
 
             <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="overflow-x-auto">

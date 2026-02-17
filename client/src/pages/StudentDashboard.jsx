@@ -25,7 +25,12 @@ export default function StudentDashboard() {
     }
   };
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    loadData();
+    // Background polling for live updates (60 seconds)
+    const pollInterval = setInterval(loadData, 60000);
+    return () => clearInterval(pollInterval);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">

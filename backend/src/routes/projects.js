@@ -354,7 +354,7 @@ router.patch('/:id', authenticate, authorize(['ADMIN', 'FACULTY']), projectValid
                     facultyId: req.user.id,
                     startTime: { gte: todayStart },
                     endTime: { lte: todayEnd },
-                    students: {
+                    user_sessionstudents: {
                         some: {
                             teamMemberships: {
                                 some: {

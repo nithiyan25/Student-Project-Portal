@@ -36,7 +36,15 @@ export default function StudentScheduleTab() {
 
             // Filter where current user is in session.students
             const mySessions = res.data.filter(s => s.students?.some(student => student.id === user?.id));
-            setSessions(mySessions);
+
+            // Sort sessions: Newest first for History, Chronological for others
+            const sortedSessions = mySessions.sort((a, b) => {
+                const dateA = new Date(a.startTime);
+                const dateB = new Date(b.startTime);
+                return activeTab === 'history' ? dateB - dateA : dateA - dateB;
+            });
+
+            setSessions(sortedSessions);
 
         } catch (e) {
             console.error(e);
@@ -47,6 +55,9 @@ export default function StudentScheduleTab() {
 
     useEffect(() => {
         fetchMySchedule();
+        // Background polling for live updates (30 seconds)
+        const pollInterval = setInterval(fetchMySchedule, 30000);
+        return () => clearInterval(pollInterval);
     }, [activeTab]);
 
     return (
@@ -73,13 +84,7 @@ export default function StudentScheduleTab() {
                 </button>
             </div>
 
-            {/* Debug Overlay */}
-            <div className="flex items-center gap-2 px-3 py-1 bg-yellow-50 border border-yellow-200 rounded-lg text-[10px] font-black text-yellow-700 uppercase w-fit">
-                <span>User: {user?.id?.substring(0, 8)}...</span>
-                <div className="w-1 h-3 bg-yellow-200 mx-1" />
-                <span>Fetched: {sessions.length}</span>
-                <button onClick={fetchMySchedule} className="ml-2 hover:text-yellow-900 underline">Reload</button>
-            </div>
+
 
             {/* List */}
             <div className="grid gap-4">

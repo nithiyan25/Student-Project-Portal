@@ -88,17 +88,15 @@ export default function StudentBatchDetail() {
 
     useEffect(() => {
         loadData();
-        const interval = setInterval(async () => {
-            try {
-                const scopeRes = await api.get('/scopes/my-scopes');
-                const foundScope = scopeRes.data.find(s => s.id === scopeId);
-                if (foundScope) setScope(foundScope);
-            } catch (err) {
-                console.error("Polling error", err);
+        // Background polling for live updates (60 seconds)
+        // Pause polling if the submission modal is open to avoid UI flicker/overwriting
+        const interval = setInterval(() => {
+            if (!isSubmitModalOpen) {
+                loadData();
             }
-        }, 60000); // Polling every 60s
+        }, 60000);
         return () => clearInterval(interval);
-    }, [scopeId]);
+    }, [scopeId, isSubmitModalOpen]);
 
     // --- ACTIONS ---
 

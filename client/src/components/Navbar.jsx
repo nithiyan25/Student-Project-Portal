@@ -1,15 +1,56 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { Database, Download, Loader2 } from 'lucide-react';
+import api from '../api';
+import { useToast } from '../context/ToastContext';
 
 export default function Navbar({ compact, variant = 'default' }) {
-  const { user, logout, lastActivityTime } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
+  const { addToast } = useToast();
   const navigate = useNavigate();
+  const [isBackingUp, setIsBackingUp] = useState(false);
   if (!user) return null;
 
   const handleLogout = () => {
     logout();
     navigate('/');
+  };
+
+  const handleBackupDownload = async () => {
+    if (isBackingUp) return;
+    setIsBackingUp(true);
+    addToast("Preparing database backup...", "info");
+
+    try {
+      const response = await api.get('/admin/backup/download', {
+        responseType: 'blob'
+      });
+
+      // Get filename from header or use default
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = `db-backup-${new Date().toISOString().split('T')[0]}.sql`;
+      if (contentDisposition) {
+        const match = contentDisposition.match(/filename="(.+)"/);
+        if (match) filename = match[1];
+      }
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      addToast("Backup downloaded successfully!", "success");
+    } catch (error) {
+      console.error("Backup failed:", error);
+      addToast("Failed to download backup. Please ensure mysqldump is installed on total server.", "error");
+    } finally {
+      setIsBackingUp(false);
+    }
   };
 
   const isLight = variant === 'light';
@@ -36,9 +77,23 @@ export default function Navbar({ compact, variant = 'default' }) {
             </div>
           </div>
         </div>
+        {user.role === 'ADMIN' && user.name === 'Super Admin' && user.email === 'nithiyan.al23@bitsathy.ac.in' && (
+          <button
+            onClick={handleBackupDownload}
+            disabled={isBackingUp}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded text-sm transition font-medium ${isLight
+              ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+              : 'bg-blue-900 text-blue-100 hover:bg-blue-950'
+              } ${isBackingUp ? 'opacity-50 cursor-not-allowed' : ''}`}
+            title="Download Instant MySQL Backup"
+          >
+            {isBackingUp ? <Loader2 className="animate-spin" size={16} /> : <Database size={16} />}
+            <span className="hidden sm:inline">Backup</span>
+          </button>
+        )}
         <button
           onClick={handleLogout}
-          className="bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded text-sm transition font-medium text-white"
+          className="bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded text-sm transition font-medium text-white flex items-center gap-2"
         >
           Logout
         </button>

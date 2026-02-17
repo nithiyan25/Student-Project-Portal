@@ -1,6 +1,7 @@
 const express = require('express');
 const prisma = require('../utils/prisma');
 const { authenticate, authorize } = require('../middleware/auth');
+const { syncTeamReviewsWithSession } = require('../utils/assignmentUtils');
 const router = express.Router();
 
 // --- VENUE MANAGEMENT ---
@@ -339,10 +340,21 @@ router.put('/sessions/:id', authenticate, authorize(['ADMIN']), async (req, res)
             };
         }
 
-        const updatedSession = await prisma.labsession.update({
-            where: { id: sessionId },
-            data: updateData,
-            include: { venue: true, user_labsession_facultyIdTouser: true, user_sessionstudents: true }
+        const updatedSession = await prisma.$transaction(async (tx) => {
+            const result = await tx.labsession.update({
+                where: { id: sessionId },
+                data: updateData,
+                include: { venue: true, user_labsession_facultyIdTouser: true, user_sessionstudents: true }
+            });
+
+            // If faculty changed OR students changed, sync reviews
+            if (facultyId || studentIds) {
+                const affectedStudentIds = studentIds || result.user_sessionstudents.map(s => s.id);
+                const activeFacultyId = facultyId || result.facultyId;
+                await syncTeamReviewsWithSession(tx, affectedStudentIds, activeFacultyId, req.user.id);
+            }
+
+            return result;
         });
 
         const mappedSession = {
