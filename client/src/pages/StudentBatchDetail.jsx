@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api';
 import Navbar from '../components/Navbar';
 import { AuthContext } from '../context/AuthContext';
-import { Users, CheckCircle, MessageSquare, Search, ArrowLeft, XCircle, Check, AlertCircle, Clock, MapPin, Layout, History, Timer, Calendar } from 'lucide-react';
+import { Users, CheckCircle, MessageSquare, Search, ArrowLeft, XCircle, Check, AlertCircle, Clock, MapPin, Layout, History, Timer, Calendar, ChevronDown, Rocket, Video, Building2, ArrowRight } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { useConfirm } from '../context/ConfirmContext';
 import BatchTimer from '../components/student/BatchTimer';
@@ -210,7 +210,7 @@ export default function StudentBatchDetail() {
         }
     };
 
-    if (loading) return <div className="p-10 text-center">Loading...</div>;
+    if (loading) return <div className="p-10 text-center text-gray-400">Loading...</div>;
     if (!scope) return null;
 
     const scopeRequest = myTeam?.projectRequests?.[0];
@@ -260,50 +260,53 @@ export default function StudentBatchDetail() {
         <div className="min-h-screen bg-gray-50">
             <Navbar variant="light" compact />
 
-            {/* Top Persistent Deadline Banner */}
+            {/* Deadline Banner */}
             {deadlineDate && (
-                <div className={`sticky top-0 z-40 border-b transition-all duration-300 ${isPassed ? 'bg-red-600 border-red-700' : isUrgent ? 'bg-orange-500 border-orange-600 animate-pulse' : 'bg-blue-600 border-blue-700'}`}>
-                    <div className="max-w-6xl mx-auto px-8 py-2 flex items-center justify-between gap-4 text-white">
+                <div className={`sticky top-0 z-40 border-b text-sm ${isPassed
+                    ? 'bg-red-600 border-red-700 text-white'
+                    : isUrgent
+                        ? 'bg-amber-500 border-amber-600 text-white'
+                        : 'bg-white border-gray-200 text-gray-700'
+                    }`}>
+                    <div className="max-w-6xl mx-auto px-6 py-2 flex items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
-                            <Calendar size={16} className="opacity-80" />
-                            <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-black uppercase tracking-widest opacity-80">Phase {currentPhase} Deadline:</span>
-                                <span className="text-xs font-bold">
-                                    {deadlineDate.toLocaleDateString([], { dateStyle: 'medium' })} at {deadlineDate.toLocaleTimeString([], { timeStyle: 'short' })}
-                                </span>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Clock size={14} className="opacity-80" />
-                            <span className="text-[10px] font-black uppercase tracking-widest">
-                                {isPassed ? 'DEADLINE PASSED' : (() => {
-                                    const diff = deadlineDate - now;
-                                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                                    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                                    return days > 0 ? `${days}d ${hours}h remaining` : `${hours}h ${mins}m remaining`;
-                                })()}
+                            <Calendar size={14} />
+                            <span className="font-medium">
+                                Phase {currentPhase} — {deadlineDate.toLocaleDateString([], { dateStyle: 'medium' })} at {deadlineDate.toLocaleTimeString([], { timeStyle: 'short' })}
                             </span>
                         </div>
+                        <span className="text-xs font-medium flex items-center gap-1.5">
+                            <Clock size={12} />
+                            {isPassed ? 'Passed' : (() => {
+                                const diff = deadlineDate - now;
+                                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                                const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                                return days > 0 ? `${days}d ${hours}h left` : `${hours}h ${mins}m left`;
+                            })()}
+                        </span>
                     </div>
                 </div>
             )}
 
-            <div className="p-8 max-w-6xl mx-auto space-y-8">
+            <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-6">
 
-                {/* Header / Nav */}
-                <div className="flex items-center gap-4">
-                    <button onClick={() => navigate('/student')} className="p-2 hover:bg-gray-200 rounded-full transition">
-                        <ArrowLeft size={24} className="text-gray-600" />
-                    </button>
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-800">{scope.name}</h1>
-                        <p className="text-gray-500">{scope.description || "Manage your project and team for this batch."}</p>
+                <div className="space-y-4">
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => navigate('/student')}
+                            className="h-10 w-10 flex items-center justify-center bg-white border border-gray-200 rounded-lg text-gray-400 hover:text-blue-600 hover:border-blue-300 transition-colors shrink-0"
+                        >
+                            <ArrowLeft size={18} />
+                        </button>
+                        <div>
+                            <h1 className="text-xl font-bold text-gray-900">{scope.name}</h1>
+                            {scope.description && <p className="text-sm text-gray-500 mt-0.5">{scope.description}</p>}
+                        </div>
                     </div>
-                </div>
 
-                {/* Batch Timer */}
-                <BatchTimer scope={scope} />
+                    <BatchTimer scope={scope} />
+                </div>
 
                 <div className="grid lg:grid-cols-3 gap-8">
                     {/* LEFT COLUMN: Team & Project Status */}
@@ -312,23 +315,8 @@ export default function StudentBatchDetail() {
                             {(() => {
                                 const completedReviews = myTeam?.reviews?.filter(r => r.status === 'COMPLETED') || [];
 
-                                // If results are not published by admin, don't show the summary
-                                if (!scope?.resultsPublished) {
-                                    if (completedReviews.length > 0) {
-                                        return (
-                                            <div className="bg-white p-6 shadow-sm rounded-2xl border border-orange-100 mb-6 bg-orange-50/20">
-                                                <div className="flex items-center gap-3 text-orange-600">
-                                                    <Clock className="animate-pulse" size={24} />
-                                                    <div>
-                                                        <p className="font-bold">Results Pending</p>
-                                                        <p className="text-xs text-orange-400">Your reviews are completed. Scores will be visible once the admin publishes them.</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    }
-                                    return null;
-                                }
+                                // Reviews are available — backend strips marks if not authorized
+
 
                                 const myScores = completedReviews
                                     .map(r => {
@@ -360,29 +348,30 @@ export default function StudentBatchDetail() {
                                 const avgPercentage = ((totalScored / totalPossible) * 100).toFixed(1);
 
                                 return (
-                                    <div className="bg-white p-6 shadow-sm rounded-2xl border border-gray-100 mb-6 animate-in fade-in slide-in-from-left-4 duration-500">
-                                        <div className="flex justify-between items-center mb-6">
-                                            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2 font-outfit">
-                                                <CheckCircle className="text-green-600" size={24} /> Performance Summary
-                                            </h2>
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-100">
-                                                Results Published
+                                    <div className="bg-white p-6 rounded-lg border border-gray-200 mb-6">
+                                        <div className="flex justify-between items-center mb-5">
+                                            <div className="flex items-center gap-2.5">
+                                                <CheckCircle size={18} className="text-green-600" />
+                                                <h2 className="text-base font-semibold text-gray-900">Performance Summary</h2>
+                                            </div>
+                                            <span className="text-xs font-medium text-green-700 bg-green-50 px-2.5 py-1 rounded-full border border-green-200">
+                                                Published
                                             </span>
                                         </div>
-                                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                                            {/* Cumulative Average Card */}
-                                            <div className="p-4 bg-blue-600 rounded-xl border border-blue-700 shadow-lg shadow-blue-100 transition-all group lg:col-span-1 col-span-2">
-                                                <p className="text-[9px] font-black text-blue-100 uppercase tracking-[0.15em] mb-1">Total Score</p>
-                                                <p className="text-3xl font-black text-white font-outfit">
-                                                    {avgPercentage}<span className="text-sm text-blue-200 ml-1 font-bold">%</span>
+
+                                        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                                            <div className="p-4 bg-gray-900 rounded-lg col-span-2 lg:col-span-1">
+                                                <p className="text-xs text-gray-400 mb-1">Average</p>
+                                                <p className="text-2xl font-bold text-white">
+                                                    {avgPercentage}<span className="text-sm text-gray-400 ml-0.5">%</span>
                                                 </p>
                                             </div>
 
                                             {myScores.map((s, i) => (
-                                                <div key={i} className="p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-blue-200 transition-all group">
-                                                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.15em] mb-1 group-hover:text-blue-400 transition-colors">Phase {s.phase}</p>
-                                                    <p className="text-2xl font-black text-gray-800 font-outfit">
-                                                        {s.marks}<span className="text-sm text-gray-400 ml-1 font-bold">{s.scale}</span>
+                                                <div key={i} className="p-4 bg-gray-50 rounded-lg border border-gray-100 hover:border-blue-200 transition-colors">
+                                                    <p className="text-xs text-gray-500 mb-1">Phase {s.phase}</p>
+                                                    <p className="text-xl font-bold text-gray-900">
+                                                        {s.marks}<span className="text-sm text-gray-400 ml-0.5">{s.scale}</span>
                                                     </p>
                                                 </div>
                                             ))}
@@ -391,110 +380,128 @@ export default function StudentBatchDetail() {
                                 );
                             })()}
 
-                            <div className={`bg-white p-6 shadow-sm rounded-2xl border ${isPending ? 'border-orange-200 ring-4 ring-orange-50/50' : 'border-gray-100'} relative`}>
-                                <div className="absolute top-0 right-0 p-4 flex gap-2">
-                                    <span className="text-[10px] font-black uppercase tracking-[0.1em] px-3 py-1 rounded-full border bg-blue-50 text-blue-600 border-blue-100">
+                            <div className={`bg-white p-6 rounded-lg border ${isPending ? 'border-amber-300' : 'border-gray-200'}`}>
+                                <div className="flex justify-between items-center mb-5">
+                                    <div className="flex items-center gap-2.5">
+                                        <Users size={18} className="text-blue-600" />
+                                        <h2 className="text-base font-semibold text-gray-900">Your Team</h2>
+                                    </div>
+                                    <span className="text-xs font-medium px-2.5 py-1 rounded-full border bg-blue-50 text-blue-600 border-blue-200">
                                         {myTeam.status.replace('_', ' ')}
                                     </span>
                                 </div>
 
-                                <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2 font-outfit">
-                                    <Users className="text-blue-600" size={24} /> Team
-                                </h2>
-
                                 {/* INVITATION BANNER */}
                                 {isPending && (
-                                    <div className="mb-6 p-4 bg-orange-50 rounded-xl border border-orange-100 flex items-center justify-between animate-in fade-in slide-in-from-top-4">
-                                        <div>
-                                            <h3 className="font-bold text-orange-800">You have been invited!</h3>
-                                            <p className="text-xs text-orange-600">Join this team to start working on the project.</p>
+                                    <div className="mb-6 p-4 bg-amber-50 rounded-lg border border-amber-200 flex flex-col md:flex-row items-center justify-between gap-4">
+                                        <div className="flex items-center gap-3">
+                                            <Check size={18} className="text-amber-600" />
+                                            <div>
+                                                <h3 className="font-semibold text-gray-900">You've been invited!</h3>
+                                                <p className="text-sm text-gray-500">Accept to join your teammates.</p>
+                                            </div>
                                         </div>
-                                        <div className="flex gap-2">
+                                        <div className="flex gap-2 w-full md:w-auto">
                                             <button
                                                 onClick={handleRejectInvite}
-                                                className="flex items-center gap-1 px-3 py-1.5 bg-white text-red-600 border border-red-100 rounded-lg text-xs font-bold hover:bg-red-50 transition-colors"
+                                                className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-white text-red-600 border border-red-200 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors"
                                             >
                                                 <XCircle size={14} /> Reject
                                             </button>
                                             <button
                                                 onClick={handleAcceptInvite}
-                                                className="flex items-center gap-1 px-3 py-1.5 bg-orange-600 text-white rounded-lg text-xs font-bold hover:bg-orange-700 transition-colors shadow-sm shadow-orange-200"
+                                                className="flex-1 md:flex-none flex items-center justify-center gap-1.5 px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
                                             >
                                                 <Check size={14} /> Accept
                                             </button>
                                         </div>
                                     </div>
                                 )}
-
                                 <div className={`space-y-6 ${isPending ? 'opacity-50 pointer-events-none grayscale-[0.5]' : ''}`}>
                                     {/* Member List */}
                                     <div>
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-3">Members</label>
-                                        <div className="flex flex-wrap gap-3">
+                                        <p className="text-xs font-medium text-gray-500 mb-3">Members</p>
+                                        <div className="flex flex-wrap gap-2">
                                             {myTeam.members.map(m => (
-                                                <div key={m.id} className={`flex items-center gap-3 px-4 py-2 rounded-2xl border ${m.userId === user?.id ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-100'}`}>
+                                                <div
+                                                    key={m.id}
+                                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm ${m.userId === user?.id
+                                                        ? 'bg-blue-50 border-blue-200 text-blue-800'
+                                                        : 'bg-white border-gray-200 text-gray-700'
+                                                        }`}
+                                                >
                                                     <div className={`w-2 h-2 rounded-full ${m.approved ? 'bg-green-500' : 'bg-yellow-400'}`}></div>
-                                                    <div className="text-xs font-bold text-gray-800">{m.user?.name} {m.userId === user?.id && "(You)"}</div>
-                                                    {m.isLeader && <CheckCircle size={14} className="text-blue-500" />}
+                                                    <span className="font-medium">
+                                                        {m.user?.name} {m.userId === user?.id && <span className="text-gray-400">(You)</span>}
+                                                    </span>
+                                                    {m.isLeader && (
+                                                        <span className="text-xs text-blue-600 font-medium">Leader</span>
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
 
-                                    {/* Invites Logic */}
+                                    {/* Invites Logic - Refined */}
                                     {scopeMe?.isLeader && !myTeam.project && (
-                                        <div className="flex gap-2 p-1 bg-gray-50 rounded-xl border border-gray-100">
+                                        <div className="flex gap-2">
+                                            <div className="flex items-center text-gray-400 pl-3">
+                                                <Users size={15} />
+                                            </div>
                                             <input
-                                                className="bg-transparent px-4 py-2 flex-1 outline-none text-sm"
-                                                placeholder="Invite student by email..."
+                                                className="bg-white border border-gray-200 rounded-lg px-3 py-2 flex-1 outline-none text-sm placeholder:text-gray-400 focus:border-blue-400 transition-colors"
+                                                placeholder="Invite by email..."
                                                 value={inviteEmail}
                                                 onChange={e => setInviteEmail(e.target.value)}
                                             />
-                                            <button onClick={invite} className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-indigo-700 transition-all">Invite</button>
+                                            <button
+                                                onClick={invite}
+                                                className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                                            >
+                                                Invite
+                                            </button>
                                         </div>
                                     )}
 
                                     {/* STEP 1: Current Project Status */}
                                     {myTeam.project ? (
-                                        <>
-                                            <div className="p-6 bg-gradient-to-br from-green-600 to-green-700 rounded-2xl text-white shadow-xl relative overflow-hidden">
-                                                <div className="flex-1">
-                                                    <p className="text-[10px] font-black text-green-100 uppercase tracking-widest mb-1 opacity-80">Confirmed Project</p>
-                                                    <h3 className="text-2xl font-bold font-outfit">{myTeam.project.title}</h3>
+                                        <div className="p-5 bg-white rounded-lg border-l-4 border-l-blue-600 border border-gray-200">
+                                            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                                                <div className="space-y-2">
+                                                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                                                        <span>{myTeam.project.category}</span>
+                                                        <span>·</span>
+                                                        <span>Phase {currentPhase}</span>
+                                                    </div>
+                                                    <h3 className="text-lg font-semibold text-gray-900">{myTeam.project.title}</h3>
                                                     {myTeam.project.description && (
-                                                        <p className="mt-3 text-sm text-green-50 leading-relaxed font-medium">
-                                                            {myTeam.project.description}
-                                                        </p>
+                                                        <p className="text-sm text-gray-500 max-w-2xl">{myTeam.project.description}</p>
                                                     )}
+
                                                     {(myTeam.project.techStack || myTeam.project.srs) && (
-                                                        <div className="mt-4 flex flex-wrap gap-3">
+                                                        <div className="flex flex-wrap gap-3 pt-1">
                                                             {myTeam.project.techStack && (
-                                                                <div className="bg-white/10 backdrop-blur-sm border border-white/20 px-3 py-1.5 rounded-xl">
-                                                                    <p className="text-[9px] font-black text-green-100 uppercase tracking-wider mb-0.5">Tech Stack</p>
-                                                                    <p className="text-xs font-bold text-white">{myTeam.project.techStack}</p>
-                                                                </div>
+                                                                <span className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-md border border-gray-200">
+                                                                    {myTeam.project.techStack}
+                                                                </span>
                                                             )}
                                                             {myTeam.project.srs && (
                                                                 <a
                                                                     href={myTeam.project.srs}
                                                                     target="_blank"
                                                                     rel="noopener noreferrer"
-                                                                    className="bg-white/10 backdrop-blur-sm border border-white/20 px-3 py-1.5 rounded-xl hover:bg-white/20 transition-all flex flex-col"
+                                                                    className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
                                                                 >
-                                                                    <p className="text-[9px] font-black text-green-100 uppercase tracking-wider mb-0.5">Documentation</p>
-                                                                    <p className="text-xs font-bold text-white flex items-center gap-1">View SRS <CheckCircle size={10} /></p>
+                                                                    View SRS <ArrowRight size={12} />
                                                                 </a>
                                                             )}
                                                         </div>
                                                     )}
                                                 </div>
-                                                <CheckCircle size={100} className="absolute -bottom-6 -right-6 text-white/10 rotate-12" />
                                             </div>
-
-
-                                        </>
+                                        </div>
                                     ) : scopeRequest ? (
-                                        <div className={`p-6 rounded-2xl border-2 shadow-sm ${scopeRequest.status === 'PENDING' ? 'bg-orange-50 border-orange-100' : 'bg-red-50 border-red-100'}`}>
+                                        <div className={`p-6 rounded-lg border-2 shadow-sm ${scopeRequest.status === 'PENDING' ? 'bg-orange-50 border-orange-100' : 'bg-red-50 border-red-100'}`}>
                                             <div className="flex justify-between items-start mb-4">
                                                 <h3 className="text-lg font-bold text-gray-800">Selection Status</h3>
                                                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${scopeRequest.status === 'PENDING' ? 'bg-orange-100 text-orange-700 border-orange-200' : 'bg-red-100 text-red-700 border-red-200'}`}>
@@ -510,25 +517,30 @@ export default function StudentBatchDetail() {
                                             )}
                                         </div>
                                     ) : (
-                                        <div className="p-6 bg-gray-50 border border-dashed border-gray-200 rounded-2xl text-center">
+                                        <div className="p-6 bg-gray-50 border border-dashed border-gray-200 rounded-lg text-center">
                                             <p className="text-sm text-gray-400 font-bold">Step 1: Select a Project from the list.</p>
                                         </div>
                                     )}
 
-                                    {/* ── Tab Navigation ── */}
                                     {myTeam.project && (
-                                        <div className="flex gap-1 p-1 bg-gray-100 rounded-xl mt-2">
+                                        <div className="flex bg-gray-100 p-1 rounded-lg mt-4">
                                             <button
                                                 onClick={() => setActiveTab('current')}
-                                                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'current' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'current'
+                                                    ? 'bg-white text-gray-900 shadow-sm'
+                                                    : 'text-gray-500 hover:text-gray-700'
+                                                    }`}
                                             >
-                                                <Layout size={14} /> Current Overview
+                                                <Layout size={14} /> Overview
                                             </button>
                                             <button
                                                 onClick={() => setActiveTab('history')}
-                                                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'history' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'history'
+                                                    ? 'bg-white text-gray-900 shadow-sm'
+                                                    : 'text-gray-500 hover:text-gray-700'
+                                                    }`}
                                             >
-                                                <History size={14} /> Past Reviews
+                                                <Clock size={14} /> History
                                             </button>
                                         </div>
                                     )}
@@ -536,45 +548,43 @@ export default function StudentBatchDetail() {
                                     {/* ── CURRENT TAB ── */}
                                     {activeTab === 'current' && (
                                         <>
-                                            {/* Phase Deadline Banner */}
+                                            {/* Phase Deadline Banner - Modernized */}
                                             {deadlineDate && (
-                                                <div className={`mt-4 p-5 rounded-3xl border ${isPassed ? 'bg-red-50 border-red-100' : isUrgent ? 'bg-orange-50 border-orange-100 animate-pulse' : 'bg-blue-50 border-blue-100'} shadow-sm flex items-center justify-between gap-4`}>
-                                                    <div className="flex items-center gap-4">
-                                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${isPassed ? 'bg-red-100 text-red-600' : isUrgent ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'}`}>
-                                                            <Calendar size={24} />
-                                                        </div>
+                                                <div className={`mt-4 p-4 rounded-lg border flex flex-col md:flex-row items-center justify-between gap-4 ${isPassed
+                                                    ? 'bg-red-50 border-red-200'
+                                                    : isUrgent
+                                                        ? 'bg-amber-50 border-amber-200'
+                                                        : 'bg-gray-50 border-gray-200'
+                                                    }`}>
+                                                    <div className="flex items-center gap-3">
+                                                        <Calendar size={16} className={isPassed ? 'text-red-500' : isUrgent ? 'text-amber-600' : 'text-blue-600'} />
                                                         <div>
-                                                            <p className={`text-[10px] font-black uppercase tracking-widest ${isPassed ? 'text-red-400' : isUrgent ? 'text-orange-400' : 'text-blue-400'}`}>
-                                                                Phase {currentPhase} Deadline
-                                                            </p>
-                                                            <h4 className={`text-lg font-black font-outfit ${isPassed ? 'text-red-800' : isUrgent ? 'text-orange-800' : 'text-blue-800'}`}>
-                                                                {deadlineDate.toLocaleDateString([], { dateStyle: 'long' })}
-                                                                <span className="text-sm font-bold ml-2 opacity-60">
-                                                                    at {deadlineDate.toLocaleTimeString([], { timeStyle: 'short' })}
+                                                            <p className={`text-sm font-medium ${isPassed ? 'text-red-800' : isUrgent ? 'text-amber-800' : 'text-gray-800'}`}>
+                                                                Phase {currentPhase} — {deadlineDate.toLocaleDateString([], { dateStyle: 'long' })}
+                                                                <span className="text-gray-400 ml-2 font-normal">
+                                                                    {deadlineDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                                 </span>
-                                                            </h4>
-                                                            <p className={`text-xs font-bold ${isPassed ? 'text-red-600' : isUrgent ? 'text-orange-600' : 'text-blue-600'}`}>
-                                                                {isPassed ? 'Deadline has passed. Automatically moved to next phase.' : isUrgent ? 'Hurry! Deadline is approaching.' : 'Complete your review before this date.'}
+                                                            </p>
+                                                            <p className={`text-xs mt-0.5 ${isPassed ? 'text-red-600' : isUrgent ? 'text-amber-600' : 'text-gray-500'}`}>
+                                                                {isPassed ? 'Deadline passed.' : isUrgent ? 'Deadline approaching.' : 'Ensure deliverables are ready.'}
                                                             </p>
                                                         </div>
                                                     </div>
                                                     {!isPassed && (
-                                                        <div className="text-right hidden sm:block">
-                                                            <p className={`text-[10px] font-black uppercase tracking-widest ${isUrgent ? 'text-orange-400' : 'text-blue-400'}`}>Time Remaining</p>
-                                                            <p className={`text-xl font-black font-outfit ${isUrgent ? 'text-orange-700' : 'text-blue-700'}`}>
-                                                                {(() => {
-                                                                    const diff = deadlineDate - now;
-                                                                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                                                                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                                                                    return days > 0 ? `${days}d ${hours}h` : `${hours}h remaining`;
-                                                                })()}
-                                                            </p>
-                                                        </div>
+                                                        <span className={`text-lg font-bold tabular-nums ${isUrgent ? 'text-amber-700' : 'text-gray-700'}`}>
+                                                            {(() => {
+                                                                const diff = deadlineDate - now;
+                                                                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                                                                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                                                                const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                                                                return days > 0 ? `${days}d ${hours}h` : hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+                                                            })()}
+                                                        </span>
                                                     )}
                                                 </div>
                                             )}
 
-                                            {/* Upcoming Review Schedule */}
+                                            {/* Upcoming Review Schedule - Handcrafted Cards */}
                                             {assignedFaculty.length > 0 && (() => {
                                                 const upcomingAssignments = assignedFaculty.filter(a => {
                                                     if (!a.accessExpiresAt) return true;
@@ -582,41 +592,27 @@ export default function StudentBatchDetail() {
                                                 });
                                                 if (upcomingAssignments.length === 0) return null;
                                                 return (
-                                                    <div className="mt-4 space-y-3">
-                                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Upcoming Review Schedule</p>
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                    <div className="mt-8 space-y-4">
+                                                        <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Upcoming Evaluations</h4>
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                             {upcomingAssignments.map(assignment => (
-                                                                <div key={assignment.id} className="p-4 bg-white border border-gray-100 rounded-2xl shadow-sm flex items-center gap-4 hover:border-blue-200 transition-all">
-                                                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${assignment.mode === 'ONLINE' ? 'bg-blue-50 text-blue-600' : 'bg-gray-50 text-gray-400'}`}>
-                                                                        <Clock size={20} />
+                                                                <div key={assignment.id} className="p-4 bg-white border border-gray-200 rounded-lg flex items-center gap-4 hover:border-blue-300 transition-colors">
+                                                                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center shrink-0 ${assignment.mode === 'ONLINE' ? 'bg-indigo-50 text-indigo-600' : 'bg-gray-50 text-gray-400'}`}>
+                                                                        {assignment.mode === 'ONLINE' ? <Video size={20} /> : <MapPin size={20} />}
                                                                     </div>
                                                                     <div className="min-w-0">
-                                                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest truncate">{assignment.faculty?.name || "Reviewer Assigned"}</p>
-                                                                        <div className="flex flex-col gap-0.5">
-                                                                            <div className="flex items-center gap-1.5 min-w-0">
-                                                                                <span className="text-[8px] font-black text-gray-300 uppercase shrink-0">From:</span>
-                                                                                <span className="text-[11px] font-bold text-gray-600 truncate">
-                                                                                    {assignment.accessStartsAt ? new Date(assignment.accessStartsAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'Immediately'}
-                                                                                </span>
-                                                                            </div>
-                                                                            <div className="flex items-center gap-1.5 min-w-0">
-                                                                                <span className="text-[8px] font-black text-gray-300 uppercase shrink-0">To:</span>
-                                                                                <span className="text-xs font-bold text-gray-800 truncate">
-                                                                                    {assignment.accessExpiresAt ? new Date(assignment.accessExpiresAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'Flexible Timing'}
-                                                                                </span>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div className="flex gap-2 mt-1">
-                                                                            <span className="text-[9px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-100 font-bold uppercase tracking-wider">Phase {assignment.reviewPhase || 1}</span>
-                                                                            <span className={`text-[9px] px-2 py-0.5 rounded border font-bold uppercase tracking-wider ${assignment.mode === 'ONLINE' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-gray-50 text-gray-600 border-gray-100'}`}>
+                                                                        <p className="text-sm font-semibold text-gray-900 truncate">{assignment.faculty?.name || "Reviewer Assigned"}</p>
+                                                                        <div className="flex flex-wrap items-center gap-2 mt-1">
+                                                                            <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-medium border border-blue-100">Phase {assignment.reviewPhase || 1}</span>
+                                                                            <span className={`text-[10px] px-2 py-0.5 rounded border font-medium ${assignment.mode === 'ONLINE' ? 'bg-indigo-50 text-indigo-700 border-indigo-100' : 'bg-gray-100 text-gray-600 border-gray-200'}`}>
                                                                                 {assignment.mode}
                                                                             </span>
-                                                                            {assignment.venue && assignment.mode === 'OFFLINE' && (
-                                                                                <span className="text-[9px] bg-purple-50 text-purple-700 px-2 py-0.5 rounded border border-purple-100 font-bold uppercase tracking-wider flex items-center gap-1">
-                                                                                    <MapPin size={8} /> {assignment.venue.name}
-                                                                                </span>
-                                                                            )}
                                                                         </div>
+                                                                        <p className="text-xs text-gray-500 mt-1">
+                                                                            {assignment.accessStartsAt ? new Date(assignment.accessStartsAt).toLocaleDateString([], { month: 'short', day: 'numeric' }) : 'Today'}
+                                                                            <span className="mx-1">·</span>
+                                                                            {assignment.accessStartsAt ? new Date(assignment.accessStartsAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Now'}
+                                                                        </p>
                                                                     </div>
                                                                 </div>
                                                             ))}
@@ -624,101 +620,89 @@ export default function StudentBatchDetail() {
                                                     </div>
                                                 );
                                             })()}
-
-                                            {/* STEP 2 & 3: Faculty Assignment */}
+                                            {/* STEP 2 & 3: Faculty Assignment - Handcrafted Grid */}
                                             {myTeam.project && (scope.requireGuide || scope.requireSubjectExpert) && (
-                                                <div className="grid md:grid-cols-2 gap-4 pt-4 border-t border-gray-100">
+                                                <div className="grid md:grid-cols-2 gap-4 pt-6 border-t border-gray-100 mt-8">
                                                     {scope.requireGuide && (
-                                                        <div className={`p-4 rounded-xl border ${myTeam.guide ? 'bg-white border-green-200' : 'bg-gray-50 border-gray-100'}`}>
-                                                            <div className="flex justify-between items-center mb-2">
-                                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Guide</p>
-                                                                {myTeam.guide && <CheckCircle size={12} className="text-green-500" />}
-                                                            </div>
+                                                        <div className={`p-4 rounded-lg border ${myTeam.guide ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-100 border-dashed'}`}>
+                                                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Project Mentor</p>
 
                                                             {myTeam.guide && myTeam.guideStatus !== 'REJECTED' ? (
-                                                                <div className="flex items-center justify-between gap-2">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-xs">{myTeam.guide.name[0]}</div>
-                                                                        <div className="text-sm font-bold text-gray-800">{myTeam.guide.name}</div>
+                                                                <div className="flex items-center justify-between gap-3">
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className="w-10 h-10 bg-blue-100 text-blue-700 rounded-lg flex items-center justify-center font-bold">{myTeam.guide.name[0]}</div>
+                                                                        <div>
+                                                                            <div className="text-sm font-semibold text-gray-900">{myTeam.guide.name}</div>
+                                                                            <div className="text-xs text-gray-500">Mentor</div>
+                                                                        </div>
                                                                     </div>
-                                                                    {myTeam.guideStatus === 'PENDING' && (
-                                                                        <span className="text-[9px] bg-yellow-50 text-yellow-700 px-2 py-0.5 rounded border border-yellow-200 font-black uppercase tracking-wider">Pending</span>
-                                                                    )}
-                                                                    {myTeam.guideStatus === 'APPROVED' && (
-                                                                        <span className="text-[9px] bg-green-50 text-green-700 px-2 py-0.5 rounded border border-green-200 font-black uppercase tracking-wider">Approved</span>
-                                                                    )}
+                                                                    <span className={`text-[10px] px-2 py-1 rounded font-semibold uppercase tracking-wider ${myTeam.guideStatus === 'APPROVED' ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>
+                                                                        {myTeam.guideStatus}
+                                                                    </span>
                                                                 </div>
                                                             ) : scopeMe?.isLeader && (
-                                                                <div className="space-y-2">
+                                                                <div className="space-y-3">
                                                                     {myTeam.guideStatus === 'REJECTED' && (
-                                                                        <div className="p-2 bg-red-50 border border-red-100 rounded-lg flex items-center gap-2 mb-2 animate-in fade-in slide-in-from-top-1">
-                                                                            <XCircle size={14} className="text-red-500" />
-                                                                            <p className="text-[10px] text-red-700 font-bold">Request rejected by {myTeam.guide?.name}. Select another Guide.</p>
-                                                                        </div>
+                                                                        <p className="text-xs text-red-600 font-medium">Mentor rejected request. Please select another.</p>
                                                                     )}
-                                                                    <select className="w-full p-2 text-xs border border-gray-200 rounded-lg outline-none" value={selectedGuideId} onChange={e => setSelectedGuideId(e.target.value)}>
-                                                                        <option value="">Select Guide...</option>
+                                                                    <select className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-400 transition-colors" value={selectedGuideId} onChange={e => setSelectedGuideId(e.target.value)}>
+                                                                        <option value="">Select Mentor...</option>
                                                                         {facultyList
                                                                             .filter(f => f.isGuide && (f.batchOccupancy ?? 0) < 4)
-                                                                            .map(f => <option key={f.id} value={f.id}>{f.name} (Slots: {4 - (f.batchOccupancy || 0)}/4 left)</option>)
+                                                                            .map(f => <option key={f.id} value={f.id}>{f.name} ({4 - (f.batchOccupancy || 0)} slots left)</option>)
                                                                         }
                                                                     </select>
-                                                                    <button onClick={handleSelectGuide} className="w-full bg-blue-600 text-white py-1.5 rounded-lg text-xs font-bold">Assign Guide</button>
-                                                                    <p className="text-[9px] text-gray-400 italic">Showing faculty with &lt; 4 teams in this batch.</p>
+                                                                    <button onClick={handleSelectGuide} className="w-full bg-blue-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">Assign Mentor</button>
                                                                 </div>
                                                             )}
                                                         </div>
                                                     )}
 
-                                                    {/* Expert Selection */}
                                                     {scope.requireSubjectExpert && (
-                                                        <div className={`p-4 rounded-xl border ${myTeam.subjectExpert ? 'bg-white border-green-200' : 'bg-gray-50 border-gray-100'} ${(!scope.requireGuide || myTeam.guide) ? '' : 'opacity-50 pointer-events-none'}`}>
-                                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Expert</p>
+                                                        <div className={`p-4 rounded-lg border ${myTeam.subjectExpert ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-100 border-dashed'} ${(!scope.requireGuide || myTeam.guide) ? '' : 'opacity-40 grayscale pointer-events-none'}`}>
+                                                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Subject Expert</p>
+
                                                             {myTeam.subjectExpert && myTeam.expertStatus !== 'REJECTED' ? (
-                                                                <div className="flex items-center justify-between gap-2">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 font-bold text-xs">{myTeam.subjectExpert.name[0]}</div>
-                                                                        <div className="text-sm font-bold text-gray-800">{myTeam.subjectExpert.name}</div>
+                                                                <div className="flex items-center justify-between gap-3">
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className="w-10 h-10 bg-purple-100 text-purple-700 rounded-lg flex items-center justify-center font-bold">{myTeam.subjectExpert.name[0]}</div>
+                                                                        <div>
+                                                                            <div className="text-sm font-semibold text-gray-900">{myTeam.subjectExpert.name}</div>
+                                                                            <div className="text-xs text-gray-500">Academic Expert</div>
+                                                                        </div>
                                                                     </div>
-                                                                    {myTeam.expertStatus === 'PENDING' && (
-                                                                        <span className="text-[9px] bg-yellow-50 text-yellow-700 px-2 py-0.5 rounded border border-yellow-200 font-black uppercase tracking-wider">Pending</span>
-                                                                    )}
-                                                                    {myTeam.expertStatus === 'APPROVED' && (
-                                                                        <span className="text-[9px] bg-green-50 text-green-700 px-2 py-0.5 rounded border border-green-200 font-black uppercase tracking-wider">Approved</span>
-                                                                    )}
+                                                                    <span className={`text-[10px] px-2 py-1 rounded font-semibold uppercase tracking-wider ${myTeam.expertStatus === 'APPROVED' ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>
+                                                                        {myTeam.expertStatus}
+                                                                    </span>
                                                                 </div>
                                                             ) : scopeMe?.isLeader && (
-                                                                <div className="space-y-2">
+                                                                <div className="space-y-3">
                                                                     {myTeam.expertStatus === 'REJECTED' && (
-                                                                        <div className="p-2 bg-red-50 border border-red-100 rounded-lg flex items-center gap-2 mb-2 animate-in fade-in slide-in-from-top-1">
-                                                                            <XCircle size={14} className="text-red-500" />
-                                                                            <p className="text-[10px] text-red-700 font-bold">Request rejected by {myTeam.subjectExpert?.name}. Select another Expert.</p>
-                                                                        </div>
+                                                                        <p className="text-xs text-red-600 font-medium">Expert rejected request. Please select another.</p>
                                                                     )}
-                                                                    <select className="w-full p-2 text-xs border border-gray-200 rounded-lg outline-none" value={selectedExpertId} onChange={e => setSelectedExpertId(e.target.value)}>
+                                                                    <select className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-400 transition-colors" value={selectedExpertId} onChange={e => setSelectedExpertId(e.target.value)}>
                                                                         <option value="">Select Expert...</option>
                                                                         {facultyList
                                                                             .filter(f => f.isSubjectExpert && (f.batchOccupancy ?? 0) < 4)
-                                                                            .map(f => <option key={f.id} value={f.id}>{f.name} (Slots: {4 - (f.batchOccupancy || 0)}/4 left)</option>)
+                                                                            .map(f => <option key={f.id} value={f.id}>{f.name} ({4 - (f.batchOccupancy || 0)} slots left)</option>)
                                                                         }
                                                                     </select>
                                                                     <button
                                                                         disabled={scope.requireGuide && !myTeam.guide}
                                                                         onClick={handleSelectExpert}
-                                                                        className="w-full bg-purple-600 text-white py-1.5 rounded-lg text-xs font-bold disabled:bg-gray-400"
+                                                                        className="w-full bg-blue-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:bg-gray-200 disabled:text-gray-400"
                                                                     >
                                                                         Assign Expert
                                                                     </button>
-                                                                    <p className="text-[9px] text-gray-400 italic">Showing faculty with &lt; 4 teams in this batch.</p>
                                                                 </div>
                                                             )}
-                                                            {scope.requireGuide && !myTeam.guide && <p className="text-[10px] text-red-500 font-bold mt-1">Select Guide first</p>}
+                                                            {scope.requireGuide && !myTeam.guide && <p className="text-[10px] text-gray-400 mt-2 text-center">Assign mentor first</p>}
                                                         </div>
                                                     )}
                                                 </div>
                                             )}
 
-                                            {/* Changes Required Countdown Timer */}
+                                            {/* Changes Required Countdown Timer - Handcrafted Aesthetic */}
                                             {(() => {
                                                 const changesReview = myTeam.reviews
                                                     ?.filter(r => r.status === 'CHANGES_REQUIRED')
@@ -732,17 +716,24 @@ export default function StudentBatchDetail() {
 
                                                 if (diff <= 0) {
                                                     return (
-                                                        <div className="mt-4 p-5 bg-red-50 border-2 border-red-200 rounded-2xl">
-                                                            <div className="flex items-center gap-3 mb-2">
-                                                                <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center">
-                                                                    <Timer size={20} className="text-red-600" />
+                                                        <div className="mt-8 p-8 bg-gradient-to-br from-red-600 to-red-800 rounded-[32px] text-white shadow-2xl shadow-red-200 relative overflow-hidden">
+                                                            <div className="absolute inset-0 bg-white/5 backdrop-blur-[2px]" />
+                                                            <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
+                                                                <div className="w-20 h-20 bg-white/10 rounded-lg flex items-center justify-center backdrop-blur-md border border-white/20">
+                                                                    <Timer size={40} className="text-white animate-pulse" />
                                                                 </div>
-                                                                <div>
-                                                                    <p className="text-sm font-black text-red-700 uppercase tracking-wide">Resubmission Deadline Expired</p>
-                                                                    <p className="text-[10px] text-red-500 font-bold">The 24-hour window to address changes has passed.</p>
+                                                                <div className="flex-1 text-center md:text-left">
+                                                                    <h4 className="text-2xl font-black font-outfit tracking-tight mb-2">Resubmission Window Closed</h4>
+                                                                    <p className="text-sm text-red-100/80 font-medium leading-relaxed max-w-xl">
+                                                                        The 24-hour response period has expired. Please contact your reviewer <span className="text-white font-black underline">({changesReview.faculty?.name})</span> immediately to discuss the next steps.
+                                                                    </p>
+                                                                    <div className="mt-6 pt-6 border-t border-white/10 flex flex-col gap-2">
+                                                                        <span className="text-[10px] font-black uppercase tracking-widest text-red-200 opacity-60">Faculty Feedback</span>
+                                                                        <p className="text-sm font-bold italic">"{changesReview.content}"</p>
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                            <p className="text-xs text-red-600 mt-2 pl-[52px]">Feedback: <span className="italic">"{changesReview.content}"</span></p>
+                                                            <XCircle size={120} className="absolute -bottom-8 -right-8 text-white/10 rotate-12" />
                                                         </div>
                                                     );
                                                 }
@@ -750,38 +741,38 @@ export default function StudentBatchDetail() {
                                                 const hours = Math.floor(diff / (1000 * 60 * 60));
                                                 const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
                                                 const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-                                                const isUrgent = diff < 2 * 60 * 60 * 1000; // less than 2 hours
+                                                const isUrgent = diff < 2 * 60 * 60 * 1000;
 
                                                 return (
-                                                    <div className={`mt-4 p-5 rounded-2xl border-2 ${isUrgent ? 'bg-red-50 border-red-200 animate-pulse' : 'bg-orange-50 border-orange-200'}`}>
-                                                        <div className="flex items-start gap-3">
-                                                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isUrgent ? 'bg-red-100' : 'bg-orange-100'}`}>
-                                                                <Timer size={20} className={isUrgent ? 'text-red-600' : 'text-orange-600'} />
-                                                            </div>
-                                                            <div className="flex-1">
-                                                                <p className={`text-sm font-black uppercase tracking-wide ${isUrgent ? 'text-red-700' : 'text-orange-700'}`}>Changes Required — Resubmit Before</p>
-                                                                <p className="text-[10px] text-gray-500 font-bold mt-0.5">
-                                                                    Deadline: {deadline.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })} • By {changesReview.faculty?.name || 'Reviewer'}
-                                                                    {changesReview.reviewPhase && <span className="ml-1.5 bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded border border-orange-200 text-[9px] font-black uppercase">Phase {changesReview.reviewPhase}</span>}
-                                                                </p>
-                                                                <div className="flex gap-3 mt-3">
-                                                                    {[{ label: 'Hours', value: String(hours).padStart(2, '0') }, { label: 'Minutes', value: String(minutes).padStart(2, '0') }, { label: 'Seconds', value: String(seconds).padStart(2, '0') }].map(t => (
-                                                                        <div key={t.label} className={`flex flex-col items-center px-4 py-2 rounded-xl ${isUrgent ? 'bg-red-100' : 'bg-orange-100'}`}>
-                                                                            <span className={`text-2xl font-black tabular-nums ${isUrgent ? 'text-red-700' : 'text-orange-700'}`}>{t.value}</span>
-                                                                            <span className={`text-[8px] font-black uppercase tracking-widest ${isUrgent ? 'text-red-400' : 'text-orange-400'}`}>{t.label}</span>
-                                                                        </div>
-                                                                    ))}
+                                                    <div className={`mt-8 p-6 rounded-lg border ${isUrgent ? 'bg-red-50 border-red-200' : 'bg-amber-50 border-amber-200'}`}>
+                                                        <div className="flex flex-col md:flex-row gap-6">
+                                                            <div className="flex-1 space-y-4">
+                                                                <div className="flex items-center gap-2">
+                                                                    <Timer size={18} className={isUrgent ? 'text-red-600' : 'text-amber-600'} />
+                                                                    <h4 className="font-semibold text-gray-900">Changes Required</h4>
                                                                 </div>
-                                                                <p className={`text-xs mt-3 italic ${isUrgent ? 'text-red-600' : 'text-orange-600'}`}>
+                                                                <div className="bg-white border border-gray-100 p-4 rounded-lg text-sm text-gray-700 italic">
                                                                     "{changesReview.content}"
+                                                                </div>
+                                                                <p className="text-[11px] font-medium text-gray-500">
+                                                                    Address feedback from <span className="text-gray-900 font-semibold">{changesReview.faculty?.name}</span> before the deadline.
                                                                 </p>
+                                                            </div>
+
+                                                            <div className="bg-white border border-gray-200 rounded-lg p-5 flex flex-col items-center justify-center min-w-[200px]">
+                                                                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Time Remaining</p>
+                                                                <div className="flex items-baseline gap-1">
+                                                                    <span className={`text-3xl font-bold tabular-nums ${isUrgent ? 'text-red-600' : 'text-gray-900'}`}>
+                                                                        {String(hours).padStart(2, '0')}:{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+                                                                    </span>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 );
                                             })()}
 
-                                            {/* Action Buttons — hidden when status is READY_FOR_REVIEW or PENDING */}
+                                            {/* Action Buttons — Handcrafted Interaction Banners */}
                                             {myTeam.project && myTeam.status !== 'READY_FOR_REVIEW' && myTeam.status !== 'PENDING' && (() => {
                                                 const completedReviews = myTeam.reviews?.filter(r => r.status === 'COMPLETED' || r.status === 'NOT_COMPLETED') || [];
                                                 const completedPhases = new Set(completedReviews.map(r => r.reviewPhase)).size;
@@ -794,12 +785,15 @@ export default function StudentBatchDetail() {
 
                                                 if (allPhasesCompleted) {
                                                     return (
-                                                        <div className="pt-4 border-t border-gray-100">
-                                                            <div className="bg-green-50 border border-green-100 p-4 rounded-xl flex items-center gap-3">
-                                                                <CheckCircle size={20} className="text-green-500" />
-                                                                <p className="text-sm text-green-700 font-bold">
-                                                                    All {totalPhases} review phases completed! 🎉
-                                                                </p>
+                                                        <div className="mt-10 pt-8 border-t border-slate-100">
+                                                            <div className="bg-emerald-50/80 backdrop-blur-sm border border-emerald-100 p-6 rounded-[28px] flex items-center gap-5 shadow-xl shadow-emerald-100/20">
+                                                                <div className="w-14 h-14 bg-emerald-500 text-white rounded-lg flex items-center justify-center shadow-lg shadow-emerald-200">
+                                                                    <CheckCircle size={28} />
+                                                                </div>
+                                                                <div>
+                                                                    <h4 className="text-lg font-black font-outfit text-emerald-900 tracking-tight">Curriculum Completed! 🎉</h4>
+                                                                    <p className="text-xs text-emerald-700 font-bold opacity-80 uppercase tracking-widest mt-0.5">All {totalPhases} review phases have been successfully verified.</p>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     );
@@ -807,12 +801,15 @@ export default function StudentBatchDetail() {
 
                                                 if (hasMissedCurrentPhase) {
                                                     return (
-                                                        <div className="pt-4 border-t border-gray-100">
-                                                            <div className="bg-red-50 border border-red-100 p-4 rounded-xl flex items-center gap-3">
-                                                                <XCircle size={20} className="text-red-500" />
-                                                                <p className="text-sm text-red-700 font-bold">
-                                                                    Phase {currentPhase} was missed (Not Completed). Please wait for admin to reassign this phase.
-                                                                </p>
+                                                        <div className="mt-10 pt-8 border-t border-slate-100">
+                                                            <div className="bg-red-50/80 backdrop-blur-sm border border-red-100 p-6 rounded-[28px] flex items-center gap-5 shadow-xl shadow-red-100/20">
+                                                                <div className="w-14 h-14 bg-red-600 text-white rounded-lg flex items-center justify-center shadow-lg shadow-red-200">
+                                                                    <XCircle size={28} />
+                                                                </div>
+                                                                <div>
+                                                                    <h4 className="text-lg font-black font-outfit text-red-900 tracking-tight">Phase {currentPhase} Absent</h4>
+                                                                    <p className="text-xs text-red-600 font-bold opacity-80 uppercase tracking-widest mt-0.5">Evaluation window missed. Awaiting administrative reconfiguration.</p>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     );
@@ -820,52 +817,69 @@ export default function StudentBatchDetail() {
 
                                                 if (hasCompletedCurrentPhase || hasPendingReview) {
                                                     return (
-                                                        <div className="pt-4 border-t border-gray-100">
-                                                            <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex items-center gap-3">
-                                                                <Clock size={20} className="text-blue-500" />
-                                                                <p className="text-sm text-blue-700 font-bold">
-                                                                    {hasPendingReview
-                                                                        ? 'Review in progress. Please wait for faculty feedback.'
-                                                                        : `Phase ${highestPassedPhase} completed. Wait for the next review phase assignment.`
-                                                                    }
-                                                                </p>
+                                                        <div className="mt-10 pt-8 border-t border-slate-100">
+                                                            <div className="bg-blue-50/80 backdrop-blur-sm border border-blue-100 p-6 rounded-[28px] flex items-center gap-5 shadow-xl shadow-blue-100/20">
+                                                                <div className="w-14 h-14 bg-blue-600 text-white rounded-lg flex items-center justify-center shadow-lg shadow-blue-200">
+                                                                    <Clock size={28} />
+                                                                </div>
+                                                                <div>
+                                                                    <h4 className="text-lg font-black font-outfit text-blue-900 tracking-tight">
+                                                                        {hasPendingReview ? 'Review in progress' : `Phase ${highestPassedPhase} Verified`}
+                                                                    </h4>
+                                                                    <p className="text-xs text-blue-700 font-bold opacity-80 uppercase tracking-widest mt-0.5">
+                                                                        {hasPendingReview
+                                                                            ? 'Faculty is currently evaluating your submission. Stay tuned.'
+                                                                            : 'Successfully cleared. Next phase assignment will appear shortly.'
+                                                                        }
+                                                                    </p>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     );
                                                 }
 
                                                 return (
-                                                    <div className="pt-4 border-t border-gray-100">
+                                                    <div className="mt-10 pt-8 border-t border-slate-100">
                                                         {(!scope.requireGuide || (myTeam.guide && myTeam.guideStatus === 'APPROVED')) &&
                                                             (!scope.requireSubjectExpert || (myTeam.subjectExpert && myTeam.expertStatus === 'APPROVED')) ? (
-                                                            <button onClick={handleSubmitForReview} className="w-full bg-black text-white px-6 py-3 rounded-xl text-sm font-bold transition-all shadow-sm hover:bg-gray-800">
-                                                                Submit Project for Review (Phase {currentPhase})
+                                                            <button
+                                                                onClick={handleSubmitForReview}
+                                                                className="w-full bg-gray-900 text-white px-6 py-4 rounded-lg text-sm font-bold uppercase tracking-widest transition-all hover:bg-gray-800 active:scale-[0.98] shadow-lg shadow-gray-200"
+                                                            >
+                                                                Submit Phase {currentPhase} for Review
                                                             </button>
                                                         ) : (
-                                                            <div className="bg-orange-50 border border-orange-100 p-4 rounded-xl flex items-center gap-3">
-                                                                <AlertCircle size={20} className="text-orange-500" />
-                                                                <p className="text-sm text-orange-700 font-bold">
-                                                                    Submission Locked: Waiting for {
-                                                                        (!scope.requireGuide || (myTeam.guide && myTeam.guideStatus === 'APPROVED'))
-                                                                            ? 'Expert'
-                                                                            : (!scope.requireSubjectExpert || (myTeam.subjectExpert && myTeam.expertStatus === 'APPROVED'))
-                                                                                ? 'Guide'
-                                                                                : 'Guide & Expert'
-                                                                    } approval.
-                                                                </p>
+                                                            <div className="bg-gray-50 border border-gray-200 p-5 rounded-lg flex items-center gap-4">
+                                                                <div className="w-12 h-12 bg-white border border-gray-100 text-gray-400 rounded-lg flex items-center justify-center">
+                                                                    <AlertCircle size={24} />
+                                                                </div>
+                                                                <div>
+                                                                    <h4 className="text-sm font-semibold text-gray-900">Submission Locked</h4>
+                                                                    <p className="text-xs text-gray-500 mt-0.5">
+                                                                        Awaiting final verification from {
+                                                                            (!scope.requireGuide || (myTeam.guide && myTeam.guideStatus === 'APPROVED'))
+                                                                                ? 'Domain Expert'
+                                                                                : (!scope.requireSubjectExpert || (myTeam.subjectExpert && myTeam.expertStatus === 'APPROVED'))
+                                                                                    ? 'Project Guide'
+                                                                                    : 'Guide & Expert'
+                                                                        }
+                                                                    </p>
+                                                                </div>
                                                             </div>
                                                         )}
                                                     </div>
                                                 );
                                             })()}
 
-                                            {/* Review History */}
+                                            {/* Review History — Handcrafted Timeline Content */}
                                             {myTeam?.project && (!scope.requireGuide || myTeam.guide) && (!scope.requireSubjectExpert || myTeam.subjectExpert) && (
-                                                <div className="mt-6">
-                                                    <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2 font-outfit">
-                                                        <MessageSquare className="text-blue-600" size={20} /> Review History
-                                                    </h3>
-                                                    <div className="space-y-4">
+                                                <div className="mt-12">
+                                                    <div className="flex items-center gap-3 mb-6">
+                                                        <MessageSquare size={20} className="text-blue-600" />
+                                                        <h3 className="text-xl font-bold text-gray-900">Review Timeline</h3>
+                                                    </div>
+
+                                                    <div className="space-y-6">
                                                         {(() => {
                                                             const completedReviews = myTeam.reviews?.filter(r => r.status !== 'PENDING').map(r => ({
                                                                 ...r,
@@ -903,117 +917,119 @@ export default function StudentBatchDetail() {
                                                             const fullHistory = [...completedReviews, ...missedAssignments, ...missedDeadlines].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
                                                             if (fullHistory.length === 0) {
-                                                                return <p className="text-gray-400 text-sm">No review history yet.</p>;
+                                                                return (
+                                                                    <div className="py-12 text-center border border-dashed border-gray-200 rounded-lg bg-gray-50">
+                                                                        <MessageSquare size={32} className="mx-auto mb-3 text-gray-300" />
+                                                                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">No feedback logs recorded yet</p>
+                                                                    </div>
+                                                                );
                                                             }
 
                                                             return fullHistory.map((item, idx) => {
                                                                 if (item.type === 'MISSED') {
                                                                     return (
-                                                                        <div key={item.id} className="bg-gray-50 p-5 rounded-2xl border border-gray-100 shadow-sm opacity-75">
-                                                                            <div className="flex justify-between items-start mb-2">
-                                                                                <div className="flex items-center gap-3">
-                                                                                    <div className="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center text-gray-500 font-bold"><Clock size={16} /></div>
-                                                                                    <div>
-                                                                                        <p className="text-sm font-bold text-gray-600 flex items-center gap-2">
-                                                                                            {item.faculty?.name || "Reviewer"}
-                                                                                            {item.reviewPhase && <span className="text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded border border-gray-300 uppercase font-black tracking-wide">Phase {item.reviewPhase}</span>}
-                                                                                        </p>
-                                                                                        <p className="text-[10px] text-gray-400 font-bold uppercase">Expired on {new Date(item.createdAt).toLocaleDateString()}</p>
+                                                                        <div key={item.id} className="p-4 bg-gray-50 rounded-lg border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 opacity-75">
+                                                                            <div className="flex items-center gap-4">
+                                                                                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-gray-400 border border-gray-100"><Clock size={18} /></div>
+                                                                                <div>
+                                                                                    <div className="flex items-center gap-2">
+                                                                                        <p className="text-sm font-semibold text-gray-700">{item.faculty?.name || "Resource Pool"}</p>
+                                                                                        {item.reviewPhase && <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded border border-gray-200 font-medium">Phase {item.reviewPhase}</span>}
                                                                                     </div>
+                                                                                    <p className="text-[10px] text-gray-500 mt-0.5 uppercase tracking-wider">Expired: {new Date(item.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                                                                                 </div>
-                                                                                <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full border bg-gray-200 text-gray-600 border-gray-300">
-                                                                                    MISSED
-                                                                                </span>
                                                                             </div>
-                                                                            <p className="text-xs text-gray-500 italic pl-14">Review window expired without submission or feedback.</p>
+                                                                            <span className="text-[10px] font-semibold uppercase tracking-wider px-3 py-1 rounded bg-gray-200 text-gray-600">Session missed</span>
                                                                         </div>
                                                                     );
                                                                 }
 
                                                                 if (item.type === 'DEADLINE_MISSED') {
                                                                     return (
-                                                                        <div key={item.id} className="bg-red-50 p-5 rounded-2xl border border-red-100 shadow-sm opacity-90">
-                                                                            <div className="flex justify-between items-start mb-2">
-                                                                                <div className="flex items-center gap-3">
-                                                                                    <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center text-red-500 font-bold"><Calendar size={16} /></div>
-                                                                                    <div>
-                                                                                        <p className="text-sm font-bold text-red-800 flex items-center gap-2">
-                                                                                            Batch Deadline Passed
-                                                                                            {item.reviewPhase && <span className="text-[10px] bg-red-200 text-red-800 px-1.5 py-0.5 rounded border border-red-300 uppercase font-black tracking-wide">Phase {item.reviewPhase}</span>}
-                                                                                        </p>
-                                                                                        <p className="text-[10px] text-red-400 font-bold uppercase">Deadline was {new Date(item.createdAt).toLocaleDateString()}</p>
+                                                                        <div key={item.id} className="p-4 bg-red-50 rounded-lg border border-red-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                                                            <div className="flex items-center gap-4">
+                                                                                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-red-500 border border-red-100"><Calendar size={18} /></div>
+                                                                                <div>
+                                                                                    <div className="flex items-center gap-2">
+                                                                                        <p className="text-sm font-semibold text-red-900">Deadline Missed</p>
+                                                                                        {item.reviewPhase && <span className="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded border border-red-200 font-medium">Phase {item.reviewPhase}</span>}
                                                                                     </div>
+                                                                                    <p className="text-[10px] text-red-500/70 mt-0.5 uppercase tracking-wider">Marked absent on {new Date(item.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                                                                                 </div>
-                                                                                <span className="text-[10px] font-black uppercase px-3 py-1 rounded-full border bg-red-100 text-red-700 border-red-200">
-                                                                                    ABSENT
-                                                                                </span>
                                                                             </div>
-                                                                            <p className="text-xs text-red-600 font-medium pl-14">Review window for this phase has closed. Automatically marked as absent.</p>
+                                                                            <span className="text-[10px] font-semibold uppercase tracking-wider px-3 py-1 rounded bg-red-100 text-red-700">Timeline violation</span>
                                                                         </div>
                                                                     );
                                                                 }
 
                                                                 const r = item;
+                                                                const isCompleted = r.status === 'COMPLETED';
                                                                 return (
-                                                                    <div key={r.id} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-                                                                        <div className="flex justify-between items-start mb-4">
-                                                                            <div className="flex items-center gap-3">
-                                                                                <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center text-gray-500 font-bold">{fullHistory.length - idx}</div>
-                                                                                <div>
-                                                                                    <p className="text-sm font-bold text-gray-800 flex items-center gap-2">
-                                                                                        {r.faculty?.name || "Reviewer"}
-                                                                                        {myTeam.guideId === r.facultyId && <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded border border-blue-200 uppercase font-black tracking-wide">Guide</span>}
-                                                                                        {myTeam.subjectExpertId === r.facultyId && <span className="text-[10px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded border border-purple-200 uppercase font-black tracking-wide">Expert</span>}
-                                                                                        {r.reviewPhase && <span className="text-[10px] bg-blue-50 text-blue-800 px-1.5 py-0.5 rounded border border-blue-100 uppercase font-black tracking-wide">Phase {r.reviewPhase}</span>}
-                                                                                    </p>
-                                                                                    <p className="text-[10px] text-gray-400 font-bold uppercase">{new Date(r.createdAt).toLocaleDateString()}</p>
+                                                                    <div key={r.id} className="p-6 bg-white rounded-lg border border-gray-200 hover:border-blue-300 transition-colors shadow-sm">
+                                                                        <div className="flex flex-col gap-4">
+                                                                            <div className="flex flex-wrap justify-between items-start gap-4">
+                                                                                <div className="flex items-center gap-3">
+                                                                                    <div className="w-10 h-10 bg-gray-50 rounded-lg flex items-center justify-center font-bold text-gray-400 border border-gray-100">{fullHistory.length - idx}</div>
+                                                                                    <div>
+                                                                                        <div className="flex flex-wrap items-center gap-2">
+                                                                                            <p className="text-sm font-bold text-gray-900">{r.faculty?.name || "Official Evaluator"}</p>
+                                                                                            <div className="flex gap-1.5">
+                                                                                                {myTeam.guideId === r.facultyId && <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-100 font-medium">Guide</span>}
+                                                                                                {myTeam.subjectExpertId === r.facultyId && <span className="text-[10px] bg-purple-50 text-purple-700 px-2 py-0.5 rounded border border-purple-100 font-medium">Expert</span>}
+                                                                                                {r.reviewPhase && <span className="text-[10px] bg-gray-100 text-gray-700 px-2 py-0.5 rounded border border-gray-200 font-medium">Phase {r.reviewPhase}</span>}
+                                                                                            </div>
+                                                                                        </div>
+                                                                                        <p className="text-[10px] text-gray-500 mt-0.5 font-medium uppercase tracking-wider">
+                                                                                            {new Date(r.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })} · {new Date(r.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                                        </p>
+                                                                                    </div>
                                                                                 </div>
+                                                                                <span className={`px-3 py-1 rounded text-[10px] font-bold uppercase tracking-wider border ${isCompleted ? 'bg-green-50 text-green-700 border-green-100' : 'bg-amber-50 text-amber-700 border-amber-100'}`}>
+                                                                                    {r.status.replace('_', ' ')}
+                                                                                </span>
                                                                             </div>
-                                                                            <span className={`text-[10px] font-black uppercase px-3 py-1 rounded-full border ${r.status === 'COMPLETED' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-orange-50 text-orange-700 border-orange-200'}`}>
-                                                                                {r.status.replace('_', ' ')}
-                                                                            </span>
-                                                                        </div>
-                                                                        <div className="space-y-3">
-                                                                            {scope?.resultsPublished && r.reviewMarks && r.reviewMarks.length > 0 && (
+
+                                                                            {r.reviewMarks && r.reviewMarks.length > 0 && (
                                                                                 <div className="flex flex-wrap gap-2">
                                                                                     {r.reviewMarks.map((mark, i) => {
                                                                                         const isMe = mark.studentId === user?.id;
-                                                                                        const name = isMe ? "You" : (myTeam.members.find(m => m.userId === mark.studentId)?.user.name.split(' ')[0] || "Student");
-
+                                                                                        const name = isMe ? "My Score" : (myTeam.members.find(m => m.userId === mark.studentId)?.user.name.split(' ')[0] || "Member");
                                                                                         let tooltip = "";
                                                                                         let displayScore = mark.marks;
-
                                                                                         if (mark.criterionMarks) {
                                                                                             try {
                                                                                                 const cm = JSON.parse(mark.criterionMarks);
                                                                                                 if (cm._total) {
-                                                                                                    displayScore = `${mark.marks} / ${cm._total}`;
-                                                                                                    tooltip = Object.entries(cm)
-                                                                                                        .filter(([k]) => k !== '_total')
-                                                                                                        .map(([k, v]) => `${k}: ${v.score}/${v.max}`)
-                                                                                                        .join('\n');
+                                                                                                    displayScore = `${mark.marks}/${cm._total}`;
+                                                                                                    tooltip = Object.entries(cm).filter(([k]) => k !== '_total').map(([k, v]) => `${k}: ${v.score}/${v.max}`).join('\n');
                                                                                                 }
-                                                                                            } catch (e) {
-                                                                                                console.error("Error parsing marks", e);
-                                                                                            }
+                                                                                            } catch (e) { }
                                                                                         }
-
                                                                                         return (
-                                                                                            <span key={i} title={tooltip} className={`text-[10px] px-3 py-1 rounded-full font-black border transition-all ${isMe ? 'bg-blue-600 text-white border-blue-700 shadow-sm shadow-blue-100' : 'bg-gray-100 text-gray-700 border-gray-200'} ${tooltip ? 'cursor-help underline decoration-dotted underline-offset-2' : ''}`}>
-                                                                                                {name}: <span className={isMe ? 'text-white' : 'text-blue-600'}>{displayScore}</span>
-                                                                                            </span>
+                                                                                            <div key={i} title={tooltip} className={`px-3 py-1 rounded-lg flex items-center gap-2 border text-[10px] font-semibold transition-colors ${isMe ? 'bg-blue-600 text-white border-blue-700' : 'bg-gray-50 text-gray-700 border-gray-100'}`}>
+                                                                                                <span className={isMe ? 'text-blue-100' : 'text-gray-400'}>{name}:</span>
+                                                                                                <span className="font-bold">{displayScore}</span>
+                                                                                            </div>
                                                                                         );
                                                                                     })}
                                                                                 </div>
                                                                             )}
-                                                                            <p className="text-sm text-gray-600 leading-relaxed bg-gray-50/50 p-4 rounded-xl border border-gray-100">{r.content}</p>
+
+                                                                            <div className="text-sm text-gray-700 leading-relaxed font-inter py-2 border-t border-gray-50">
+                                                                                {r.content}
+                                                                            </div>
 
                                                                             {r.resubmittedAt && (
-                                                                                <div className="mt-2 flex flex-col pl-4 border-l-2 border-orange-100">
-                                                                                    <span className="text-[8px] font-black text-orange-400 uppercase tracking-widest mb-1">Resubmission History / Context</span>
-                                                                                    <pre className="text-[10px] text-orange-800 italic whitespace-pre-wrap font-sans leading-tight bg-orange-50/30 p-2 rounded">
-                                                                                        {r.resubmissionNote}
-                                                                                    </pre>
+                                                                                <div className="mt-4 p-5 bg-indigo-50/50 border border-indigo-100/50 rounded-lg relative overflow-hidden group/resub">
+                                                                                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/20 rounded-full blur-2xl -mr-12 -mt-12 group-hover/resub:bg-white/40 transition-colors" />
+                                                                                    <div className="flex items-center gap-4 mb-3 relative z-10">
+                                                                                        <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-indigo-500 shadow-sm"><RefreshCcw size={18} /></div>
+                                                                                        <div>
+                                                                                            <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Resubmitted on {new Date(r.resubmittedAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                                                                                            <p className="text-sm font-black text-indigo-800 font-outfit tracking-tight">Team's Resubmission Note</p>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <pre className="text-xs text-indigo-700 italic whitespace-pre-wrap font-sans leading-tight bg-white/50 p-4 rounded-lg border border-white relative z-10">{r.resubmissionNote}</pre>
                                                                                 </div>
                                                                             )}
                                                                         </div>
@@ -1039,36 +1055,23 @@ export default function StudentBatchDetail() {
                                                 });
                                                 if (pastAssignments.length === 0) return null;
                                                 return (
-                                                    <div className="mt-4 space-y-3">
-                                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Past Review Schedules</p>
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                    <div className="mt-8">
+                                                        <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Past Review Schedules</h4>
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                             {pastAssignments.map(assignment => (
-                                                                <div key={assignment.id} className="p-4 bg-gray-50 border border-gray-100 rounded-2xl shadow-sm flex items-center gap-4 opacity-75">
-                                                                    <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-gray-100 text-gray-400">
-                                                                        <Clock size={20} />
+                                                                <div key={assignment.id} className="p-4 bg-gray-50 border border-gray-200 rounded-lg flex items-center gap-4 opacity-80">
+                                                                    <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-white border border-gray-100 text-gray-400">
+                                                                        <Clock size={16} />
                                                                     </div>
                                                                     <div className="min-w-0">
-                                                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest truncate">{assignment.faculty?.name || "Reviewer"}</p>
-                                                                        <div className="flex flex-col gap-0.5">
-                                                                            <div className="flex items-center gap-1.5 min-w-0">
-                                                                                <span className="text-[8px] font-black text-gray-300 uppercase shrink-0">From:</span>
-                                                                                <span className="text-[11px] font-bold text-gray-500 truncate">
-                                                                                    {assignment.accessStartsAt ? new Date(assignment.accessStartsAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A'}
-                                                                                </span>
-                                                                            </div>
-                                                                            <div className="flex items-center gap-1.5 min-w-0">
-                                                                                <span className="text-[8px] font-black text-gray-300 uppercase shrink-0">To:</span>
-                                                                                <span className="text-[11px] font-bold text-gray-500 truncate">
-                                                                                    {assignment.accessExpiresAt ? new Date(assignment.accessExpiresAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A'}
-                                                                                </span>
-                                                                            </div>
+                                                                        <p className="text-xs font-bold text-gray-800 truncate">{assignment.faculty?.name || "Reviewer"}</p>
+                                                                        <div className="text-[10px] text-gray-500 mt-1 space-y-0.5">
+                                                                            <p>Starts: {assignment.accessStartsAt ? new Date(assignment.accessStartsAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : 'N/A'}</p>
+                                                                            <p>Expires: {assignment.accessExpiresAt ? new Date(assignment.accessExpiresAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : 'N/A'}</p>
                                                                         </div>
-                                                                        <div className="flex gap-2 mt-1">
-                                                                            <span className="text-[9px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded border border-gray-200 font-bold uppercase tracking-wider">Phase {assignment.reviewPhase || 1}</span>
-                                                                            <span className={`text-[9px] px-2 py-0.5 rounded border font-bold uppercase tracking-wider ${assignment.mode === 'ONLINE' ? 'bg-blue-50 text-blue-500 border-blue-100' : 'bg-gray-50 text-gray-500 border-gray-200'}`}>
-                                                                                {assignment.mode}
-                                                                            </span>
-                                                                            <span className="text-[9px] px-2 py-0.5 rounded border font-bold uppercase tracking-wider bg-red-50 text-red-500 border-red-100">Expired</span>
+                                                                        <div className="flex gap-2 mt-2">
+                                                                            <span className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded border border-gray-200 font-medium">Phase {assignment.reviewPhase || 1}</span>
+                                                                            <span className="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded border border-red-100 font-medium">Expired</span>
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -1084,13 +1087,15 @@ export default function StudentBatchDetail() {
                                 </div>
                             </div>
 
-                            {/* Project Rubrics */}
+                            {/* Project Rubrics — Handcrafted Criterion Cards */}
                             {myTeam?.project && rubrics.length > 0 && (
-                                <div className="mt-8">
-                                    <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2 font-outfit">
-                                        <CheckCircle className="text-green-600" size={20} /> Evaluation Rubrics
-                                    </h3>
-                                    <div className="space-y-6">
+                                <div className="mt-12">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <CheckCircle size={20} className="text-emerald-600" />
+                                        <h3 className="text-xl font-bold text-gray-900">Evaluation Rubrics</h3>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-6">
                                         {rubrics.map((rubric) => {
                                             let criteria = [];
                                             try {
@@ -1099,25 +1104,50 @@ export default function StudentBatchDetail() {
                                                 console.error("Error parsing rubric criteria", e);
                                             }
 
+                                            const themeColor = {
+                                                1: 'blue-600',
+                                                2: 'indigo-600',
+                                                3: 'purple-600',
+                                                4: 'emerald-600'
+                                            }[rubric.phase] || 'gray-600';
+
                                             return (
-                                                <div key={rubric.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                                                    <div className="px-6 py-4 bg-gray-50 border-b flex justify-between items-center">
-                                                        <div>
-                                                            <h4 className="font-bold text-gray-800">{rubric.name}</h4>
-                                                            <p className="text-[10px] text-gray-400 font-bold uppercase">Phase {rubric.phase}</p>
-                                                        </div>
-                                                    </div>
-                                                    <div className="divide-y divide-gray-50">
-                                                        {criteria.map((c, i) => (
-                                                            <div key={i} className="p-6 hover:bg-gray-50/50 transition-colors">
-                                                                <div className="flex justify-between items-start gap-4 mb-2">
-                                                                    <p className="font-bold text-gray-800 text-sm">{c.name}</p>
-                                                                </div>
-                                                                <p className="text-xs text-gray-500 leading-relaxed font-medium">
-                                                                    {c.description}
-                                                                </p>
+                                                <div key={rubric.id} className={`p-5 bg-white rounded-lg border-l-4 border-l-${themeColor} border border-gray-200 mb-6 last:mb-0`}>
+                                                    <div className="space-y-4">
+                                                        <div className="space-y-1">
+                                                            <div className="flex items-center gap-2 text-xs text-gray-500 font-medium">
+                                                                <span>Evaluation Standards</span>
+                                                                <span>·</span>
+                                                                <span className={`text-${themeColor}`}>Phase {rubric.phase}</span>
                                                             </div>
-                                                        ))}
+                                                            <h3 className="text-lg font-semibold text-gray-900">{rubric.name}</h3>
+                                                        </div>
+
+                                                        <div className="space-y-3 pt-2">
+                                                            <p className="text-xs font-medium text-gray-500">Criteria</p>
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                                {criteria.map((c, i) => (
+                                                                    <div
+                                                                        key={i}
+                                                                        className="flex items-start gap-3 px-4 py-3 bg-gray-50/50 rounded-lg border border-gray-100/80 group-hover:bg-white transition-colors"
+                                                                    >
+                                                                        <div className={`mt-1 h-1.5 w-1.5 rounded-full bg-${themeColor} shrink-0`} />
+                                                                        <div>
+                                                                            <p className="text-sm font-semibold text-gray-800 leading-tight mb-1">{c.name}</p>
+                                                                            <p className="text-xs text-gray-500 leading-relaxed">
+                                                                                {c.description || "Assessment of quality and implementation standards."}
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="pt-2">
+                                                            <p className="text-[10px] text-gray-400 font-medium italic">
+                                                                * Ensure all deliverables for Phase {rubric.phase} are uploaded before the evaluation begins.
+                                                            </p>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             );
@@ -1127,35 +1157,44 @@ export default function StudentBatchDetail() {
                             )}
                         </div>
                     ) : (
-                        // NO TEAM START - FULL WIDTH PROJECT GRID
-                        <div className="col-span-3 space-y-6">
-                            <div className="bg-blue-50 rounded-2xl p-8 text-center border border-blue-100">
-                                <h2 className="text-2xl font-bold text-blue-900 mb-2">Start Your Project</h2>
-                                <p className="text-blue-600 text-sm max-w-lg mx-auto">
-                                    Select a project from the list below to automatically create your team and get started.
-                                </p>
+                        <div className="col-span-3 space-y-12 animate-in fade-in slide-in-from-bottom-5 duration-700">
+                            {/* NO TEAM START - FULL WIDTH PROJECT GRID — Handcrafted Onboarding */}
+                            <div className="bg-gray-900 rounded-lg p-8 md:p-12 text-center relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -mr-32 -mt-32" />
+                                <div className="relative z-10 max-w-2xl mx-auto">
+                                    <div className="w-16 h-16 bg-white/10 rounded-lg flex items-center justify-center mx-auto mb-6">
+                                        <Rocket size={32} className="text-white" />
+                                    </div>
+                                    <h2 className="text-3xl font-bold text-white mb-3 tracking-tight">Select Your Project</h2>
+                                    <p className="text-gray-400 text-base">
+                                        Choose a project to begin. Your team and workspace will be initialized once you make a selection.
+                                    </p>
+                                </div>
                             </div>
 
-                            <div className="flex flex-col md:flex-row gap-4 mb-2">
+                            <div className="flex flex-col md:flex-row gap-4">
                                 <div className="relative flex-1">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                     <input
                                         type="text"
-                                        className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl outline-none focus:border-blue-500 transition shadow-sm"
-                                        placeholder="Search by project title..."
+                                        className="w-full pl-11 pr-4 py-3.5 bg-white border border-gray-200 rounded-lg outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-medium text-gray-700 placeholder:text-gray-400"
+                                        placeholder="Search projects..."
                                         value={projectSearch}
                                         onChange={e => setProjectSearch(e.target.value)}
                                     />
                                 </div>
-                                <select
-                                    className="px-4 py-3 bg-white border border-gray-200 rounded-xl outline-none focus:border-blue-500 transition shadow-sm font-bold text-gray-700 min-w-[200px]"
-                                    value={categoryFilter}
-                                    onChange={e => setCategoryFilter(e.target.value)}
-                                >
-                                    {uniqueCategories.map(c => (
-                                        <option key={c} value={c}>{c === 'ALL' ? 'All Domains' : c}</option>
-                                    ))}
-                                </select>
+                                <div className="relative">
+                                    <select
+                                        className="w-full md:w-64 px-4 py-3.5 bg-white border border-gray-200 rounded-lg outline-none focus:border-blue-500 transition-all font-semibold text-gray-600 appearance-none pr-10"
+                                        value={categoryFilter}
+                                        onChange={e => setCategoryFilter(e.target.value)}
+                                    >
+                                        {uniqueCategories.map(c => (
+                                            <option key={c} value={c}>{c === 'ALL' ? 'All Categories' : c}</option>
+                                        ))}
+                                    </select>
+                                    <ChevronDown size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                                </div>
                             </div>
 
                             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1163,141 +1202,171 @@ export default function StudentBatchDetail() {
                                     <div
                                         key={p.id}
                                         onClick={() => selectProject(p.id, p.title)}
-                                        className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-blue-300 hover:-translate-y-1 transition-all group cursor-pointer h-full flex flex-col justify-between"
+                                        className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm hover:border-blue-400 hover:shadow-md transition-all group cursor-pointer flex flex-col justify-between"
                                     >
                                         <div>
                                             <div className="flex justify-between items-start mb-4">
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg">
+                                                <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded border border-blue-100">
                                                     {p.category}
                                                 </span>
+                                                <ArrowRight size={16} className="text-gray-300 group-hover:text-blue-500 transition-colors" />
                                             </div>
-                                            <h3 className="text-lg font-bold text-gray-800 group-hover:text-blue-600 transition-colors mb-2">
+                                            <h3 className="font-bold text-gray-900 group-hover:text-blue-600 mb-3 leading-snug">
                                                 {p.title}
                                             </h3>
-                                            <p className="text-sm text-gray-500 line-clamp-3 leading-relaxed">
+                                            <p className="text-xs text-gray-500 line-clamp-3 leading-relaxed mb-6">
                                                 {p.description || "No description provided."}
                                             </p>
                                         </div>
-                                        <div className="pt-6 mt-4 border-t border-gray-50 flex items-center justify-between text-xs font-bold text-gray-400 group-hover:text-gray-600">
-                                            <span>Max Team Size: {p.maxTeamSize}</span>
-                                            <div className="flex items-center gap-1 text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                Select <CheckCircle size={14} />
-                                            </div>
+
+                                        <div className="pt-4 border-t border-gray-50 flex items-center justify-between">
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase flex items-center gap-1.5">
+                                                <Users size={12} /> {p.maxTeamSize} Members
+                                            </span>
+                                            <span className="text-[10px] font-bold text-blue-600 uppercase opacity-0 group-hover:opacity-100 transition-opacity">
+                                                Select Project
+                                            </span>
                                         </div>
                                     </div>
                                 ))}
                             </div>
 
                             {projects.length === 0 && (
-                                <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-200">
-                                    <p className="text-gray-400 font-bold text-lg">No projects available right now.</p>
+                                <div className="text-center py-32 bg-slate-50 rounded-[48px] border-4 border-dashed border-slate-200">
+                                    <div className="w-20 h-20 bg-white rounded-lg shadow-lg border border-slate-100 flex items-center justify-center mx-auto mb-6 text-slate-200">
+                                        <Layout size={40} />
+                                    </div>
+                                    <p className="text-slate-400 font-black uppercase tracking-[0.25em] text-sm">Deployment queue empty</p>
                                 </div>
                             )}
                         </div>
                     )}
 
-                    {/* RIGHT COLUMN: Available Projects (ONLY SHOW IF TEAM EXISTS) */}
+                    {/* RIGHT COLUMN: Available Projects — Handcrafted Selector */}
                     {myTeam && (
                         <div className="space-y-6">
-                            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm sticky top-6">
-                                <div className="mb-4">
-                                    <h4 className="font-bold text-gray-800">Available Projects</h4>
-                                    <p className="text-xs text-gray-500">Pick a project for this batch</p>
+                            <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm sticky top-10">
+                                <div className="mb-6">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <Layout size={18} className="text-blue-600" />
+                                        <h4 className="text-base font-bold text-gray-900">Available Projects</h4>
+                                    </div>
+                                    <p className="text-xs text-gray-500">Select a project for your team</p>
                                 </div>
 
-                                {/* Search & Filter */}
-                                <div className="space-y-3 mb-4">
+                                <div className="space-y-3 mb-6">
                                     <div className="relative">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
                                         <input
                                             type="text"
-                                            className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none focus:border-blue-300 transition"
-                                            placeholder="Search title..."
+                                            className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-xs outline-none focus:border-blue-300 focus:bg-white transition-all"
+                                            placeholder="Search titles..."
                                             value={projectSearch}
                                             onChange={e => setProjectSearch(e.target.value)}
                                         />
                                     </div>
-                                    <select
-                                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none focus:border-blue-300 transition font-bold text-gray-600"
-                                        value={categoryFilter}
-                                        onChange={e => setCategoryFilter(e.target.value)}
-                                    >
-                                        {uniqueCategories.map(c => (
-                                            <option key={c} value={c}>{c === 'ALL' ? 'All Domains' : c}</option>
-                                        ))}
-                                    </select>
+                                    <div className="relative">
+                                        <select
+                                            className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-xs font-semibold text-gray-600 outline-none focus:border-blue-300 appearance-none"
+                                            value={categoryFilter}
+                                            onChange={e => setCategoryFilter(e.target.value)}
+                                        >
+                                            {uniqueCategories.map(c => (
+                                                <option key={c} value={c}>{c === 'ALL' ? 'All Domains' : c}</option>
+                                            ))}
+                                        </select>
+                                        <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                                    </div>
                                 </div>
 
-                                <div className={`space-y-3 max-h-[600px] overflow-y-auto pr-1 custom-scrollbar ${isPending ? 'opacity-50 pointer-events-none' : ''}`}>
+                                <div className={`space-y-3 max-h-[400px] overflow-y-auto pr-1 custom-scrollbar ${isPending ? 'opacity-50 pointer-events-none' : ''}`}>
                                     {filteredProjects.map(p => {
-                                        // Check if disabled: user already has a pending/active project in this team
                                         const hasProject = myTeam?.project || myTeam?.projectRequests?.some(r => r.status === 'PENDING');
+                                        const isSelected = myTeam?.project?.id === p.id;
+                                        const isPendingRequest = myTeam?.projectRequests?.some(r => r.projectId === p.id && r.status === 'PENDING');
 
                                         return (
-                                            <div key={p.id} className="p-4 rounded-xl border border-gray-100 hover:border-blue-200 transition-all hover:shadow-md bg-white group cursor-pointer"
-                                                onClick={() => !hasProject && selectProject(p.id, p.title)}>
-                                                <div className="flex justify-between items-start mb-2">
-                                                    <span className="text-[9px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-2 py-0.5 rounded">{p.category}</span>
-                                                    {hasProject && <span className="text-[9px] font-bold text-gray-300">Disabled</span>}
+                                            <div
+                                                key={p.id}
+                                                onClick={() => !hasProject && selectProject(p.id, p.title)}
+                                                className={`p-4 rounded-lg border transition-all ${isSelected
+                                                    ? 'bg-blue-600 border-blue-700'
+                                                    : isPendingRequest
+                                                        ? 'bg-amber-50 border-amber-200'
+                                                        : hasProject
+                                                            ? 'bg-gray-50 border-gray-100 opacity-40 grayscale'
+                                                            : 'bg-white border-gray-100 hover:border-blue-300 cursor-pointer shadow-sm'
+                                                    }`}
+                                            >
+                                                <div className="flex justify-between items-start gap-2 mb-1">
+                                                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${isSelected ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-500'}`}>
+                                                        {p.category}
+                                                    </span>
+                                                    {isSelected && <Check size={12} className="text-white" />}
+                                                    {isPendingRequest && <Clock size={12} className="text-amber-600 pulse" />}
                                                 </div>
-                                                <h5 className="text-sm font-bold text-gray-800 leading-tight group-hover:text-blue-700 transition-colors">{p.title}</h5>
-                                                <p className="text-xs text-gray-400 mt-2 line-clamp-2">{p.description}</p>
+                                                <h5 className={`text-xs font-bold ${isSelected ? 'text-white' : 'text-gray-800'}`}>{p.title}</h5>
                                             </div>
                                         );
                                     })}
-                                    {projects.length === 0 && (
-                                        <div className="text-center py-8 text-gray-400 text-xs">No projects available for this batch.</div>
-                                    )}
                                 </div>
                             </div>
                         </div>
                     )}
 
                 </div>
-            </div>
-            {/* SUBMIT REVIEW MODAL */}
-            {isSubmitModalOpen && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl animate-in fade-in zoom-in-95">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-xl font-bold text-gray-800">Submit for Review</h3>
-                            <button onClick={() => setIsSubmitModalOpen(false)} className="text-gray-400 hover:text-gray-600"><XCircle size={24} /></button>
-                        </div>
+                {/* SUBMIT REVIEW MODAL — Handcrafted Focused UI */}
+                {isSubmitModalOpen && (
+                    <div className="fixed inset-0 bg-gray-900/40 flex items-center justify-center z-[100] backdrop-blur-sm p-4">
+                        <div className="bg-white rounded-lg w-full max-w-md p-8 shadow-2xl border border-gray-100 animate-in zoom-in-95 duration-200">
+                            <div className="flex items-center gap-4 mb-6">
+                                <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
+                                    <Rocket size={24} />
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-900">Submit Phase {currentPhase}</h3>
+                            </div>
 
-                        <p className="text-sm text-gray-500 mb-4">
-                            You are about to submit your project for <strong>Phase {currentPhase}</strong> review.
-                            This will lock further changes until the review is complete.
-                        </p>
+                            <div className="bg-gray-50 rounded-lg p-5 mb-6 border border-gray-100">
+                                <p className="text-sm text-gray-600 leading-relaxed">
+                                    You are finalizing your submission for the <span className="font-bold text-gray-900">Phase {currentPhase}</span> review cycle.
+                                </p>
+                                <div className="mt-3 flex items-center gap-2 text-amber-700 text-[11px] font-bold uppercase tracking-wider">
+                                    <Clock size={14} />
+                                    <span>Changes locked after submission</span>
+                                </div>
+                            </div>
 
-                        <div className="mb-6">
-                            <label className="text-xs font-bold text-gray-600 uppercase mb-1 block">Note for Reviewer (Optional)</label>
-                            <textarea
-                                className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 ring-blue-500 outline-none resize-none text-sm"
-                                rows={3}
-                                placeholder="E.g. Addressed previous feedback regarding..."
-                                value={resubmissionNote}
-                                onChange={e => setResubmissionNote(e.target.value)}
-                            />
-                        </div>
+                            <div className="mb-8">
+                                <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2 block">Submission Notes (Optional)</label>
+                                <textarea
+                                    className="w-full bg-white border border-gray-200 p-4 rounded-lg focus:border-blue-500 outline-none resize-none text-sm font-medium text-gray-700 transition-all"
+                                    rows={3}
+                                    placeholder="Add any relevant notes for the evaluator..."
+                                    value={resubmissionNote}
+                                    onChange={e => setResubmissionNote(e.target.value)}
+                                />
+                            </div>
 
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => setIsSubmitModalOpen(false)}
-                                className="flex-1 py-2.5 rounded-xl text-sm font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={confirmSubmitReview}
-                                disabled={isSubmitting}
-                                className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 flex justify-center items-center gap-2 transition-colors"
-                            >
-                                {isSubmitting ? 'Submitting...' : 'Confirm Submission'}
-                            </button>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setIsSubmitModalOpen(false)}
+                                    className="flex-1 py-3.5 rounded-lg text-sm font-bold text-gray-500 hover:bg-gray-50 transition-all border border-gray-100"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={confirmSubmitReview}
+                                    disabled={isSubmitting}
+                                    className="flex-[2] py-3.5 rounded-lg text-sm font-bold text-white bg-gray-900 hover:bg-gray-800 transition-all disabled:opacity-50"
+                                >
+                                    {isSubmitting ? 'Submitting...' : 'Confirm Submission'}
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div >
+                )}
+            </div>
+        </div>
     );
 }
+

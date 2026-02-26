@@ -42,7 +42,7 @@ const FacultyDetailModal = ({ faculty, onClose }) => {
                         <X size={24} />
                     </button>
                     <div className="flex items-center gap-6">
-                        <div className="w-20 h-20 rounded-3xl bg-white/10 flex items-center justify-center border border-white/20 shadow-inner">
+                        <div className="w-20 h-20 rounded-lg bg-white/10 flex items-center justify-center border border-white/20 shadow-inner">
                             <span className="text-3xl font-black">{faculty.name?.charAt(0)}</span>
                         </div>
                         <div>
@@ -57,11 +57,11 @@ const FacultyDetailModal = ({ faculty, onClose }) => {
 
                     {/* Quick Stats Overlay */}
                     <div className="absolute -bottom-6 right-12 flex gap-4">
-                        <div className="bg-white text-slate-900 px-6 py-4 rounded-2xl shadow-xl border border-slate-100 min-w-[140px]">
+                        <div className="bg-white text-slate-900 px-6 py-4 rounded-lg shadow-xl border border-slate-100 min-w-[140px]">
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Avg marks given</p>
                             <p className="text-2xl font-black text-center mt-1 text-indigo-600">{faculty.averageMarksPercentage}%</p>
                         </div>
-                        <div className="bg-white text-slate-900 px-6 py-4 rounded-2xl shadow-xl border border-slate-100 min-w-[140px]">
+                        <div className="bg-white text-slate-900 px-6 py-4 rounded-lg shadow-xl border border-slate-100 min-w-[140px]">
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Listed Reviews</p>
                             <p className="text-2xl font-black text-center mt-1 text-blue-600">
                                 {reviewsByStudent.reduce((acc, group) => acc + group.reviews.length, 0)}
@@ -81,7 +81,7 @@ const FacultyDetailModal = ({ faculty, onClose }) => {
                             <div className="space-y-3">
                                 {faculty.studentsDetails?.length > 0 ? (
                                     faculty.studentsDetails.map((s, idx) => (
-                                        <div key={idx} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-indigo-200 transition-colors">
+                                        <div key={idx} className="p-4 bg-slate-50 rounded-lg border border-slate-100 hover:border-indigo-200 transition-colors">
                                             <div className="flex justify-between items-start">
                                                 <div>
                                                     <p className="font-bold text-slate-800 text-sm leading-tight">{s.name}</p>
@@ -100,7 +100,7 @@ const FacultyDetailModal = ({ faculty, onClose }) => {
                             </div>
                         </div>
 
-                        <div className="p-6 bg-indigo-50/50 rounded-3xl border border-indigo-100">
+                        <div className="p-6 bg-indigo-50/50 rounded-lg border border-indigo-100">
                             <h4 className="text-xs font-black text-indigo-600 uppercase tracking-widest mb-2">Quota Statistics</h4>
                             <div className="flex justify-between items-end">
                                 <div>
@@ -123,7 +123,7 @@ const FacultyDetailModal = ({ faculty, onClose }) => {
                         <div className="space-y-6">
                             {reviewsByStudent.length > 0 ? (
                                 reviewsByStudent.map((group, idx) => (
-                                    <div key={idx} className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                                    <div key={idx} className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
                                         <div className="px-5 py-3 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs uppercase">
@@ -167,7 +167,7 @@ const FacultyDetailModal = ({ faculty, onClose }) => {
                                     </div>
                                 ))
                             ) : (
-                                <div className="text-center py-20 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
+                                <div className="text-center py-20 bg-slate-50 rounded-lg border border-dashed border-slate-200">
                                     <ClipboardList size={40} className="mx-auto text-slate-200 mb-3" />
                                     <p className="text-slate-400 font-bold">No review data recorded for this faculty.</p>
                                 </div>
@@ -238,7 +238,7 @@ export default function FacultyStatsTab({ facultyMembers, onBack }) {
             <div className="flex flex-col xl:flex-row gap-6">
                 <div className="flex-1 bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-center gap-6">
                     <div className="flex items-center gap-6">
-                        <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-200">
+                        <div className="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-200">
                             <Target size={32} />
                         </div>
                         <div>
@@ -248,7 +248,7 @@ export default function FacultyStatsTab({ facultyMembers, onBack }) {
                     </div>
                     <div className="flex items-center gap-4 w-full md:w-auto">
                         <SearchInput value={search} onChange={setSearch} placeholder="Search Faculty..." className="w-full md:w-80" />
-                        <button onClick={onBack} className="p-3 bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all">
+                        <button onClick={onBack} className="p-3 bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all">
                             <ChevronLeft size={24} />
                         </button>
                     </div>
@@ -295,7 +295,7 @@ export default function FacultyStatsTab({ facultyMembers, onBack }) {
                                 <tr key={f.id} className="group hover:bg-slate-50/70 transition-colors cursor-pointer" onClick={() => setSelectedFaculty(f)}>
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-5">
-                                            <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center font-bold text-lg group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
+                                            <div className="w-12 h-12 rounded-lg bg-slate-100 text-slate-400 flex items-center justify-center font-bold text-lg group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
                                                 {f.name.charAt(0)}
                                             </div>
                                             <div>
@@ -341,7 +341,7 @@ export default function FacultyStatsTab({ facultyMembers, onBack }) {
                                         </div>
                                     </td>
                                     <td className="px-8 py-6 text-center">
-                                        <button className="p-3 hover:bg-blue-100 text-blue-600 rounded-xl transition-all active:scale-90">
+                                        <button className="p-3 hover:bg-blue-100 text-blue-600 rounded-lg transition-all active:scale-90">
                                             <Eye size={20} />
                                         </button>
                                     </td>
@@ -354,3 +354,4 @@ export default function FacultyStatsTab({ facultyMembers, onBack }) {
         </div>
     );
 }
+

@@ -257,8 +257,8 @@ export default function ReviewsTab({
                     { label: 'Completed', count: counts.COMPLETED, icon: CheckCircle, color: 'green' },
                     { label: 'Pending Steps', count: counts.CHANGES_REQUIRED + counts.IN_PROGRESS + counts.NOT_COMPLETED + (counts.PENDING || 0) + (counts.APPROVED || 0), icon: AlertCircle, color: 'indigo' }
                 ].map((stat, i) => (
-                    <div key={i} className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4">
-                        <div className={`p-3 bg-${stat.color}-50 text-${stat.color}-600 rounded-2xl`}>
+                    <div key={i} className="bg-white p-5 rounded-lg border border-gray-100 shadow-sm flex items-center gap-4">
+                        <div className={`p-3 bg-${stat.color}-50 text-${stat.color}-600 rounded-lg`}>
                             <stat.icon size={20} />
                         </div>
                         <div>
@@ -269,10 +269,10 @@ export default function ReviewsTab({
                 ))}
             </div>
 
-            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 space-y-6">
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 space-y-6">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div className="flex items-center gap-4">
-                        <div className="p-3 bg-indigo-100 text-indigo-600 rounded-2xl"><MessageSquare size={24} /></div>
+                        <div className="p-3 bg-indigo-100 text-indigo-600 rounded-lg"><MessageSquare size={24} /></div>
                         <div>
                             <h2 className="text-xl font-bold text-gray-800 tracking-tight">Project Progress & Reviews</h2>
                             <p className="text-sm text-gray-500">Manage review history and submit feedback</p>
@@ -287,7 +287,7 @@ export default function ReviewsTab({
                                     setFilterStatus(status);
                                     setPagination(prev => ({ ...prev, page: 1 }));
                                 }}
-                                className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border ${filterStatus === status
+                                className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border ${filterStatus === status
                                     ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-100'
                                     : 'bg-white border-gray-200 text-gray-400 hover:border-indigo-400'
                                     }`}
@@ -312,7 +312,7 @@ export default function ReviewsTab({
                             setSelectedScope(e.target.value);
                             setPagination(prev => ({ ...prev, page: 1 }));
                         }}
-                        className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-xs font-bold text-gray-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                        className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-xs font-bold text-gray-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                     >
                         <option value="ALL">All Batches</option>
                         {scopes.map(s => (
@@ -326,7 +326,7 @@ export default function ReviewsTab({
                             setFilterPhase(e.target.value);
                             setPagination(prev => ({ ...prev, page: 1 }));
                         }}
-                        className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-xs font-bold text-gray-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                        className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-xs font-bold text-gray-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                     >
                         <option value="ALL">All Phases</option>
                         <option value="1">Phase 1</option>
@@ -341,7 +341,7 @@ export default function ReviewsTab({
                             setFilterActive(e.target.value);
                             setPagination(prev => ({ ...prev, page: 1 }));
                         }}
-                        className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-xs font-bold text-gray-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                        className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-xs font-bold text-gray-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                     >
                         <option value="ALL">Any Session</option>
                         <option value="true">Active Session</option>
@@ -354,7 +354,7 @@ export default function ReviewsTab({
                             setSelectedCategory(e.target.value);
                             setPagination(prev => ({ ...prev, page: 1 }));
                         }}
-                        className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-xs font-bold text-gray-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                        className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-xs font-bold text-gray-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                     >
                         <option value="">All Categories</option>
                         {categories.map(c => (
@@ -368,7 +368,7 @@ export default function ReviewsTab({
                             setSelectedDepartment(e.target.value);
                             setPagination(prev => ({ ...prev, page: 1 }));
                         }}
-                        className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-xs font-bold text-gray-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                        className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-xs font-bold text-gray-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                     >
                         <option value="">All Departments</option>
                         {departments.map(d => (
@@ -383,7 +383,7 @@ export default function ReviewsTab({
                         <select
                             value={pagination.limit}
                             onChange={(e) => setPagination(prev => ({ ...prev, limit: parseInt(e.target.value), page: 1 }))}
-                            className="bg-gray-50 border border-gray-200 rounded-xl px-2 py-1 text-xs font-bold text-gray-600 outline-none transition-all"
+                            className="bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 text-xs font-bold text-gray-600 outline-none transition-all"
                         >
                             {[12, 24, 50, 100, 500].map(l => (
                                 <option key={l} value={l}>{l}</option>
@@ -414,12 +414,12 @@ export default function ReviewsTab({
 
             <div className="grid grid-cols-1 gap-4">
                 {isLoading ? (
-                    <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-gray-100 space-y-4">
+                    <div className="flex flex-col items-center justify-center py-20 bg-white rounded-lg border border-gray-100 space-y-4">
                         <div className="w-12 h-12 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
                         <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">Loading Reviews...</p>
                     </div>
                 ) : teams.length === 0 ? (
-                    <div className="text-center py-12 bg-white rounded-3xl shadow-sm border border-dashed border-gray-200 text-gray-400">
+                    <div className="text-center py-12 bg-white rounded-lg shadow-sm border border-dashed border-gray-200 text-gray-400">
                         No projects found matching your criteria.
                     </div>
                 ) : (
@@ -432,7 +432,7 @@ export default function ReviewsTab({
                         return (
                             <div
                                 key={team.id}
-                                className={`bg-white rounded-xl shadow-sm border transition-all duration-300 overflow-hidden ${isExpanded ? 'ring-2 ring-blue-500 border-transparent shadow-lg' : 'hover:shadow-md border-gray-100'} ${team.status === 'READY_FOR_REVIEW' ? 'ring-2 ring-green-500 animate-pulse-subtle' : ''}`}
+                                className={`bg-white rounded-lg shadow-sm border transition-all duration-300 overflow-hidden ${isExpanded ? 'ring-2 ring-blue-500 border-transparent shadow-lg' : 'hover:shadow-md border-gray-100'} ${team.status === 'READY_FOR_REVIEW' ? 'ring-2 ring-green-500 animate-pulse-subtle' : ''}`}
                             >
                                 {/* Collapsed View / Header */}
                                 <div
@@ -502,7 +502,7 @@ export default function ReviewsTab({
                                                     <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                                                         {(() => {
                                                             if (!team.reviews || team.reviews.length === 0) {
-                                                                return <div className="text-sm text-gray-400 italic text-center py-8 bg-gray-50 rounded-xl border border-dashed">No reviews added yet.</div>;
+                                                                return <div className="text-sm text-gray-400 italic text-center py-8 bg-gray-50 rounded-lg border border-dashed">No reviews added yet.</div>;
                                                             }
 
                                                             // Group reviews by phase
@@ -522,7 +522,7 @@ export default function ReviewsTab({
                                                                 const status = latestReview.status;
 
                                                                 return (
-                                                                    <div key={phase} className="bg-gray-50 rounded-xl border border-gray-100 overflow-hidden">
+                                                                    <div key={phase} className="bg-gray-50 rounded-lg border border-gray-100 overflow-hidden">
                                                                         <div className="px-4 py-2 bg-white border-b border-gray-100 flex justify-between items-center">
                                                                             <div className="flex items-center gap-2">
                                                                                 <span className="text-[10px] font-black bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full uppercase">
@@ -645,7 +645,7 @@ export default function ReviewsTab({
                                             </div>
 
                                             {/* Right Side: Review Form */}
-                                            <div className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 space-y-4">
+                                            <div className="bg-gray-50/50 p-6 rounded-lg border border-gray-100 space-y-4">
                                                 <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-2">
                                                     <CheckCircle size={14} /> Submit New Review
                                                 </h4>
@@ -657,7 +657,7 @@ export default function ReviewsTab({
 
                                                     if (team.status === 'READY_FOR_REVIEW' && latestWithNote) {
                                                         return (
-                                                            <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 space-y-3">
+                                                            <div className="bg-amber-50 border border-amber-100 rounded-lg p-4 space-y-3">
                                                                 <div className="flex items-center gap-2 text-amber-800 font-bold text-xs uppercase tracking-wider">
                                                                     <AlertCircle size={14} /> Resubmission Feedback context
                                                                 </div>
@@ -873,7 +873,7 @@ export default function ReviewsTab({
                     <button
                         disabled={pagination.page === 1}
                         onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
-                        className="p-2 rounded-xl bg-white border border-gray-200 text-gray-400 hover:text-indigo-600 disabled:opacity-30 disabled:hover:text-gray-400 transition-all shadow-sm"
+                        className="p-2 rounded-lg bg-white border border-gray-200 text-gray-400 hover:text-indigo-600 disabled:opacity-30 disabled:hover:text-gray-400 transition-all shadow-sm"
                     >
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
                     </button>
@@ -885,7 +885,7 @@ export default function ReviewsTab({
                                     <button
                                         key={p}
                                         onClick={() => setPagination(prev => ({ ...prev, page: p }))}
-                                        className={`w-10 h-10 rounded-xl text-xs font-black transition-all ${pagination.page === p
+                                        className={`w-10 h-10 rounded-lg text-xs font-black transition-all ${pagination.page === p
                                             ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100'
                                             : 'bg-white border border-gray-200 text-gray-500 hover:border-indigo-400'
                                             }`}
@@ -901,7 +901,7 @@ export default function ReviewsTab({
                     <button
                         disabled={pagination.page === pagination.totalPages}
                         onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
-                        className="p-2 rounded-xl bg-white border border-gray-200 text-gray-400 hover:text-indigo-600 disabled:opacity-30 disabled:hover:text-gray-400 transition-all shadow-sm"
+                        className="p-2 rounded-lg bg-white border border-gray-200 text-gray-400 hover:text-indigo-600 disabled:opacity-30 disabled:hover:text-gray-400 transition-all shadow-sm"
                     >
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
                     </button>
@@ -910,3 +910,4 @@ export default function ReviewsTab({
         </div>
     );
 }
+

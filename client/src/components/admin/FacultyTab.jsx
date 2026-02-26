@@ -23,7 +23,7 @@ const EditFacultyModal = ({ faculty, isOpen, onClose, onSave }) => {
 
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
                 <div className="flex justify-between items-center p-6 border-b">
                     <h3 className="text-xl font-bold text-gray-800">Edit Faculty</h3>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
@@ -85,7 +85,7 @@ const FacultyDetailsModal = ({ faculty, isOpen, onClose }) => {
 
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
+            <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
                 <div className="flex justify-between items-center p-6 border-b bg-gray-50">
                     <div>
                         <h3 className="text-xl font-bold text-gray-800">{faculty.name}</h3>
@@ -99,17 +99,17 @@ const FacultyDetailsModal = ({ faculty, isOpen, onClose }) => {
                 <div className="p-6 overflow-y-auto space-y-8">
                     {/* Workload Stats */}
                     <div className="grid grid-cols-3 gap-4">
-                        <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-center">
+                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 text-center">
                             <h4 className="text-xs font-bold text-blue-500 uppercase tracking-widest mb-1">Quota Used</h4>
                             <p className="text-2xl font-black text-blue-900">{faculty.quotaStatus}</p>
                             <p className="text-xs text-blue-400">Teams (Guide + Expert)</p>
                         </div>
-                        <div className="bg-purple-50 p-4 rounded-xl border border-purple-100 text-center">
+                        <div className="bg-purple-50 p-4 rounded-lg border border-purple-100 text-center">
                             <h4 className="text-xs font-bold text-purple-500 uppercase tracking-widest mb-1">Students</h4>
                             <p className="text-2xl font-black text-purple-900">{faculty.studentsCount}</p>
                             <p className="text-xs text-purple-400">Total Mentored</p>
                         </div>
-                        <div className="bg-green-50 p-4 rounded-xl border border-green-100 text-center">
+                        <div className="bg-green-50 p-4 rounded-lg border border-green-100 text-center">
                             <h4 className="text-xs font-bold text-green-500 uppercase tracking-widest mb-1">Reviews</h4>
                             <p className="text-2xl font-black text-green-900">{faculty.reviewsCount}</p>
                             <p className="text-xs text-green-400">Reviews Submitted</p>
@@ -284,7 +284,7 @@ const TempAdminModal = ({ faculty, isOpen, onClose, onSave }) => {
 
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
+            <div className="bg-white rounded-lg shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
                 <div className="flex justify-between items-center p-6 border-b bg-gradient-to-r from-orange-50 to-amber-50">
                     <div>
                         <h3 className="text-xl font-bold text-gray-800">Admin Access Settings</h3>
@@ -657,3 +657,4 @@ export default function FacultyTab({
         </div>
     );
 }
+

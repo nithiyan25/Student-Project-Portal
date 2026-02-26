@@ -160,7 +160,7 @@ export default function RubricsTab() {
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             {/* Header & Filters */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-2xl border border-gray-100 shadow-sm gap-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-lg border border-gray-100 shadow-sm gap-4">
                 <div>
                     <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
                         <LayoutList className="text-blue-600" size={24} /> Evaluation Rubrics
@@ -186,7 +186,7 @@ export default function RubricsTab() {
                     </select>
                     <button
                         onClick={() => handleOpenModal()}
-                        className="bg-blue-600 text-white px-5 py-2 rounded-xl font-bold hover:bg-blue-700 transition flex items-center gap-2 shadow-lg shadow-blue-100"
+                        className="bg-blue-600 text-white px-5 py-2 rounded-lg font-bold hover:bg-blue-700 transition flex items-center gap-2 shadow-lg shadow-blue-100"
                     >
                         <Plus size={18} /> Create Rubric
                     </button>
@@ -198,7 +198,7 @@ export default function RubricsTab() {
                 {rubrics.map(rubric => {
                     const criteria = JSON.parse(rubric.criteria);
                     return (
-                        <div key={rubric.id} className="bg-white p-5 rounded-2xl border border-gray-200 hover:shadow-md transition">
+                        <div key={rubric.id} className="bg-white p-5 rounded-lg border border-gray-200 hover:shadow-md transition">
                             <div className="flex justify-between items-start mb-4">
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
@@ -224,7 +224,7 @@ export default function RubricsTab() {
                             </div>
 
                             {/* Criteria Preview */}
-                            <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                            <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
                                 <div className="space-y-2">
                                     {criteria.map((c, idx) => (
                                         <div key={idx} className="flex justify-between items-center text-sm">
@@ -243,7 +243,7 @@ export default function RubricsTab() {
                 })}
 
                 {!loading && rubrics.length === 0 && (
-                    <div className="text-center py-12 text-gray-400 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+                    <div className="text-center py-12 text-gray-400 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
                         <LayoutList size={48} className="mx-auto mb-4 opacity-50" />
                         <p>No rubrics defined yet.</p>
                     </div>
@@ -253,7 +253,7 @@ export default function RubricsTab() {
             {/* Create/Edit Modal */}
             {showModal && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl animate-in zoom-in-95">
+                    <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl animate-in zoom-in-95">
                         <div className="p-6 border-b flex justify-between items-center">
                             <h3 className="text-xl font-bold text-gray-800">
                                 {editingRubric ? 'Edit Rubric' : 'Create New Rubric'}
@@ -335,7 +335,7 @@ export default function RubricsTab() {
                                 </div>
 
                                 {showImportPanel && (
-                                    <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 mb-4 animate-in slide-in-from-top-2">
+                                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-4 animate-in slide-in-from-top-2">
                                         <label className="block text-xs font-bold text-blue-800 mb-2">
                                             Paste Criteria (Format: Name, Marks, Description)
                                         </label>
@@ -416,3 +416,4 @@ export default function RubricsTab() {
         </div>
     );
 }
+

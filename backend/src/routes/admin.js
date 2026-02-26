@@ -646,14 +646,16 @@ router.post('/auto-assign-reviews', authenticate, authorize(['ADMIN']), async (r
             const nextPhase = Math.max(team.submissionPhase || 0, Math.max(0, ...Array.from(passedPhases)) + 1);
 
             // Perform assignment/reassignment using utility
-            const assignmentMethod = await reassignPendingReview(tx, team, facultyIdToAssign, nextPhase, now, req.user.id);
-            assignedVia += assignmentMethod;
+            await prisma.$transaction(async (tx) => {
+                const assignmentMethod = await reassignPendingReview(tx, team, facultyIdToAssign, nextPhase, now, req.user.id);
+                assignedVia += assignmentMethod;
 
-            // Update Team Status
-            await prisma.team.update({
-                where: { id: team.id },
-                data: { status: 'IN_PROGRESS' }
-            });
+                // Update Team Status
+                await tx.team.update({
+                    where: { id: team.id },
+                    data: { status: 'IN_PROGRESS' }
+                });
+            }, { timeout: 30000 });
 
             results.push({ teamId, teamName: team.project?.title || team.id, message: `Assigned via ${assignedVia} (Phase ${nextPhase})`, status: 'success' });
             successCount++;
@@ -822,6 +824,7 @@ router.get('/stats', authenticate, authorize(['ADMIN']), async (req, res, next) 
         const projectFilter = scopeId && scopeId !== 'ALL' ? { scopeId } : {};
         const teamFilter = scopeId && scopeId !== 'ALL' ? { project: { scopeId } } : {};
 
+        // Split into two batches to avoid exhausting DB connection pool
         const [
             studentCount,
             facultyCount,
@@ -829,14 +832,7 @@ router.get('/stats', authenticate, authorize(['ADMIN']), async (req, res, next) 
             studentsWithoutTeam,
             totalProjects,
             availableProjects,
-            requestedProjects,
-            assignedProjects,
-            teamsTotal,
-            teamsNotCompleted,
-            teamsReadyForReview,
-            teamsChangesRequired,
-            teamsCompleted,
-            usersForMatrix
+            requestedProjects
         ] = await Promise.all([
             prisma.user.count({ where: { role: 'STUDENT' } }),
             prisma.user.count({ where: { role: 'FACULTY' } }),
@@ -845,13 +841,24 @@ router.get('/stats', authenticate, authorize(['ADMIN']), async (req, res, next) 
             prisma.project.count({ where: projectFilter }),
             prisma.project.count({ where: { status: 'AVAILABLE', ...projectFilter } }),
             prisma.project.count({ where: { status: 'REQUESTED', ...projectFilter } }),
+        ]);
+
+        const [
+            assignedProjects,
+            teamsTotal,
+            teamsNotCompleted,
+            teamsReadyForReview,
+            teamsChangesRequired,
+            teamsCompleted,
+            usersForMatrix
+        ] = await Promise.all([
             prisma.project.count({ where: { status: 'ASSIGNED', ...projectFilter } }),
             prisma.team.count({ where: teamFilter }),
             prisma.team.count({ where: { status: 'NOT_COMPLETED', ...teamFilter } }),
             prisma.team.count({ where: { status: 'READY_FOR_REVIEW', ...teamFilter } }),
             prisma.team.count({ where: { status: 'CHANGES_REQUIRED', ...teamFilter } }),
             prisma.team.count({ where: { status: 'COMPLETED', ...teamFilter } }),
-            // Fetch minimal user data for matrix and breakdowns to avoid heavy processing
+            // Fetch minimal user data for matrix and breakdowns
             prisma.user.findMany({
                 where: { role: 'STUDENT' },
                 select: {
@@ -941,33 +948,46 @@ router.get('/stats', authenticate, authorize(['ADMIN']), async (req, res, next) 
         });
 
         // Calculate detailed student phase completion report
-        const studentsForReport = await prisma.user.findMany({
-            where: { role: 'STUDENT' },
-            select: {
-                id: true,
-                name: true,
-                rollNumber: true,
-                department: true,
-                year: true,
-                teamMemberships: {
-                    include: {
-                        team: {
-                            include: {
-                                project: true,
-                                reviews: {
-                                    select: {
-                                        reviewPhase: true,
-                                        status: true,
-                                        createdAt: true,
-                                        reviewMarks: true
+        // Optimized: select only needed fields to avoid DB connection timeout
+        let studentsForReport = [];
+        try {
+            studentsForReport = await prisma.user.findMany({
+                where: { role: 'STUDENT' },
+                select: {
+                    id: true,
+                    name: true,
+                    rollNumber: true,
+                    department: true,
+                    year: true,
+                    teamMemberships: {
+                        select: {
+                            team: {
+                                select: {
+                                    project: { select: { title: true } },
+                                    reviews: {
+                                        select: {
+                                            reviewPhase: true,
+                                            status: true,
+                                            createdAt: true,
+                                            reviewMarks: {
+                                                select: {
+                                                    studentId: true,
+                                                    marks: true,
+                                                    criterionMarks: true
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
-                        }
+                        },
+                        take: 1
                     }
                 }
-            }
-        });
+            });
+        } catch (reportErr) {
+            console.error("Warning: Student phase report query failed, returning empty report:", reportErr.message);
+        }
 
         const studentPhaseReport = studentsForReport.map(student => {
             const teamMembership = student.teamMemberships[0];
@@ -2778,6 +2798,66 @@ router.get('/backup/download', authenticate, authorize(['ADMIN']), async (req, r
             mysqldump.kill();
         });
 
+    } catch (e) {
+        next(e);
+    }
+});
+
+// BLOCK USER MANUALLY
+router.post('/users/:id/block', authenticate, authorize(['ADMIN']), async (req, res, next) => {
+    const { id } = req.params;
+    const { duration, reason } = req.body;
+
+    if (!reason) return res.status(400).json({ error: "Reason for block is required" });
+
+    try {
+        let blockedUntil = null;
+        if (duration !== 'permanent') {
+            const now = new Date();
+            if (duration === '1h') blockedUntil = new Date(now.getTime() + 60 * 60 * 1000);
+            else if (duration === '24h') blockedUntil = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+            else if (duration === '7d') blockedUntil = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+            else return res.status(400).json({ error: "Invalid block duration" });
+        }
+
+        const user = await prisma.user.update({
+            where: { id },
+            data: {
+                isBlocked: true,
+                blockedUntil,
+                blockReason: reason
+            }
+        });
+
+        // LOG THE BLOCK AS A SECURITY EVENT
+        await prisma.securityAlert.create({
+            data: {
+                userId: id,
+                type: 'USER_BLOCKED',
+                description: `User ${user.name} was manually blocked by Admin. Duration: ${duration}. Reason: ${reason}`,
+                severity: 'HIGH'
+            }
+        });
+
+        res.json({ message: `User ${user.name} blocked successfully`, user });
+    } catch (e) {
+        next(e);
+    }
+});
+
+// UNBLOCK USER MANUALLY
+router.post('/users/:id/unblock', authenticate, authorize(['ADMIN']), async (req, res, next) => {
+    const { id } = req.params;
+    try {
+        const user = await prisma.user.update({
+            where: { id },
+            data: {
+                isBlocked: false,
+                blockedUntil: null
+            }
+        });
+
+        res.json({ message: `User ${user.name} unblocked successfully` });
     } catch (e) {
         next(e);
     }

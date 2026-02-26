@@ -154,7 +154,7 @@ export default function ManualPhaseAssignModal({ isOpen, onClose, faculty, scope
                     <div className="flex-1 max-w-xs">
                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1 ml-1">Project Batch</label>
                         <select
-                            className="w-full px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 outline-none"
+                            className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-bold text-gray-700 outline-none"
                             value={selectedScope}
                             onChange={e => setSelectedScope(e.target.value)}
                         >
@@ -164,7 +164,7 @@ export default function ManualPhaseAssignModal({ isOpen, onClose, faculty, scope
                     <div className="w-32">
                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1 ml-1">Phase</label>
                         <select
-                            className="w-full px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 outline-none"
+                            className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-bold text-gray-700 outline-none"
                             value={selectedPhase}
                             onChange={e => setSelectedPhase(e.target.value)}
                         >
@@ -202,7 +202,7 @@ export default function ManualPhaseAssignModal({ isOpen, onClose, faculty, scope
                             <input
                                 type="text"
                                 placeholder="Search teams or students..."
-                                className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm outline-none"
+                                className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-lg text-sm outline-none"
                                 value={searchTerm}
                                 onChange={e => setSearchTerm(e.target.value)}
                             />
@@ -223,7 +223,7 @@ export default function ManualPhaseAssignModal({ isOpen, onClose, faculty, scope
                                         <div
                                             key={team.id}
                                             onClick={() => toggleTeam(team.id)}
-                                            className={`p-4 rounded-xl border transition-all cursor-pointer group ${selectedTeamIds.includes(team.id)
+                                            className={`p-4 rounded-lg border transition-all cursor-pointer group ${selectedTeamIds.includes(team.id)
                                                 ? 'bg-blue-50 border-blue-200'
                                                 : 'bg-white border-gray-100 hover:border-gray-200'
                                                 }`}
@@ -296,7 +296,7 @@ export default function ManualPhaseAssignModal({ isOpen, onClose, faculty, scope
                                             <input
                                                 type="text"
                                                 placeholder="Search faculty..."
-                                                className="w-full pl-9 pr-3 py-1.5 bg-white border border-gray-200 rounded-xl text-xs outline-none"
+                                                className="w-full pl-9 pr-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs outline-none"
                                                 value={facultySearchTerm}
                                                 onChange={e => setFacultySearchTerm(e.target.value)}
                                             />
@@ -306,7 +306,7 @@ export default function ManualPhaseAssignModal({ isOpen, onClose, faculty, scope
                                                 <div
                                                     key={f.id}
                                                     onClick={() => toggleFaculty(f.id)}
-                                                    className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${selectedFacultyIds.includes(f.id) ? 'bg-indigo-600 text-white border-indigo-700' : 'bg-white border-gray-200 text-gray-700'}`}
+                                                    className={`p-3 rounded-lg border transition-all cursor-pointer flex items-center justify-between ${selectedFacultyIds.includes(f.id) ? 'bg-indigo-600 text-white border-indigo-700' : 'bg-white border-gray-200 text-gray-700'}`}
                                                 >
                                                     <div className="min-w-0">
                                                         <p className="text-xs font-bold truncate">{f.name}</p>
@@ -318,7 +318,7 @@ export default function ManualPhaseAssignModal({ isOpen, onClose, faculty, scope
                                         </div>
                                     </>
                                 ) : (
-                                    <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-4 text-center">
+                                    <div className="bg-blue-50/50 border border-blue-100 rounded-lg p-4 text-center">
                                         <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 mb-2">
                                             <Layout size={16} />
                                         </div>
@@ -332,7 +332,7 @@ export default function ManualPhaseAssignModal({ isOpen, onClose, faculty, scope
                                 <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest">3. Assignment Settings</h3>
                                 <div>
                                     <label className="text-[10px] font-black text-gray-400 uppercase block mb-1">Access Duration</label>
-                                    <select className="w-full px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold" value={duration} onChange={e => setDuration(e.target.value)}>
+                                    <select className="w-full px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-bold" value={duration} onChange={e => setDuration(e.target.value)}>
                                         <option value="24">24 Hours</option>
                                         <option value="48">48 Hours</option>
                                         <option value="168">1 Week</option>
@@ -341,7 +341,7 @@ export default function ManualPhaseAssignModal({ isOpen, onClose, faculty, scope
                                 </div>
                                 <div>
                                     <label className="text-[10px] font-black text-gray-400 uppercase block mb-1">Mode</label>
-                                    <div className="flex bg-gray-100 p-1 rounded-xl">
+                                    <div className="flex bg-gray-100 p-1 rounded-lg">
                                         <button onClick={() => setReviewMode('OFFLINE')} className={`flex-1 py-1.5 px-2 rounded-lg text-[10px] font-bold uppercase transition-all ${reviewMode === 'OFFLINE' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400'}`}>Offline</button>
                                         <button onClick={() => setReviewMode('ONLINE')} className={`flex-1 py-1.5 px-2 rounded-lg text-[10px] font-bold uppercase transition-all ${reviewMode === 'ONLINE' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400'}`}>Online</button>
                                     </div>
@@ -370,7 +370,7 @@ export default function ManualPhaseAssignModal({ isOpen, onClose, faculty, scope
                             <button
                                 onClick={handleSubmit}
                                 disabled={isSubmitting || selectedTeamIds.length === 0 || (!useVenueFaculty && selectedFacultyIds.length === 0)}
-                                className="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-700 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg hover:shadow-indigo-200 transition-all active:scale-95 disabled:opacity-50"
+                                className="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-700 text-white rounded-lg font-black text-sm uppercase tracking-widest shadow-lg hover:shadow-indigo-200 transition-all active:scale-95 disabled:opacity-50"
                             >
                                 {isSubmitting ? "Processing..." : "Assign Reviewers"}
                             </button>
@@ -381,3 +381,4 @@ export default function ManualPhaseAssignModal({ isOpen, onClose, faculty, scope
         </div>
     );
 }
+

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api';
-import { X, FileText, Users, MessageSquare, Save, ExternalLink, Shield, AlertCircle, CheckCircle } from 'lucide-react';
+import { X, FileText, Users, MessageSquare, Save, ExternalLink, Shield, AlertCircle, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function ProjectDetailsModal({ team, onClose, onUpdate, readOnly = false }) {
     const [project, setProject] = useState(team?.project || null);
@@ -12,6 +12,7 @@ export default function ProjectDetailsModal({ team, onClose, onUpdate, readOnly 
     });
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
+    const [showSRS, setShowSRS] = useState(false);
 
     // If only team object with nested project was passed, we might want to fetch fresh details
     // or just use what we have. For history, we definitely need to fetch if not present.
@@ -55,8 +56,8 @@ export default function ProjectDetailsModal({ team, onClose, onUpdate, readOnly 
     if (!team) return null;
 
     return (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 md:p-8 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white rounded-lg shadow-2xl w-full max-w-6xl h-[95vh] md:h-[90vh] flex flex-col animate-in zoom-in-95 duration-200">
                 {/* Header */}
                 <div className="px-6 py-4 border-b flex justify-between items-center bg-slate-50">
                     <div className="flex items-center gap-3">
@@ -91,45 +92,44 @@ export default function ProjectDetailsModal({ team, onClose, onUpdate, readOnly 
                                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                         <Shield size={14} /> Project Overview
                                     </h3>
-                                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 italic text-slate-600 text-sm leading-relaxed">
+                                    <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 italic text-slate-600 text-sm leading-relaxed">
                                         {project?.description || "No description provided."}
                                     </div>
 
                                     <div className="space-y-4 pt-2">
                                         <div className="space-y-1">
                                             <label className="text-xs font-bold text-slate-500">Tech Stack</label>
-                                            <input
-                                                type="text"
-                                                value={editData.techStack}
-                                                onChange={e => setEditData({ ...editData, techStack: e.target.value })}
-                                                placeholder="e.g. MERN, Python, TensorFlow"
-                                                disabled={readOnly}
-                                                className={`w-full px-4 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 ring-blue-500 outline-none text-sm transition-all shadow-sm ${readOnly ? 'opacity-70 cursor-not-allowed bg-slate-50' : ''}`}
-                                            />
+                                            {readOnly ? (
+                                                <p className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words">
+                                                    {editData.techStack || <span className="text-slate-400 italic">Not specified</span>}
+                                                </p>
+                                            ) : (
+                                                <textarea
+                                                    value={editData.techStack}
+                                                    onChange={e => setEditData({ ...editData, techStack: e.target.value })}
+                                                    placeholder="e.g. Frontend: React, Tailwind&#10;Backend: Node.js, Express&#10;Database: MongoDB"
+                                                    rows={3}
+                                                    className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 ring-blue-500 outline-none text-sm transition-all shadow-sm resize-y"
+                                                />
+                                            )}
                                         </div>
-                                        <div className="space-y-1">
-                                            <label className="text-xs font-bold text-slate-500">SRS Document Link</label>
-                                            <div className="flex gap-2">
+                                        {!readOnly && (
+                                            <div className="space-y-1">
+                                                <label className="text-xs font-bold text-slate-500">SRS Document URL</label>
                                                 <input
                                                     type="url"
                                                     value={editData.srs}
                                                     onChange={e => setEditData({ ...editData, srs: e.target.value })}
-                                                    placeholder="https://docs.google.com/..."
-                                                    disabled={readOnly}
-                                                    className={`flex-1 px-4 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 ring-blue-500 outline-none text-sm transition-all shadow-sm ${readOnly ? 'opacity-70 cursor-not-allowed bg-slate-50' : ''}`}
+                                                    placeholder="https://docs.google.com/... or PDF URL"
+                                                    className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 ring-blue-500 outline-none text-sm transition-all shadow-sm"
                                                 />
-                                                {editData.srs && (
-                                                    <a href={editData.srs} target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors">
-                                                        <ExternalLink size={18} />
-                                                    </a>
-                                                )}
                                             </div>
-                                        </div>
+                                        )}
                                         {!readOnly && (
                                             <button
                                                 onClick={handleSave}
                                                 disabled={saving}
-                                                className="w-full bg-blue-600 text-white py-2.5 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2 disabled:opacity-50"
+                                                className="w-full bg-blue-600 text-white py-2.5 rounded-lg font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2 disabled:opacity-50"
                                             >
                                                 {saving ? "Saving..." : <><Save size={18} /> Update Technical Details</>}
                                             </button>
@@ -154,7 +154,7 @@ export default function ProjectDetailsModal({ team, onClose, onUpdate, readOnly 
                                     </h3>
                                     <div className="grid gap-2">
                                         {fullTeam?.members?.filter(m => m.approved).map(m => (
-                                            <div key={m.id} className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl shadow-sm">
+                                            <div key={m.id} className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-lg shadow-sm">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center font-bold">
                                                         {m.user?.name?.charAt(0)}
@@ -172,6 +172,62 @@ export default function ProjectDetailsModal({ team, onClose, onUpdate, readOnly 
                                 </div>
                             </div>
 
+                            {/* SRS Document Preview Section (Full Width) */}
+                            {(editData.srs || !readOnly) && (
+                                <div className="space-y-4 border-t pt-8">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                            <FileText size={14} /> SRS Document Preview
+                                        </h3>
+                                        {editData.srs && (
+                                            <button
+                                                onClick={() => setShowSRS(!showSRS)}
+                                                className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-bold transition-all duration-200 shadow-sm border ${showSRS
+                                                        ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
+                                                        : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'
+                                                    }`}
+                                            >
+                                                {showSRS ? <><ChevronUp size={12} /> Hide Document Preview</> : <><ChevronDown size={12} /> Click to View Document</>}
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {!editData.srs && readOnly ? (
+                                        <div className="text-center py-10 bg-slate-50 rounded-lg border border-dashed border-slate-200 text-slate-400 text-sm italic">
+                                            No SRS Document specified.
+                                        </div>
+                                    ) : editData.srs ? (
+                                        showSRS && (
+                                            <div className="border border-slate-200 rounded-lg overflow-hidden flex flex-col bg-slate-50 animate-in slide-in-from-top-4 duration-300">
+                                                <div className="bg-slate-100/80 px-3 py-2 border-b border-slate-200 flex justify-between items-center shrink-0">
+                                                    <span className="text-xs font-bold text-slate-600 flex items-center gap-2">
+                                                        <FileText size={14} className="text-blue-500" /> Document Viewer
+                                                    </span>
+                                                    <a href={editData.srs} target="_blank" rel="noopener noreferrer" className="text-[10px] font-bold text-blue-600 hover:text-blue-700 uppercase tracking-widest flex items-center gap-1 transition-colors bg-white px-2 py-1 rounded border border-blue-100 shadow-sm hover:shadow">
+                                                        Open External <ExternalLink size={12} />
+                                                    </a>
+                                                </div>
+                                                <iframe
+                                                    src={
+                                                        editData.srs.includes('drive.google.com')
+                                                            ? editData.srs.replace('/view', '/preview')
+                                                            : editData.srs.includes('docs.google.com/document')
+                                                                ? editData.srs.replace('/edit', '/preview').split('?')[0]
+                                                                : editData.srs
+                                                    }
+                                                    className="w-full h-[600px] lg:h-[800px] border-0 bg-white shadow-inner"
+                                                    title="SRS Document Preview"
+                                                />
+                                            </div>
+                                        )
+                                    ) : (
+                                        <div className="text-center py-10 bg-slate-50 rounded-lg border border-dashed border-slate-200 text-slate-400 text-sm italic">
+                                            Add an SRS document URL above to see the preview here.
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
                             {/* Review History Section */}
                             <div className="space-y-4 border-t pt-8">
                                 <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
@@ -180,12 +236,12 @@ export default function ProjectDetailsModal({ team, onClose, onUpdate, readOnly 
 
                                 <div className="space-y-4">
                                     {(!fullTeam?.reviews || fullTeam.reviews.length === 0) ? (
-                                        <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-slate-400 text-sm italic">
+                                        <div className="text-center py-10 bg-slate-50 rounded-lg border border-dashed border-slate-200 text-slate-400 text-sm italic">
                                             No reviews recorded for this team yet.
                                         </div>
                                     ) : (
                                         fullTeam.reviews.map(review => (
-                                            <div key={review.id} className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm space-y-3">
+                                            <div key={review.id} className="bg-white border border-slate-100 rounded-lg p-5 shadow-sm space-y-3">
                                                 <div className="flex justify-between items-start">
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-9 h-9 bg-slate-100 rounded-full flex items-center justify-center font-bold text-slate-600">
@@ -233,7 +289,7 @@ export default function ProjectDetailsModal({ team, onClose, onUpdate, readOnly 
                                                     </div>
                                                 )}
 
-                                                <p className="text-sm text-slate-600 leading-relaxed bg-slate-50/50 p-3 rounded-xl border border-slate-50 italic">
+                                                <p className="text-sm text-slate-600 leading-relaxed bg-slate-50/50 p-3 rounded-lg border border-slate-50 italic">
                                                     "{review.content}"
                                                 </p>
                                             </div>
@@ -249,7 +305,7 @@ export default function ProjectDetailsModal({ team, onClose, onUpdate, readOnly 
                 <div className="p-4 border-t bg-slate-50 flex justify-end">
                     <button
                         onClick={onClose}
-                        className="px-6 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-100 transition-colors shadow-sm"
+                        className="px-6 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg font-bold hover:bg-slate-100 transition-colors shadow-sm"
                     >
                         Close Details
                     </button>
@@ -258,3 +314,4 @@ export default function ProjectDetailsModal({ team, onClose, onUpdate, readOnly 
         </div>
     );
 }
+

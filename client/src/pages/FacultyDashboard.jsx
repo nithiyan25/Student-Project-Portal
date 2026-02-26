@@ -5,7 +5,7 @@ import Navbar from '../components/Navbar';
 import { AuthContext } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useConfirm } from '../context/ConfirmContext';
-import { Search, MessageSquare, CheckCircle, Clock, AlertCircle, Copy, Users, UserCheck, UserX, FileText, Layout, ArrowRight, ShieldCheck, Calendar, MapPin } from 'lucide-react';
+import { Search, MessageSquare, CheckCircle, Clock, AlertCircle, Copy, Users, UserCheck, UserX, FileText, Layout, ArrowRight, ShieldCheck, Calendar, MapPin, User as UserIcon, Code, Info } from 'lucide-react';
 import FacultyScheduleTab from '../components/faculty/FacultyScheduleTab';
 import ProjectDetailsModal from '../components/faculty/ProjectDetailsModal';
 
@@ -115,6 +115,20 @@ export default function FacultyDashboard() {
       const members = item.members || [];
       const itemStatus = item.status || 'PENDING';
       const scopeId = item.project?.scopeId || item.scopeId;
+
+      // Hide completed assignments whose review access has expired
+      if (activeDashboardTab === 'ASSIGNMENTS' && item.isPhaseCompletedByFaculty) {
+        const now = new Date();
+        const deadlinePassed = item.reviewDeadline && new Date(item.reviewDeadline) < now;
+        const sessionEnds = members
+          .map(m => m.user.labSessions?.[0]?.endTime)
+          .filter(Boolean)
+          .map(d => new Date(d));
+        const allSessionsEnded = sessionEnds.length > 0 && sessionEnds.every(d => d < now);
+
+        // If review deadline passed OR all lab sessions ended, hide the card
+        if (deadlinePassed || allSessionsEnded) return false;
+      }
 
       const matchesSearch = !searchTerm ||
         title.toLowerCase().includes(lowerTerm) ||
@@ -373,25 +387,29 @@ export default function FacultyDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar variant="light" compact />
-      <div className="p-6 md:p-8 max-w-7xl mx-auto">
+      <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-6">
 
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-bold text-gray-800">Faculty Dashboard</h2>
-            <p className="text-gray-500 text-sm">Manage reviews, requests, and mentored teams.</p>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Welcome, {currentUser?.name?.split(' ')[0]}
+            </h1>
+            <p className="text-sm text-gray-500 mt-1">
+              Manage reviews, requests, and mentored teams.
+            </p>
           </div>
 
           {currentUser?.isTemporaryAdmin && (
             <Link
               to="/admin"
-              className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-xl font-bold shadow-lg shadow-orange-200 hover:bg-orange-700 transition-all hover:-translate-y-0.5"
+              className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm hover:bg-orange-700 transition-all"
             >
-              <ShieldCheck size={18} /> Enter Admin Mode
+              <ShieldCheck size={16} /> Admin Mode
             </Link>
           )}
 
-          <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+          <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
             {(activeDashboardTab === 'ASSIGNMENTS' || activeDashboardTab === 'MENTORED') && (
               <>
                 <select
@@ -400,7 +418,7 @@ export default function FacultyDashboard() {
                     setStatusFilter(e.target.value);
                     setAssignmentsPagination(prev => ({ ...prev, page: 1 }));
                   }}
-                  className="px-4 py-2 border rounded-lg focus:ring-2 ring-blue-500 outline-none shadow-sm bg-white text-sm font-bold text-gray-600"
+                  className="px-3 py-2 border border-gray-200 rounded-lg outline-none shadow-sm bg-white text-sm text-gray-600"
                 >
                   <option value="ALL">All Status</option>
                   <option value="PENDING">Pending</option>
@@ -413,7 +431,7 @@ export default function FacultyDashboard() {
                     setPhaseFilter(e.target.value);
                     setAssignmentsPagination(prev => ({ ...prev, page: 1 }));
                   }}
-                  className="px-4 py-2 border rounded-lg focus:ring-2 ring-blue-500 outline-none shadow-sm bg-white text-sm font-bold text-gray-600"
+                  className="px-3 py-2 border border-gray-200 rounded-lg outline-none shadow-sm bg-white text-sm text-gray-600"
                 >
                   <option value="ALL">All Phases</option>
                   <option value="1">Phase 1</option>
@@ -427,7 +445,7 @@ export default function FacultyDashboard() {
                     setCategoryFilter(e.target.value);
                     setAssignmentsPagination(prev => ({ ...prev, page: 1 }));
                   }}
-                  className="px-4 py-2 border rounded-lg focus:ring-2 ring-blue-500 outline-none shadow-sm bg-white text-sm font-bold text-gray-600 w-32 md:w-auto"
+                  className="px-3 py-2 border border-gray-200 rounded-lg outline-none shadow-sm bg-white text-sm text-gray-600"
                 >
                   <option value="ALL">All Categories</option>
                   {[...new Set(assignments.map(a => a.project?.category).filter(Boolean))].map(cat => (
@@ -436,12 +454,12 @@ export default function FacultyDashboard() {
                 </select>
               </>
             )}
-            <div className="relative w-full md:w-72">
-              <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+            <div className="relative w-full md:w-64">
+              <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
               <input
                 type="text"
                 placeholder="Search..."
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 ring-blue-500 outline-none shadow-sm bg-white"
+                className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg outline-none shadow-sm bg-white text-sm"
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
@@ -453,60 +471,62 @@ export default function FacultyDashboard() {
         </div>
 
         {/* Tabs */}
-        <div className="flex flex-wrap items-center gap-2 mb-8 border-b border-gray-200 pb-1">
+        <div className="flex flex-wrap bg-gray-100 p-1 rounded-lg w-fit gap-0.5">
           <button
             onClick={() => { setActiveDashboardTab('OVERVIEW'); setStatusFilter('ALL'); setSelectedScopeId(null); }}
-            className={`px-4 py-2 text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${activeDashboardTab === 'OVERVIEW' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            className={`px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-colors ${activeDashboardTab === 'OVERVIEW' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
           >
-            <Layout size={16} /> Overview
+            <Layout size={14} /> Overview
           </button>
           {requests.length > 0 && (
             <button
               onClick={() => { setActiveDashboardTab('REQUESTS'); setStatusFilter('ALL'); }}
-              className={`px-4 py-2 text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${activeDashboardTab === 'REQUESTS' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+              className={`px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-colors ${activeDashboardTab === 'REQUESTS' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
             >
-              <AlertCircle size={16} /> Pending Requests ({requests.length})
+              <AlertCircle size={14} /> Requests ({requests.length})
             </button>
           )}
           <button
             onClick={() => { setActiveDashboardTab('ASSIGNMENTS'); setStatusFilter('ALL'); }}
-            className={`px-4 py-2 text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${activeDashboardTab === 'ASSIGNMENTS' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            className={`px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-colors ${activeDashboardTab === 'ASSIGNMENTS' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
           >
-            <FileText size={16} /> Review Assignments
+            <FileText size={14} /> Assignments
           </button>
           <button
             onClick={() => { setActiveDashboardTab('MENTORED'); setStatusFilter('ALL'); }}
-            className={`px-4 py-2 text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${activeDashboardTab === 'MENTORED' ? 'border-green-500 text-green-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            className={`px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-colors ${activeDashboardTab === 'MENTORED' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
           >
-            <Users size={16} /> Mentored Teams
+            <Users size={14} /> Mentored
           </button>
           <button
             onClick={() => { setActiveDashboardTab('STUDENTS'); setStatusFilter('ALL'); }}
-            className={`px-4 py-2 text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${activeDashboardTab === 'STUDENTS' ? 'border-purple-500 text-purple-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            className={`px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-colors ${activeDashboardTab === 'STUDENTS' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
           >
-            <Copy size={16} /> Student Directory
+            <Copy size={14} /> Students
           </button>
           <button
             onClick={() => { setActiveDashboardTab('SCHEDULE'); setStatusFilter('ALL'); }}
-            className={`px-4 py-2 text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${activeDashboardTab === 'SCHEDULE' ? 'border-teal-500 text-teal-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            className={`px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-colors ${activeDashboardTab === 'SCHEDULE' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
           >
-            <Calendar size={16} /> My Schedule
+            <Calendar size={14} /> Schedule
           </button>
 
           {selectedScopeId && (
-            <div className="ml-auto flex items-center gap-2 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100 mb-1">
-              <span className="text-[10px] font-black text-indigo-600 uppercase tracking-wider">
+            <div className="ml-auto flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-md border border-blue-100">
+              <span className="text-xs font-medium text-blue-700">
                 Batch: {scopes.find(s => s.id === selectedScopeId)?.name}
               </span>
               <button
                 onClick={() => setSelectedScopeId(null)}
-                className="text-indigo-400 hover:text-indigo-600"
+                className="text-blue-400 hover:text-blue-600"
               >
                 <UserX size={14} />
               </button>
             </div>
           )}
         </div>
+
+        <hr className="border-gray-200" />
 
         {/* CONTENT AREA */}
         <div className="space-y-4">
@@ -531,7 +551,7 @@ export default function FacultyDashboard() {
 
           {/* OVERVIEW (Batch Cards) */}
           {activeDashboardTab === 'OVERVIEW' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {scopes.map(scope => {
                 const scopeAssignments = assignments.filter(a => a.project?.scopeId === scope.id || a.scopeId === scope.id);
                 const scopeMentored = mentoredTeams.filter(t => t.project?.scopeId === scope.id || t.scopeId === scope.id);
@@ -544,44 +564,51 @@ export default function FacultyDashboard() {
                       setSelectedScopeId(scope.id);
                       setActiveDashboardTab('ASSIGNMENTS');
                     }}
-                    className="group bg-white rounded-2xl shadow-sm border border-gray-100 p-6 cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden"
+                    className="group bg-white rounded-lg border border-gray-200 p-6 cursor-pointer hover:border-blue-300 hover:shadow-md transition-all flex flex-col justify-between"
                   >
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full -mr-16 -mt-16 group-hover:bg-indigo-100 transition-colors" />
-
-                    <div className="relative z-10">
-                      <div className="w-12 h-12 bg-indigo-600 text-white rounded-xl flex items-center justify-center mb-4 shadow-lg shadow-indigo-200">
-                        <Layout size={24} />
-                      </div>
-                      <h3 className="text-xl font-bold text-gray-800 mb-2 truncate">{scope.name}</h3>
-                      <p className="text-sm text-gray-500 line-clamp-2 mb-6 h-10">{scope.description || "No description provided."}</p>
-
-                      <div className="flex gap-4">
-                        <div className="flex-1 bg-gray-50 rounded-lg p-3 border border-gray-100">
-                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Reviews</p>
-                          <p className="text-lg font-bold text-gray-800">{scopeAssignments.length}</p>
+                    <div>
+                      <div className="flex justify-between items-start mb-4">
+                        <div className={`p-2.5 rounded-lg ${totalWork > 0 ? 'bg-blue-50 text-blue-600' : 'bg-gray-100 text-gray-400'}`}>
+                          <Layout size={18} />
                         </div>
-                        <div className="flex-1 bg-gray-50 rounded-lg p-3 border border-gray-100">
-                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Mentored</p>
-                          <p className="text-lg font-bold text-gray-800">{scopeMentored.length}</p>
-                        </div>
-                      </div>
-
-                      <div className="mt-6 flex items-center justify-between">
-                        <span className={`text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-tighter ${totalWork > 0 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
+                        <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${totalWork > 0 ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-gray-50 text-gray-400 border border-gray-200'}`}>
                           {totalWork > 0 ? 'Active' : 'Empty'}
                         </span>
-                        <div className="flex items-center gap-1 text-indigo-600 font-bold text-sm transform transition-transform group-hover:translate-x-1">
-                          View Details <ArrowRight size={14} />
+                      </div>
+
+                      <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-1 truncate">
+                        {scope.name}
+                      </h3>
+                      <p className="text-xs text-gray-400 mb-4">{scope.description || "No description provided."}</p>
+
+                      <div className="flex gap-3">
+                        <div className="flex-1 bg-gray-50 rounded-lg px-3 py-2 border border-gray-100">
+                          <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Reviews</p>
+                          <p className="text-base font-semibold text-gray-800">{scopeAssignments.length}</p>
+                        </div>
+                        <div className="flex-1 bg-gray-50 rounded-lg px-3 py-2 border border-gray-100">
+                          <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Mentored</p>
+                          <p className="text-base font-semibold text-gray-800">{scopeMentored.length}</p>
                         </div>
                       </div>
+                    </div>
+
+                    <div className="pt-4 mt-4 border-t border-gray-100 flex justify-between items-center">
+                      <span className="text-xs text-gray-400 group-hover:text-blue-500 transition-colors font-medium">
+                        View
+                      </span>
+                      <ArrowRight size={14} className="text-gray-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
                     </div>
                   </div>
                 );
               })}
               {scopes.length === 0 && (
-                <div className="col-span-full py-12 flex flex-col items-center justify-center text-gray-400 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-                  <Layout size={48} className="mb-4 opacity-50" />
-                  <p className="font-bold">No active batches found.</p>
+                <div className="col-span-full py-16 text-center bg-white rounded-lg border-2 border-dashed border-gray-200">
+                  <Layout className="text-gray-300 mx-auto mb-3" size={28} />
+                  <h3 className="text-base font-semibold text-gray-700 mb-1">No batches yet</h3>
+                  <p className="text-sm text-gray-400">
+                    You haven't been assigned to any batches.
+                  </p>
                 </div>
               )}
             </div>
@@ -589,10 +616,10 @@ export default function FacultyDashboard() {
 
           {/* PENDING REQUESTS */}
           {activeDashboardTab === 'REQUESTS' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {filteredItems.map(req => (
-                <div key={req.id} className="bg-white rounded-xl shadow-sm border border-orange-100 overflow-hidden hover:shadow-md transition-all">
-                  <div className="bg-orange-50/50 p-4 border-b border-orange-100 flex justify-between items-start">
+                <div key={req.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-all">
+                  <div className="bg-gray-50 p-4 border-b border-gray-100 flex justify-between items-start">
                     <div>
                       <span className="text-[10px] font-black uppercase tracking-wider text-orange-600 bg-white px-2 py-1 rounded shadow-sm border border-orange-100 mb-2 inline-block">
                         Requesting: {req.requestType}
@@ -668,87 +695,105 @@ export default function FacultyDashboard() {
                 const uniqueId = team.assignmentId || team.id;
                 const isExpanded = expandedId === uniqueId;
                 return (
-                  <div key={uniqueId} className={`bg-white rounded-xl shadow-sm border transition-all ${isExpanded ? 'ring-2 ring-blue-500' : 'hover:shadow-md'}`}>
-                    <div onClick={() => toggleExpand(uniqueId)} className="p-4 cursor-pointer flex justify-between items-center">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="bg-indigo-100 text-indigo-700 text-[10px] font-black px-2 py-0.5 rounded uppercase">Phase {team.assignedPhase || 1}</span>
-                          <span className={`${team.reviewMode === 'ONLINE' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'} text-[10px] font-black px-2 py-0.5 rounded uppercase`}>
+                  <div key={uniqueId} className={`bg-white rounded-lg border transition-all overflow-hidden ${isExpanded ? 'ring-2 ring-blue-400 border-transparent' : 'border-gray-200 hover:shadow-md'}`}>
+                    <div onClick={() => toggleExpand(uniqueId)} className="p-4 md:p-5 cursor-pointer flex flex-col gap-4 relative">
+                      {/* Top Row: Badges & Deadlines */}
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="bg-blue-50 text-blue-700 text-[10px] font-semibold px-2.5 py-1 rounded border border-blue-100 uppercase tracking-wider">Phase {team.assignedPhase || 1}</span>
+                          <span className={`${team.reviewMode === 'ONLINE' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-slate-50 text-slate-700 border-slate-200'} border text-[10px] font-black px-2.5 py-1 rounded uppercase tracking-wider`}>
                             {team.reviewMode || 'OFFLINE'}
                           </span>
-                          {(() => {
-                            const session = getGroupSessionInfo(team.members);
-                            const reviewDeadline = team.reviewDeadline;
+                        </div>
+                        {(() => {
+                          const session = getGroupSessionInfo(team.members);
+                          const reviewDeadline = team.reviewDeadline;
 
-                            if (session || reviewDeadline) {
-                              const timeLeftSession = session ? getTimeLeftStr(session.endTime) : null;
-                              const timeLeftReview = getReviewDeadlineStr(reviewDeadline);
-
-                              return (
-                                <div className="flex flex-wrap items-center gap-2">
-                                  {session && (
-                                    <>
-                                      <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-orange-100 border border-orange-200">
-                                        <Clock size={10} className="text-orange-600" />
-                                        <span className="text-[10px] font-black text-orange-700 uppercase">{timeLeftSession}</span>
-                                      </div>
-                                      <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-indigo-50 border border-indigo-100 text-indigo-600">
-                                        <MapPin size={10} />
-                                        <span className="text-[10px] font-bold uppercase">{session.venue?.name}</span>
-                                      </div>
-                                      <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-slate-50 border border-slate-200 text-slate-500 font-medium text-[10px]">
-                                        {formatSessionRange(session.startTime, session.endTime)}
-                                      </div>
-                                    </>
-                                  )}
-                                  {reviewDeadline && (
-                                    <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded border ${new Date(reviewDeadline) - new Date() < 3600000 * 2 ? 'bg-red-50 text-red-600 border-red-200' : 'bg-blue-50 text-blue-600 border-blue-200'}`}>
-                                      <AlertCircle size={10} />
-                                      <span className="text-[10px] font-black uppercase">Review Due: {timeLeftReview}</span>
+                          if (session || reviewDeadline) {
+                            const timeLeftSession = session ? getTimeLeftStr(session.endTime) : null;
+                            const timeLeftReview = getReviewDeadlineStr(reviewDeadline);
+                            return (
+                              <div className="flex flex-wrap items-center gap-2">
+                                {session && (
+                                  <>
+                                    <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-orange-50 border border-orange-200">
+                                      <Clock size={12} className="text-orange-600" />
+                                      <span className="text-[10px] font-black text-orange-700 uppercase tracking-tight">{timeLeftSession}</span>
                                     </div>
-                                  )}
-                                </div>
-                              );
-                            }
-                            return null;
-                          })()}
-                          <div className="flex flex-col gap-1">
-                            <h3 className="font-bold text-blue-900 leading-tight">{team.project?.title}</h3>
-                            {team.project?.category && (
-                              <span className="text-[10px] font-bold text-blue-600 uppercase tracking-tight">{team.project.category}</span>
-                            )}
-                          </div>
-                          <div className="flex gap-4">
-                            {team.project?.techStack && (
-                              <span className="text-[10px] text-blue-600 font-bold border border-blue-100 bg-blue-50 px-2 py-0.5 rounded">
-                                {team.project.techStack}
+                                    <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-indigo-50 border border-indigo-100 text-indigo-600">
+                                      <MapPin size={12} />
+                                      <span className="text-[10px] font-bold uppercase tracking-tight">{session.venue?.name}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1 px-2 py-1 rounded bg-slate-50 border border-slate-200 text-slate-500 font-medium text-[10px]">
+                                      {formatSessionRange(session.startTime, session.endTime)}
+                                    </div>
+                                  </>
+                                )}
+                                {reviewDeadline && !session && (
+                                  <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded border ${new Date(reviewDeadline) - new Date() < 3600000 * 2 ? 'bg-red-50 text-red-600 border-red-200' : 'bg-blue-50 text-blue-600 border-blue-200'}`}>
+                                    <AlertCircle size={12} />
+                                    <span className="text-[10px] font-black uppercase tracking-wider">Due: {timeLeftReview}</span>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
+                      </div>
+
+                      {/* Main Content Area */}
+                      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 relative z-10">
+                        <div className="flex-1 min-w-0 pr-4">
+                          <h3 className="text-base font-semibold text-gray-900 leading-tight mb-1 truncate" title={team.project?.title}>
+                            {team.project?.title || "Untitled Project"}
+                          </h3>
+                          {team.project?.category && (
+                            <span className="inline-block text-[10px] font-medium text-gray-500 uppercase tracking-wider bg-gray-50 px-2 py-0.5 rounded border border-gray-100">
+                              {team.project.category}
+                            </span>
+                          )}
+
+                          {/* Rep */}
+                          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-4">
+                            <div className="flex items-center gap-2">
+                              <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 text-slate-500">
+                                <UserIcon size={10} />
+                              </div>
+                              <span className="text-sm font-medium text-slate-600">
+                                Rep: <span className="font-bold text-slate-800">{team.members.find(m => m.isLeader)?.user.name || "Unknown"}</span>
                               </span>
-                            )}
-                            {team.project?.srs && (
-                              <a href={team.project.srs} target="_blank" rel="noopener noreferrer" className="text-[10px] text-indigo-600 font-bold hover:underline flex items-center gap-1">
-                                View SRS <CheckCircle size={10} />
-                              </a>
-                            )}
-                            <button
-                              onClick={(e) => { e.stopPropagation(); setSelectedTeamForDetails(team); }}
-                              className="text-[10px] text-blue-600 font-bold hover:underline bg-blue-50 px-2 py-0.5 rounded border border-blue-100"
-                            >
-                              View Details
-                            </button>
+                            </div>
                           </div>
                         </div>
+
+                        {/* Actions */}
+                        <div className="flex flex-row md:flex-col items-center md:items-stretch gap-2 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 md:border-l border-gray-100 md:pl-5">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setSelectedTeamForDetails(team); }}
+                            className="group flex-1 md:flex-none flex justify-center items-center gap-2 px-4 py-2 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 rounded-lg transition-all"
+                          >
+                            <Info size={14} /> View Details
+                          </button>
+                        </div>
                       </div>
-                      <p className="text-sm text-gray-500">Representative: {team.members.find(m => m.isLeader)?.user.name || "Unknown"}</p>
                     </div>
 
                     {/* Status Badge - Show Phase Status if available */}
-                    <div className="px-4 pb-4">
+                    <div className="px-4 pb-4 flex flex-wrap gap-2">
                       {team.isPhaseCompletedByFaculty ? (
                         <span className="flex items-center gap-1 px-2 py-1 rounded text-xs font-bold border bg-green-100 text-green-700 border-green-200 w-fit">
-                          <CheckCircle size={12} /> Review Completed
+                          <CheckCircle size={12} /> Phase {team.assignedPhase || 1} Reviewed
                         </span>
                       ) : (
-                        getStatusBadge(team.status)
+                        <span className="flex items-center gap-1 px-2 py-1 rounded text-xs font-bold border bg-amber-50 text-amber-700 border-amber-200 w-fit">
+                          <Clock size={12} /> Phase {team.assignedPhase || 1} — Pending Review
+                        </span>
+                      )}
+                      {team.status === 'CHANGES_REQUIRED' && (
+                        <span className="flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold border bg-red-50 text-red-600 border-red-200 w-fit">
+                          <AlertCircle size={10} /> Changes Required
+                        </span>
                       )}
                     </div>
 
@@ -765,7 +810,7 @@ export default function FacultyDashboard() {
                               }
                               return true;
                             }).map(r => (
-                              <div key={r.id} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                              <div key={r.id} className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
                                 <div className="flex justify-between items-start mb-2">
                                   <span className="font-bold text-gray-800 text-sm flex flex-col gap-0.5">
                                     <span className="flex items-center gap-2">
@@ -829,7 +874,7 @@ export default function FacultyDashboard() {
                         </div>
 
                         {team.isPhaseCompletedByFaculty ? (
-                          <div className="flex flex-col items-center justify-center p-8 bg-green-50 border border-green-100 rounded-xl text-center">
+                          <div className="flex flex-col items-center justify-center p-8 bg-green-50 border border-green-100 rounded-lg text-center">
                             <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-3">
                               <CheckCircle size={24} />
                             </div>
@@ -860,7 +905,7 @@ export default function FacultyDashboard() {
 
                               if (team.status === 'READY_FOR_REVIEW' && latestWithNote) {
                                 return (
-                                  <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 space-y-3">
+                                  <div className="bg-amber-50 border border-amber-100 rounded-lg p-4 space-y-3">
                                     <div className="flex items-center gap-2 text-amber-800 font-bold text-xs uppercase tracking-wider">
                                       <AlertCircle size={14} /> Resubmission Feedback context
                                     </div>
@@ -1108,47 +1153,53 @@ export default function FacultyDashboard() {
           {activeDashboardTab === 'MENTORED' && (
             <div className="grid gap-4">
               {filteredItems.map(team => (
-                <div key={team.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${team.myRole === 'GUIDE' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
+                <div key={team.id} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-all">
+                  <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4 mt-2 relative">
+                    {/* Left: Info Content */}
+                    <div className="flex-1 min-w-0 pr-4">
+                      {/* Top Row: Role Badge & Batch */}
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className={`text-[10px] font-semibold uppercase px-2.5 py-1 rounded tracking-wider border ${team.myRole === 'GUIDE' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-purple-50 text-purple-700 border-purple-100'}`}>
                           {team.myRole}
                         </span>
-                        <div className="flex flex-col gap-1">
-                          <h3 onClick={() => toggleExpand(team.id, 'MENTORED')} className="font-bold text-xl text-gray-800 cursor-pointer hover:text-indigo-600 transition-colors leading-tight">{team.project?.title}</h3>
-                          {team.project?.category && (
-                            <span className="text-xs font-bold text-blue-600 uppercase tracking-tight">{team.project.category}</span>
-                          )}
-                          <div className="flex gap-4 items-center mt-1">
-                            {team.project?.techStack && (
-                              <span className="text-[10px] text-blue-600 font-bold border border-blue-100 bg-blue-50 px-2 py-0.5 rounded">
-                                {team.project.techStack}
-                              </span>
-                            )}
-                            {team.project?.srs && (
-                              <a href={team.project.srs} target="_blank" rel="noopener noreferrer" className="text-[10px] text-indigo-600 font-bold hover:underline flex items-center gap-1">
-                                View SRS <CheckCircle size={10} />
-                              </a>
-                            )}
-                            <button
-                              onClick={(e) => { e.stopPropagation(); setSelectedTeamForDetails(team); }}
-                              className="text-[10px] text-indigo-600 font-bold hover:underline bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100"
-                            >
-                              View Details & Edit Info
-                            </button>
-                          </div>
+                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-slate-50 border border-slate-200">
+                          <Layout size={12} className="text-slate-500" />
+                          <span className="text-[10px] font-medium text-gray-600 uppercase tracking-tight">
+                            Batch: {team.project?.scope?.name || team.scope?.name || "N/A"}
+                          </span>
                         </div>
                       </div>
-                      <div className="flex gap-4 text-xs text-gray-500 mt-2">
-                        <div className="flex gap-4 text-xs text-gray-500 mt-2">
-                          <p>Batch: <span className="font-bold text-gray-700">
-                            {team.project?.scope?.name || team.scope?.name || "N/A"}
-                          </span></p>
-                        </div>
+
+                      {/* Main Title & Category */}
+                      <div>
+                        <h3
+                          onClick={() => toggleExpand(team.id, 'MENTORED')}
+                          className="font-semibold text-base text-gray-900 cursor-pointer hover:text-blue-600 transition-colors leading-tight mb-1 truncate"
+                          title={team.project?.title}
+                        >
+                          {team.project?.title || "Untitled Project"}
+                        </h3>
+                        {team.project?.category && (
+                          <span className="inline-block text-[10px] font-medium text-gray-500 uppercase tracking-wider bg-gray-50 px-2 py-0.5 rounded border border-gray-100">
+                            {team.project.category}
+                          </span>
+                        )}
                       </div>
                     </div>
 
+                    {/* Right: Actions */}
+                    <div className="flex flex-row md:flex-col items-center md:items-stretch gap-2 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 md:border-l border-gray-100 md:pl-5">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setSelectedTeamForDetails(team); }}
+                        className="group flex-1 md:flex-none flex justify-center items-center gap-2 px-4 py-2 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 rounded-lg transition-all"
+                      >
+                        <Info size={14} /> View Details
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Team Stats & Status Row */}
+                  <div className="flex flex-wrap items-center justify-between gap-4 mb-4 p-4 bg-gray-50 rounded-lg border border-gray-100">
                     {/* Team Average Mark */}
                     {(() => {
                       const phaseAverages = {};
@@ -1274,7 +1325,7 @@ export default function FacultyDashboard() {
                             <p className="text-sm italic text-gray-400">No reviews yet.</p>
                           ) : (
                             team.reviews.map(r => (
-                              <div key={r.id} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                              <div key={r.id} className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
                                 <div className="flex justify-between items-start mb-2">
                                   <span className="font-bold text-gray-800 text-sm flex flex-col gap-0.5">
                                     <span className="flex items-center gap-2">
@@ -1349,7 +1400,7 @@ export default function FacultyDashboard() {
                                 disabled={!team.members?.filter(m => m.approved).some(m => isPresentState[m.user.id])}
                               />
                             </div>
-                            <div className="bg-gray-50 p-3 rounded-xl border border-gray-200">
+                            <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
                               <p className="text-[10px] font-black text-gray-400 uppercase mb-3">Student Performance {rubric && <span className="text-blue-600">(Rubric Active)</span>}</p>
 
                               {rubric ? (
@@ -1452,7 +1503,7 @@ export default function FacultyDashboard() {
                           </div>
                           <button
                             onClick={(e) => submitReview(e, team.id, team.projectId, (team.reviews?.length || 0) + 1)}
-                            className="w-full bg-indigo-600 text-white py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
+                            className="w-full bg-indigo-600 text-white py-2.5 rounded-lg font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
                           >
                             <MessageSquare size={18} /> Submit Guidance Review
                           </button>
@@ -1468,7 +1519,7 @@ export default function FacultyDashboard() {
 
           {/* DIRECTORY */}
           {activeDashboardTab === 'STUDENTS' && (
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
               <table className="w-full text-left">
                 <thead className="bg-gray-50 border-b">
                   <tr>
@@ -1536,6 +1587,6 @@ export default function FacultyDashboard() {
           />
         )}
       </div>
-    </div>
+    </div >
   );
 }

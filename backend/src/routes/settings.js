@@ -5,8 +5,8 @@ const { authenticate, authorize } = require('../middleware/auth');
 const { body } = require('express-validator');
 const { validate } = require('../middleware/validation');
 
-// Get all system settings
-router.get('/', authenticate, async (req, res) => {
+// Get all system settings (Admin only)
+router.get('/', authenticate, authorize(['ADMIN']), async (req, res) => {
     try {
         const settings = await prisma.systemsettings.findMany();
         const config = {};

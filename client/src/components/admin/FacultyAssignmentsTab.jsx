@@ -387,7 +387,7 @@ export default function FacultyAssignmentsTab({
 
                 {/* Bulk Select Input Panel */}
                 {isBulkSelectVisible && (
-                    <div className="mb-6 bg-blue-50/50 p-5 rounded-xl border border-blue-100 shadow-sm animate-in slide-in-from-top-4 duration-300">
+                    <div className="mb-6 bg-blue-50/50 p-5 rounded-lg border border-blue-100 shadow-sm animate-in slide-in-from-top-4 duration-300">
                         <div className="flex items-start justify-between gap-4">
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-3">
@@ -400,7 +400,7 @@ export default function FacultyAssignmentsTab({
                                     </div>
                                 </div>
                                 <textarea
-                                    className="w-full border-2 border-blue-100 rounded-xl p-3 text-sm font-mono focus:ring-2 ring-blue-500/20 focus:border-blue-500 outline-none h-24 transition-all bg-white"
+                                    className="w-full border-2 border-blue-100 rounded-lg p-3 text-sm font-mono focus:ring-2 ring-blue-500/20 focus:border-blue-500 outline-none h-24 transition-all bg-white"
                                     placeholder="e.g. 21CS001, 21CS042, 21CS099..."
                                     value={rollNumbersInput}
                                     onChange={(e) => setRollNumbersInput(e.target.value)}
@@ -618,3 +618,4 @@ export default function FacultyAssignmentsTab({
         </div >
     );
 }
+

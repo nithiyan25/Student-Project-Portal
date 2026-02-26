@@ -62,7 +62,7 @@ export default function AbsenteesTab({ scopes }) {
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             {/* Header & Controls */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-lg border border-gray-100 shadow-sm">
                 <div>
                     <h2 className="text-2xl font-black text-gray-800 flex items-center gap-3">
                         <div className="p-2 bg-red-100 text-red-600 rounded-lg">
@@ -74,7 +74,7 @@ export default function AbsenteesTab({ scopes }) {
                 </div>
 
                 <div className="flex flex-wrap gap-3">
-                    <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-xl border border-gray-100">
+                    <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-lg border border-gray-100">
                         <Filter size={16} className="text-gray-400 ml-1" />
                         <select
                             className="bg-transparent text-sm font-bold text-gray-700 outline-none min-w-[120px]"
@@ -86,7 +86,7 @@ export default function AbsenteesTab({ scopes }) {
                         </select>
                     </div>
 
-                    <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-xl border border-gray-100">
+                    <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-lg border border-gray-100">
                         <Calendar size={16} className="text-gray-400 ml-1" />
                         <select
                             className="bg-transparent text-sm font-bold text-gray-700 outline-none min-w-[100px]"
@@ -100,7 +100,7 @@ export default function AbsenteesTab({ scopes }) {
 
                     <button
                         onClick={handleExport}
-                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
+                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
                     >
                         <Download size={18} /> Export CSV
                     </button>
@@ -108,7 +108,7 @@ export default function AbsenteesTab({ scopes }) {
             </div>
 
             {/* Main Content Area */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden min-h-[400px]">
+            <div className="bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden min-h-[400px]">
                 {loading ? (
                     <div className="flex flex-col items-center justify-center p-20 gap-4">
                         <div className="w-12 h-12 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
@@ -141,7 +141,7 @@ export default function AbsenteesTab({ scopes }) {
                                     <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
                                         <td className="p-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center font-bold text-gray-500 shadow-sm">
+                                                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center font-bold text-gray-500 shadow-sm">
                                                     {record.student?.name?.charAt(0)}
                                                 </div>
                                                 <div>
@@ -213,30 +213,30 @@ export default function AbsenteesTab({ scopes }) {
             {/* Quick Stats Summary */}
             {!loading && absentees.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
+                    <div className="bg-white p-5 rounded-lg border border-gray-100 shadow-sm flex items-center justify-between">
                         <div>
                             <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Total Absences</p>
                             <p className="text-3xl font-black text-gray-800">{absentees.length}</p>
                         </div>
-                        <div className="p-3 bg-red-50 text-red-500 rounded-2xl">
+                        <div className="p-3 bg-red-50 text-red-500 rounded-lg">
                             <UserX size={24} />
                         </div>
                     </div>
-                    <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
+                    <div className="bg-white p-5 rounded-lg border border-gray-100 shadow-sm flex items-center justify-between">
                         <div>
                             <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Explicitly Marked</p>
                             <p className="text-3xl font-black text-indigo-600">{absentees.filter(a => a.isExplicit).length}</p>
                         </div>
-                        <div className="p-3 bg-indigo-50 text-indigo-500 rounded-2xl">
+                        <div className="p-3 bg-indigo-50 text-indigo-500 rounded-lg">
                             <User size={24} />
                         </div>
                     </div>
-                    <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
+                    <div className="bg-white p-5 rounded-lg border border-gray-100 shadow-sm flex items-center justify-between">
                         <div>
                             <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Missed Deadlines</p>
                             <p className="text-3xl font-black text-amber-600">{absentees.filter(a => !a.isExplicit).length}</p>
                         </div>
-                        <div className="p-3 bg-amber-50 text-amber-500 rounded-2xl">
+                        <div className="p-3 bg-amber-50 text-amber-500 rounded-lg">
                             <AlertCircle size={24} />
                         </div>
                     </div>
@@ -245,3 +245,4 @@ export default function AbsenteesTab({ scopes }) {
         </div>
     );
 }
+

@@ -1,16 +1,40 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --brand-primary: #1e40af;
+  --brand-secondary: #3b82f6;
+  --bg-premium: #f8fafc;
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.3);
+}
+
+@layer base {
+  body {
+    @apply antialiased text-slate-900 bg-[#f8fafc];
+    font-family: 'Inter', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', sans-serif;
+  }
+}
+
+@layer components {
+  .premium-button {
+    @apply transition-all duration-200 active:scale-[0.98];
+  }
+}
+
 @layer utilities {
   @keyframes pulse-subtle {
-
-    0%,
-    100% {
+    0%, 100% {
       opacity: 1;
       transform: scale(1);
     }
-
     50% {
       opacity: 0.85;
       transform: scale(1.01);
@@ -22,13 +46,17 @@
     animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
-  @keyframes indeterminate {
-    0% {
-      transform: translateX(-100%);
-    }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
 
-    100% {
-      transform: translateX(350%);
-    }
+  @keyframes indeterminate {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(350%); }
   }
 }

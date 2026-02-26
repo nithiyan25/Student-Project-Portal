@@ -7,7 +7,7 @@ import { useToast } from '../../context/ToastContext';
 const StatusCard = ({ title, count, icon: Icon, colorClass, onClick, active }) => (
     <div
         onClick={onClick}
-        className={`p-6 rounded-2xl border transition-all cursor-pointer ${active
+        className={`p-6 rounded-lg border transition-all cursor-pointer ${active
             ? `${colorClass} border-current shadow-lg scale-105`
             : 'bg-white border-gray-100 hover:border-gray-300 hover:shadow-md'
             }`}
@@ -17,7 +17,7 @@ const StatusCard = ({ title, count, icon: Icon, colorClass, onClick, active }) =
                 <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${active ? 'opacity-80' : 'text-gray-400'}`}>{title}</p>
                 <h3 className={`text-3xl font-black ${active ? 'text-white' : 'text-gray-800'}`}>{count}</h3>
             </div>
-            <div className={`p-3 rounded-xl ${active ? 'bg-white/20 text-white' : 'bg-gray-50 text-gray-400'}`}>
+            <div className={`p-3 rounded-lg ${active ? 'bg-white/20 text-white' : 'bg-gray-50 text-gray-400'}`}>
                 <Icon size={24} />
             </div>
         </div>
@@ -141,7 +141,7 @@ export default function StudentRequestStatusTab({ scopes }) {
                 ))}
             </div>
 
-            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                     <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
                         {categories.find(c => c.id === activeCategory).title} Students
@@ -151,7 +151,7 @@ export default function StudentRequestStatusTab({ scopes }) {
                     </h2>
 
                     <div className="flex flex-wrap gap-3 items-center">
-                        <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100">
+                        <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
                             <Filter size={16} className="text-gray-400" />
                             <select
                                 className="bg-transparent text-sm font-bold text-gray-600 outline-none cursor-pointer"
@@ -172,14 +172,14 @@ export default function StudentRequestStatusTab({ scopes }) {
                         />
                         <button
                             onClick={exportToCSV}
-                            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl font-bold text-sm transition-all shadow-md active:scale-95"
+                            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all shadow-md active:scale-95"
                         >
                             <Download size={16} /> Export
                         </button>
                     </div>
                 </div>
 
-                <div className="overflow-hidden border border-gray-50 rounded-2xl">
+                <div className="overflow-hidden border border-gray-50 rounded-lg">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
                             <thead>
@@ -233,3 +233,4 @@ export default function StudentRequestStatusTab({ scopes }) {
         </div>
     );
 }
+

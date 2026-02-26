@@ -63,7 +63,7 @@ const StudentDetailView = ({ student, onClose, updateMark, updateReview, addToas
 
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[100] animate-in fade-in duration-200" onClick={onClose}>
-            <div className="bg-white w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="bg-white w-full max-w-4xl max-h-[90vh] rounded-lg shadow-2xl overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
                 <div className="p-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex justify-between items-start shrink-0">
                     <div>
                         <h2 className="text-2xl font-bold flex items-center gap-2">
@@ -81,7 +81,7 @@ const StudentDetailView = ({ student, onClose, updateMark, updateReview, addToas
 
                 <div className="p-6 overflow-y-auto custom-scrollbar space-y-8 flex-1">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="md:col-span-1 bg-gray-50 p-5 rounded-3xl border border-gray-100 flex flex-col justify-center gap-2">
+                        <div className="md:col-span-1 bg-gray-50 p-5 rounded-lg border border-gray-100 flex flex-col justify-center gap-2">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-white rounded-lg shadow-sm text-blue-600"><Folder size={20} /></div>
                                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Project</p>
@@ -107,16 +107,16 @@ const StudentDetailView = ({ student, onClose, updateMark, updateReview, addToas
                             )}
                         </div>
 
-                        <div className="bg-gradient-to-br from-green-50 to-green-100/50 p-5 rounded-3xl border border-green-100 flex items-center gap-4">
-                            <div className="p-3 bg-white rounded-2xl shadow-sm text-green-600"><Award size={24} /></div>
+                        <div className="bg-gradient-to-br from-green-50 to-green-100/50 p-5 rounded-lg border border-green-100 flex items-center gap-4">
+                            <div className="p-3 bg-white rounded-lg shadow-sm text-green-600"><Award size={24} /></div>
                             <div>
                                 <p className="text-[10px] font-black text-green-600 uppercase tracking-widest">Overall Score</p>
                                 <h3 className="text-3xl font-black text-green-800 leading-none mt-1">{stats.overallAverage}<span className="text-sm font-bold text-green-400 ml-1">/ 100</span></h3>
                             </div>
                         </div>
 
-                        <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 p-5 rounded-3xl border border-purple-100 flex items-center gap-4">
-                            <div className="p-3 bg-white rounded-2xl shadow-sm text-purple-600"><History size={24} /></div>
+                        <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 p-5 rounded-lg border border-purple-100 flex items-center gap-4">
+                            <div className="p-3 bg-white rounded-lg shadow-sm text-purple-600"><History size={24} /></div>
                             <div>
                                 <p className="text-[10px] font-black text-purple-600 uppercase tracking-widest">Graded reviews</p>
                                 <h3 className="text-3xl font-black text-purple-800 leading-none mt-1">{stats.reviewCount}</h3>
@@ -131,17 +131,17 @@ const StudentDetailView = ({ student, onClose, updateMark, updateReview, addToas
                         </h3>
 
                         {!student.isInTeam ? (
-                            <div className="text-center py-10 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                            <div className="text-center py-10 bg-gray-50 rounded-lg border border-dashed border-gray-200">
                                 <p className="text-gray-400 font-medium">Student is not part of any team yet.</p>
                             </div>
                         ) : phases.length === 0 ? (
-                            <div className="text-center py-10 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                            <div className="text-center py-10 bg-gray-50 rounded-lg border border-dashed border-gray-200">
                                 <p className="text-gray-400 font-medium">No reviews submitted yet.</p>
                             </div>
                         ) : (
                             <div className="space-y-6">
                                 {phases.map(phase => (
-                                    <div key={phase} className="border border-gray-200 rounded-2xl overflow-hidden">
+                                    <div key={phase} className="border border-gray-200 rounded-lg overflow-hidden">
                                         <div className="bg-gray-50 px-5 py-3 border-b border-gray-100 flex justify-between items-center">
                                             <h4 className="font-bold text-gray-700">Phase {phase}</h4>
                                             <span className="text-xs font-bold bg-white border px-2 py-1 rounded text-gray-500">{reviewsByPhase[phase].length} Review(s)</span>
@@ -254,7 +254,7 @@ const StudentDetailView = ({ student, onClose, updateMark, updateReview, addToas
                                                             </div>
 
                                                             {review.content && (
-                                                                <div className="ml-10 mb-2 p-3 bg-gray-50/50 rounded-xl text-xs relative group border border-gray-100">
+                                                                <div className="ml-10 mb-2 p-3 bg-gray-50/50 rounded-lg text-xs relative group border border-gray-100">
                                                                     {editingReviewId === review.id ? (
                                                                         <div className="space-y-2">
                                                                             <textarea className="w-full border rounded p-2 text-xs" value={editReviewValue} onChange={e => setEditReviewValue(e.target.value)} rows={3} />
@@ -513,9 +513,9 @@ export default function IndividualStatsTab({ users, teams, onBack, updateMark, u
                 Back to Dashboard Overview
             </button>
 
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 rounded-lg shadow-sm border border-gray-100">
                 <div className="flex items-center gap-4">
-                    <div className="p-3 bg-blue-100 text-blue-600 rounded-2xl"><Users size={24} /></div>
+                    <div className="p-3 bg-blue-100 text-blue-600 rounded-lg"><Users size={24} /></div>
                     <div>
                         <h2 className="text-xl font-bold text-gray-800 flex items-center gap-3">
                             Individual Student Statistics
@@ -530,7 +530,7 @@ export default function IndividualStatsTab({ users, teams, onBack, updateMark, u
                 <div className="flex flex-wrap gap-3 items-center">
                     <button
                         onClick={resetFilters}
-                        className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 py-2 rounded-xl font-bold text-sm transition-all active:scale-95"
+                        className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 py-2 rounded-lg font-bold text-sm transition-all active:scale-95"
                         title="Clear all filters"
                     >
                         <RotateCcw size={16} />
@@ -538,12 +538,12 @@ export default function IndividualStatsTab({ users, teams, onBack, updateMark, u
                     </button>
                     <button
                         onClick={handleExportStats}
-                        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl font-bold text-sm transition-all shadow-md active:scale-95"
+                        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all shadow-md active:scale-95"
                     >
                         <Download size={16} />
                         Export
                     </button>
-                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100">
+                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
                         <Filter size={16} className="text-gray-400" />
                         <select className="bg-transparent text-sm font-bold text-gray-600 outline-none cursor-pointer" value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setLocalPage(1); }}>
                             <option value="ALL">Status</option>
@@ -552,21 +552,21 @@ export default function IndividualStatsTab({ users, teams, onBack, updateMark, u
                         </select>
                     </div>
 
-                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100">
+                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
                         <select className="bg-transparent text-sm font-bold text-gray-600 outline-none cursor-pointer" value={deptFilter} onChange={(e) => { setDeptFilter(e.target.value); setLocalPage(1); }}>
                             <option value="ALL">All Departments</option>
                             {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
                         </select>
                     </div>
 
-                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100">
+                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
                         <select className="bg-transparent text-sm font-bold text-gray-600 outline-none cursor-pointer" value={yearFilter} onChange={(e) => { setYearFilter(e.target.value); setLocalPage(1); }}>
                             <option value="ALL">All Years</option>
                             {[1, 2, 3, 4].map(y => <option key={y} value={String(y)}>Year {y}</option>)}
                         </select>
                     </div>
 
-                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100">
+                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
                         <select className="bg-transparent text-sm font-bold text-gray-600 outline-none cursor-pointer" value={phaseFilter} onChange={(e) => { setPhaseFilter(e.target.value); setLocalPage(1); }}>
                             <option value="ALL">All Phases</option>
                             {Array.from({ length: maxPhases }, (_, i) => i + 1).map(p => (
@@ -576,7 +576,7 @@ export default function IndividualStatsTab({ users, teams, onBack, updateMark, u
                         </select>
                     </div>
 
-                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100">
+                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
                         <select className="bg-transparent text-sm font-bold text-gray-600 outline-none cursor-pointer" value={batchFilter} onChange={(e) => { setBatchFilter(e.target.value); setLocalPage(1); }}>
                             <option value="ALL">All Batches</option>
                             {scopes?.map(scope => (
@@ -598,7 +598,7 @@ export default function IndividualStatsTab({ users, teams, onBack, updateMark, u
             </div>
 
 
-            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead>
@@ -691,7 +691,7 @@ export default function IndividualStatsTab({ users, teams, onBack, updateMark, u
                             {filteredStudents.length === 0 && (
                                 <tr>
                                     <td colSpan="8" className="p-20 text-center">
-                                        <div className="flex flex-col items-center gap-4 border-2 border-dashed border-gray-100 rounded-3xl py-12">
+                                        <div className="flex flex-col items-center gap-4 border-2 border-dashed border-gray-100 rounded-lg py-12">
                                             <Search className="text-gray-200" size={48} />
                                             <div>
                                                 <p className="font-bold text-gray-400">No students found matching your search</p>
@@ -725,3 +725,4 @@ export default function IndividualStatsTab({ users, teams, onBack, updateMark, u
         </div>
     );
 }
+

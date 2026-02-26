@@ -35,7 +35,7 @@ const EditProjectModal = ({ project, isOpen, onClose, onSave, scopes }) => {
 
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[calc(100vh-2rem)] animate-in fade-in zoom-in duration-200">
+            <div className="bg-white rounded-lg shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[calc(100vh-2rem)] animate-in fade-in zoom-in duration-200">
                 <div className="flex justify-between items-center p-6 border-b shrink-0">
                     <h3 className="text-xl font-bold text-gray-800">Edit Project</h3>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
@@ -156,7 +156,7 @@ const ProjectDetailModal = ({ project, isOpen, onClose }) => {
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[60] flex items-center justify-center p-4 animate-in fade-in duration-300">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
                 {/* Header */}
                 <div className="relative bg-gradient-to-br from-indigo-600 via-blue-600 to-blue-700 p-8 text-white">
                     <button
@@ -189,7 +189,7 @@ const ProjectDetailModal = ({ project, isOpen, onClose }) => {
                 {/* Content */}
                 <div className="p-8 space-y-8 max-h-[60vh] overflow-y-auto custom-scrollbar">
                     {/* Status Section */}
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100">
                         <span className="text-sm font-bold text-gray-500 uppercase tracking-wider text-[10px]">Current Status</span>
                         <span className={`px-4 py-1.5 rounded-full text-xs font-black uppercase border shadow-sm ${project.status === 'AVAILABLE'
                             ? 'bg-green-100 border-green-200 text-green-700'
@@ -206,7 +206,7 @@ const ProjectDetailModal = ({ project, isOpen, onClose }) => {
                         <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
                             <Info size={14} className="text-indigo-500" /> Description
                         </h4>
-                        <div className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 leading-relaxed text-gray-700 whitespace-pre-wrap italic">
+                        <div className="bg-gray-50/50 p-6 rounded-lg border border-gray-100 leading-relaxed text-gray-700 whitespace-pre-wrap italic">
                             {project.description || "No description provided."}
                         </div>
                     </div>
@@ -217,7 +217,7 @@ const ProjectDetailModal = ({ project, isOpen, onClose }) => {
                             <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
                                 <Code size={14} className="text-blue-500" /> Tech Stack
                             </h4>
-                            <div className="p-4 bg-blue-50/30 border border-blue-100 rounded-2xl min-h-[60px] flex items-center">
+                            <div className="p-4 bg-blue-50/30 border border-blue-100 rounded-lg min-h-[60px] flex items-center">
                                 <p className="text-sm font-bold text-blue-800">{project.techStack || 'Not specified'}</p>
                             </div>
                         </div>
@@ -225,7 +225,7 @@ const ProjectDetailModal = ({ project, isOpen, onClose }) => {
                             <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
                                 <ExternalLink size={14} className="text-purple-500" /> Documentation
                             </h4>
-                            <div className="p-4 bg-purple-50/30 border border-purple-100 rounded-2xl min-h-[60px] flex items-center">
+                            <div className="p-4 bg-purple-50/30 border border-purple-100 rounded-lg min-h-[60px] flex items-center">
                                 {project.srs ? (
                                     <a
                                         href={project.srs}
@@ -250,10 +250,10 @@ const ProjectDetailModal = ({ project, isOpen, onClose }) => {
                         {project.teams && project.teams.length > 0 ? (
                             <div className="grid grid-cols-1 gap-3">
                                 {project.teams.map((team) => (
-                                    <div key={team.id} className="p-4 bg-indigo-50/30 border border-indigo-100 rounded-2xl">
+                                    <div key={team.id} className="p-4 bg-indigo-50/30 border border-indigo-100 rounded-lg">
                                         <div className="flex flex-wrap gap-2">
                                             {team.members?.map((m) => (
-                                                <div key={m.id} className="flex flex-col bg-white border border-indigo-100 px-3 py-1.5 rounded-xl shadow-sm">
+                                                <div key={m.id} className="flex flex-col bg-white border border-indigo-100 px-3 py-1.5 rounded-lg shadow-sm">
                                                     <span className="text-xs font-bold text-indigo-900">{m.user.name}</span>
                                                     <span className="text-[10px] font-mono text-indigo-400">{m.user.rollNumber}</span>
                                                 </div>
@@ -263,7 +263,7 @@ const ProjectDetailModal = ({ project, isOpen, onClose }) => {
                                 ))}
                             </div>
                         ) : (
-                            <div className="text-center py-6 bg-gray-50 rounded-2xl border border-dashed border-gray-200 text-gray-400 text-sm font-medium">
+                            <div className="text-center py-6 bg-gray-50 rounded-lg border border-dashed border-gray-200 text-gray-400 text-sm font-medium">
                                 No teams assigned yet
                             </div>
                         )}
@@ -274,7 +274,7 @@ const ProjectDetailModal = ({ project, isOpen, onClose }) => {
                 <div className="p-6 bg-gray-50 border-t flex justify-end">
                     <button
                         onClick={onClose}
-                        className="px-8 py-2.5 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-black transition-all shadow-lg active:scale-95"
+                        className="px-8 py-2.5 bg-gray-900 text-white rounded-lg font-bold text-sm hover:bg-black transition-all shadow-lg active:scale-95"
                     >
                         Close Details
                     </button>
@@ -621,4 +621,5 @@ export default function ProjectsTab({
         </div>
     );
 }
+
 

@@ -204,7 +204,22 @@ router.get('/my-teams', authenticate, async (req, res, next) => {
             }
         }
 
-        res.json(memberships.map(m => m.team));
+        // Build response teams
+        const teams = memberships.map(m => m.team);
+
+        // Strip reviewMarks for students (enforce backend role check)
+        if (req.user.role === 'STUDENT') {
+            for (const team of teams) {
+                if (team.reviews) {
+                    team.reviews = team.reviews.map(r => {
+                        const { reviewMarks, ...rest } = r;
+                        return rest;
+                    });
+                }
+            }
+        }
+
+        res.json(teams);
     } catch (e) {
         next(e);
     }
@@ -294,6 +309,16 @@ router.get('/my-team', authenticate, async (req, res, next) => {
                         assignment.venue = session.venue;
                     }
                 }
+            }
+        }
+
+        // Strip reviewMarks for students (enforce backend role check)
+        if (req.user.role === 'STUDENT') {
+            if (team.reviews) {
+                team.reviews = team.reviews.map(r => {
+                    const { reviewMarks, ...rest } = r;
+                    return rest;
+                });
             }
         }
 

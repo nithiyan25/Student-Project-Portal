@@ -69,7 +69,7 @@ export default function PhaseDeadlinesModal({ isOpen, onClose, scope }) {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-300">
                 {/* Header */}
                 <div className="p-6 bg-gradient-to-r from-blue-600 to-indigo-700 text-white flex justify-between items-center">
                     <div>
@@ -93,9 +93,9 @@ export default function PhaseDeadlinesModal({ isOpen, onClose, scope }) {
                         <>
                             <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                                 {deadlines.map((d) => (
-                                    <div key={d.phase} className="p-4 bg-gray-50 border border-gray-100 rounded-2xl flex items-center justify-between gap-4">
+                                    <div key={d.phase} className="p-4 bg-gray-50 border border-gray-100 rounded-lg flex items-center justify-between gap-4">
                                         <div className="shrink-0 flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-white border border-gray-200 rounded-xl flex items-center justify-center font-black text-blue-600 text-sm shadow-sm">
+                                            <div className="w-10 h-10 bg-white border border-gray-200 rounded-lg flex items-center justify-center font-black text-blue-600 text-sm shadow-sm">
                                                 P{d.phase}
                                             </div>
                                             <span className="text-sm font-bold text-gray-700">Phase {d.phase}</span>
@@ -104,14 +104,14 @@ export default function PhaseDeadlinesModal({ isOpen, onClose, scope }) {
                                             type="date"
                                             value={d.deadline}
                                             onChange={(e) => updateDeadline(d.phase, e.target.value)}
-                                            className="bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium text-gray-600 shadow-sm"
+                                            className="bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium text-gray-600 shadow-sm"
                                         />
                                     </div>
                                 ))}
                             </div>
 
                             {error && (
-                                <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-600 animate-in fade-in slide-in-from-top-2">
+                                <div className="p-4 bg-red-50 border border-red-100 rounded-lg flex items-center gap-3 text-red-600 animate-in fade-in slide-in-from-top-2">
                                     <AlertCircle size={18} />
                                     <p className="text-xs font-bold">{error}</p>
                                 </div>
@@ -120,14 +120,14 @@ export default function PhaseDeadlinesModal({ isOpen, onClose, scope }) {
                             <div className="pt-2 flex gap-3">
                                 <button
                                     onClick={onClose}
-                                    className="flex-1 px-6 py-3 rounded-2xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-all border border-gray-200"
+                                    className="flex-1 px-6 py-3 rounded-lg text-sm font-bold text-gray-500 hover:bg-gray-100 transition-all border border-gray-200"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleSave}
                                     disabled={saving}
-                                    className="flex-1 px-6 py-3 rounded-2xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-2"
+                                    className="flex-1 px-6 py-3 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-2"
                                 >
                                     {saving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save size={18} />}
                                     Save Deadlines
@@ -140,3 +140,4 @@ export default function PhaseDeadlinesModal({ isOpen, onClose, scope }) {
         </div>
     );
 }
+

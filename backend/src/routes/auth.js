@@ -33,6 +33,28 @@ router.post('/google', async (req, res) => {
             return res.status(401).json({ error: "Access denied. You are not registered in the system." });
         }
 
+        // BLOCK CHECK & AUTO-EXPIRATION
+        if (user.isBlocked) {
+            const now = new Date();
+            if (user.blockedUntil && now > new Date(user.blockedUntil)) {
+                // Period expired - auto-unblock
+                await prisma.user.update({
+                    where: { id: user.id },
+                    data: { isBlocked: false, blockedUntil: null }
+                });
+            } else {
+                const timeStr = user.blockedUntil
+                    ? ` until ${new Date(user.blockedUntil).toLocaleString()}`
+                    : " indefinitely";
+                return res.status(200).json({
+                    error: `Your account has been suspended${timeStr}. Reason: ${user.blockReason || 'Malpractice detected'}. Please contact the administrator (Learning Centre IV floor) to resolve this.`,
+                    isBlocked: true,
+                    blockedUntil: user.blockedUntil,
+                    blockReason: user.blockReason
+                });
+            }
+        }
+
         const appToken = jwt.sign(
             {
                 id: user.id,
@@ -47,6 +69,51 @@ router.post('/google', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Login failed' });
+    }
+});
+
+// Verify Token & Get Fresh User Data
+router.get('/me', async (req, res) => {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Token missing' });
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await prisma.user.findUnique({ where: { id: decoded.id } });
+
+        if (!user) return res.status(404).json({ error: "User not found" });
+
+        // BLOCK CHECK & AUTO-EXPIRATION
+        if (user.isBlocked) {
+            const now = new Date();
+            if (user.blockedUntil && now > new Date(user.blockedUntil)) {
+                // Period expired - auto-unblock
+                await prisma.user.update({
+                    where: { id: user.id },
+                    data: { isBlocked: false, blockedUntil: null }
+                });
+            } else {
+                const timeStr = user.blockedUntil
+                    ? ` until ${new Date(user.blockedUntil).toLocaleString()}`
+                    : " indefinitely";
+                return res.status(403).json({
+                    error: `Your account has been suspended${timeStr}. Reason: ${user.blockReason || 'Malpractice detected'}. Please contact the administrator (Learning Centre IV floor) to resolve this.`,
+                    isBlocked: true,
+                    blockedUntil: user.blockedUntil,
+                    blockReason: user.blockReason
+                });
+            }
+        }
+
+        // Check Temp Admin Expiry
+        if (user.isTemporaryAdmin && user.tempAdminExpiry && new Date(user.tempAdminExpiry) < new Date()) {
+            user.isTemporaryAdmin = false;
+            // Optionally update DB to reflect this immediately, but not strictly required as middleware handles it
+        }
+
+        res.json(user);
+    } catch (e) {
+        res.status(401).json({ error: 'Invalid token' });
     }
 });
 

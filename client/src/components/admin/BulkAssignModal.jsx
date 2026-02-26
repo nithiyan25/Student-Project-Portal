@@ -200,13 +200,13 @@ export default function BulkAssignModal({ isOpen, onClose, teams, faculty, onAss
                                         <input
                                             type="text"
                                             placeholder="Search projects..."
-                                            className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:ring-2 ring-blue-500 outline-none transition-all"
+                                            className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-lg text-sm focus:ring-2 ring-blue-500 outline-none transition-all"
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
                                         />
                                     </div>
                                     <select
-                                        className="px-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:ring-2 ring-blue-500 outline-none transition-all font-bold text-gray-600"
+                                        className="px-4 py-2 bg-gray-50 border border-gray-100 rounded-lg text-sm focus:ring-2 ring-blue-500 outline-none transition-all font-bold text-gray-600"
                                         value={deptFilter}
                                         onChange={(e) => setDeptFilter(e.target.value)}
                                     >
@@ -214,7 +214,7 @@ export default function BulkAssignModal({ isOpen, onClose, teams, faculty, onAss
                                         {departments.map(d => <option key={d} value={d}>{d}</option>)}
                                     </select>
                                     <select
-                                        className="px-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:ring-2 ring-blue-500 outline-none transition-all font-bold text-gray-600"
+                                        className="px-4 py-2 bg-gray-50 border border-gray-100 rounded-lg text-sm focus:ring-2 ring-blue-500 outline-none transition-all font-bold text-gray-600"
                                         value={scopeFilter}
                                         onChange={(e) => setScopeFilter(e.target.value)}
                                     >
@@ -230,7 +230,7 @@ export default function BulkAssignModal({ isOpen, onClose, teams, faculty, onAss
                                         <div
                                             key={team.id}
                                             onClick={() => toggleProject(team.projectId)}
-                                            className={`p-4 rounded-2xl border transition-all cursor-pointer group ${selectedProjectIds.includes(team.projectId)
+                                            className={`p-4 rounded-lg border transition-all cursor-pointer group ${selectedProjectIds.includes(team.projectId)
                                                 ? 'bg-blue-50 border-blue-200 shadow-sm'
                                                 : 'bg-white border-gray-100 hover:border-blue-100 hover:bg-gray-50'
                                                 }`}
@@ -271,7 +271,7 @@ export default function BulkAssignModal({ isOpen, onClose, teams, faculty, onAss
                                     Paste student roll numbers below (one per line). These students' active projects will be assigned to the selected faculty.
                                 </p>
                                 <textarea
-                                    className="flex-1 w-full p-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-mono focus:ring-2 ring-blue-500 outline-none transition-all resize-none"
+                                    className="flex-1 w-full p-4 bg-gray-50 border border-gray-200 rounded-lg text-sm font-mono focus:ring-2 ring-blue-500 outline-none transition-all resize-none"
                                     placeholder={`7376232AL172\n...`}
                                     value={pastedRollNumbers}
                                     onChange={(e) => setPastedRollNumbers(e.target.value)}
@@ -308,7 +308,7 @@ export default function BulkAssignModal({ isOpen, onClose, teams, faculty, onAss
                                         type="text"
                                         placeholder="Search faculty..."
                                         disabled={useVenueFaculty}
-                                        className="w-full pl-9 pr-3 py-1.5 bg-white border border-gray-200 rounded-xl text-xs focus:ring-2 ring-indigo-500 outline-none transition-all shadow-sm disabled:bg-gray-50 disabled:text-gray-400"
+                                        className="w-full pl-9 pr-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs focus:ring-2 ring-indigo-500 outline-none transition-all shadow-sm disabled:bg-gray-50 disabled:text-gray-400"
                                         value={facultySearchTerm}
                                         onChange={(e) => setFacultySearchTerm(e.target.value)}
                                     />
@@ -319,7 +319,7 @@ export default function BulkAssignModal({ isOpen, onClose, teams, faculty, onAss
                                         <div
                                             key={f.id}
                                             onClick={() => !useVenueFaculty && toggleFaculty(f.id)}
-                                            className={`p-3 rounded-2xl border transition-all ${!useVenueFaculty ? 'cursor-pointer' : 'cursor-not-allowed'} ${selectedFacultyIds.includes(f.id)
+                                            className={`p-3 rounded-lg border transition-all ${!useVenueFaculty ? 'cursor-pointer' : 'cursor-not-allowed'} ${selectedFacultyIds.includes(f.id)
                                                 ? 'bg-indigo-600 border-indigo-700 text-white shadow-md'
                                                 : 'bg-white border-gray-200 text-gray-700 hover:border-indigo-200 hover:bg-indigo-50/30'
                                                 }`}
@@ -341,7 +341,7 @@ export default function BulkAssignModal({ isOpen, onClose, teams, faculty, onAss
                                         </div>
                                     ))}
                                     {filteredFaculty.length === 0 && (
-                                        <div className="py-8 text-center border-2 border-dashed border-gray-100 rounded-2xl">
+                                        <div className="py-8 text-center border-2 border-dashed border-gray-100 rounded-lg">
                                             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">No faculty found</p>
                                         </div>
                                     )}
@@ -361,7 +361,7 @@ export default function BulkAssignModal({ isOpen, onClose, teams, faculty, onAss
                                             <span className="ml-2 text-blue-500 lowercase">({maxPhases} phases available)</span>
                                         </label>
                                         <select
-                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:ring-2 ring-purple-500 outline-none"
+                                            className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:ring-2 ring-purple-500 outline-none"
                                             value={reviewPhase}
                                             onChange={(e) => setReviewPhase(e.target.value)}
                                         >
@@ -375,7 +375,7 @@ export default function BulkAssignModal({ isOpen, onClose, teams, faculty, onAss
                                             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5 ml-1">Start From</label>
                                             <input
                                                 type="datetime-local"
-                                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:ring-2 ring-purple-500 outline-none"
+                                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:ring-2 ring-purple-500 outline-none"
                                                 value={accessStartsAt}
                                                 onChange={(e) => setAccessStartsAt(e.target.value)}
                                             />
@@ -383,7 +383,7 @@ export default function BulkAssignModal({ isOpen, onClose, teams, faculty, onAss
                                         <div>
                                             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5 ml-1">Access Duration</label>
                                             <select
-                                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:ring-2 ring-purple-500 outline-none"
+                                                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:ring-2 ring-purple-500 outline-none"
                                                 value={duration}
                                                 onChange={(e) => setDuration(e.target.value)}
                                             >
@@ -398,16 +398,16 @@ export default function BulkAssignModal({ isOpen, onClose, teams, faculty, onAss
 
                                     <div>
                                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5 ml-1">Review Mode</label>
-                                        <div className="flex bg-gray-50 p-1.5 rounded-2xl gap-1.5">
+                                        <div className="flex bg-gray-50 p-1.5 rounded-lg gap-1.5">
                                             <button
                                                 onClick={() => setReviewMode('OFFLINE')}
-                                                className={`flex-1 py-2 px-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${reviewMode === 'OFFLINE' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                                                className={`flex-1 py-2 px-3 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${reviewMode === 'OFFLINE' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
                                             >
                                                 Offline
                                             </button>
                                             <button
                                                 onClick={() => setReviewMode('ONLINE')}
-                                                className={`flex-1 py-2 px-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${reviewMode === 'ONLINE' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                                                className={`flex-1 py-2 px-3 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${reviewMode === 'ONLINE' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
                                             >
                                                 Online
                                             </button>
@@ -454,7 +454,7 @@ export default function BulkAssignModal({ isOpen, onClose, teams, faculty, onAss
                                         </label>
 
                                         {useVenueFaculty && (
-                                            <div className="bg-blue-50/50 border border-blue-100 p-3 rounded-xl animate-in slide-in-from-top-1 duration-300">
+                                            <div className="bg-blue-50/50 border border-blue-100 p-3 rounded-lg animate-in slide-in-from-top-1 duration-300">
                                                 <p className="text-[9px] font-bold text-blue-600 leading-relaxed uppercase tracking-widest flex items-start gap-2">
                                                     <AlertCircle size={10} className="shrink-0 mt-0.5" />
                                                     Faculty will be automatically assigned based on the lab sessions scheduled for each team in the selected batch.
@@ -471,7 +471,7 @@ export default function BulkAssignModal({ isOpen, onClose, teams, faculty, onAss
                             <button
                                 onClick={handleSubmit}
                                 disabled={isSubmitting || (inputMode === 'SELECT' && selectedProjectIds.length === 0) || (inputMode === 'PASTE' && !pastedRollNumbers.trim()) || (!useVenueFaculty && selectedFacultyIds.length === 0)}
-                                className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-lg shadow-blue-200 hover:shadow-blue-300 transition-all hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:translate-y-0 disabled:shadow-none cursor-pointer"
+                                className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-lg font-black text-sm uppercase tracking-[0.2em] shadow-lg shadow-blue-200 hover:shadow-blue-300 transition-all hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:translate-y-0 disabled:shadow-none cursor-pointer"
                             >
                                 {isSubmitting ? "Processing..." : "Confirm & Assign"}
                             </button>
@@ -488,3 +488,4 @@ export default function BulkAssignModal({ isOpen, onClose, teams, faculty, onAss
         </div>
     );
 }
+

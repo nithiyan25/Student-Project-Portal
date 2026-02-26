@@ -1,5 +1,5 @@
-import React from 'react';
-import { UserPlus, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Edit2, X, Save } from 'lucide-react';
+import React, { useContext, useState } from 'react';
+import { UserPlus, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Edit2, X, Save, ShieldAlert, ShieldOff } from 'lucide-react';
 import SearchInput from '../ui/SearchInput';
 
 const EditStudentModal = ({ student, isOpen, onClose, onSave }) => {
@@ -27,7 +27,7 @@ const EditStudentModal = ({ student, isOpen, onClose, onSave }) => {
 
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
                 <div className="flex justify-between items-center p-6 border-b">
                     <h3 className="text-xl font-bold text-gray-800">Edit Student</h3>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
@@ -126,9 +126,29 @@ export default function StudentsTab({
     updateUser,
     studentScopeFilter,
     setStudentScopeFilter,
-    scopes
+    scopes,
+    blockUser,
+    unblockUser
 }) {
     const [editingStudent, setEditingStudent] = React.useState(null);
+
+    // Blocking State
+    const [isBlockModalOpen, setIsBlockModalOpen] = React.useState(false);
+    const [selectedStudentForBlock, setSelectedStudentForBlock] = React.useState(null);
+    const [blockDuration, setBlockDuration] = React.useState('24h');
+    const [blockReason, setBlockReason] = React.useState('Malpractice detected');
+    const [isSubmittingBlock, setIsSubmittingBlock] = React.useState(false);
+
+    const handleBlockSubmit = async () => {
+        if (!selectedStudentForBlock) return;
+        setIsSubmittingBlock(true);
+        try {
+            await blockUser(selectedStudentForBlock.id, blockDuration, blockReason);
+            setIsBlockModalOpen(false);
+        } finally {
+            setIsSubmittingBlock(false);
+        }
+    };
 
     const handleSave = async (id, data) => {
         await updateUser(id, data);
@@ -300,7 +320,16 @@ export default function StudentsTab({
                                         />
                                     </td>
                                     <td className="p-3 font-mono text-blue-600">{u.rollNumber || "—"}</td>
-                                    <td className="p-3 font-medium">{u.name}</td>
+                                    <td className="p-3 font-medium">
+                                        <div className="flex flex-col">
+                                            <span className="flex items-center gap-2">
+                                                {u.name}
+                                                {u.isBlocked && (
+                                                    <span className="bg-rose-100 text-rose-600 text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-tighter">Suspended</span>
+                                                )}
+                                            </span>
+                                        </div>
+                                    </td>
                                     <td className="p-3 text-gray-500">{u.email}</td>
                                     <td className="p-3 text-gray-400 font-medium">{u.department || "—"}</td>
                                     <td className="p-3 text-center">
@@ -310,6 +339,28 @@ export default function StudentsTab({
                                     </td>
                                     <td className="p-3 text-center">
                                         <div className="flex items-center justify-center gap-2">
+                                            {u.isBlocked ? (
+                                                <button
+                                                    onClick={() => unblockUser(u.id)}
+                                                    className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 text-emerald-600 rounded hover:bg-emerald-100 border border-emerald-200 text-xs font-semibold transition"
+                                                    title="Unblock student"
+                                                >
+                                                    <ShieldOff size={14} />
+                                                    Unblock
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedStudentForBlock(u);
+                                                        setIsBlockModalOpen(true);
+                                                    }}
+                                                    className="inline-flex items-center gap-1 px-3 py-1 bg-rose-50 text-rose-600 rounded hover:bg-rose-100 border border-rose-200 text-xs font-semibold transition"
+                                                    title="Block student"
+                                                >
+                                                    <ShieldAlert size={14} />
+                                                    Block
+                                                </button>
+                                            )}
                                             <button
                                                 onClick={() => setEditingStudent(u)}
                                                 className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-100 border border-blue-200 text-xs font-semibold transition"
@@ -384,7 +435,77 @@ export default function StudentsTab({
                 onClose={() => setEditingStudent(null)}
                 onSave={handleSave}
             />
+
+            {/* BLOCK MODAL */}
+            {isBlockModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                    <div className="bg-white w-full max-w-md rounded-lg shadow-2xl border overflow-hidden">
+                        <div className="p-6">
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                                    <ShieldAlert className="text-rose-500" /> Block Access
+                                </h3>
+                                <button onClick={() => setIsBlockModalOpen(false)} className="p-2 hover:bg-slate-50 rounded-full">
+                                    <X size={24} className="text-slate-400" />
+                                </button>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="p-4 bg-rose-50 rounded-lg border border-rose-100">
+                                    <p className="text-sm text-rose-700 font-medium">
+                                        Block <strong>{selectedStudentForBlock?.name}</strong>? They will be denied access immediately. Data is preserved.
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Duration</label>
+                                    <select
+                                        value={blockDuration}
+                                        onChange={(e) => setBlockDuration(e.target.value)}
+                                        className="w-full bg-slate-50 border rounded-lg px-3 py-2 text-sm font-bold"
+                                    >
+                                        <option value="1h">1 Hour</option>
+                                        <option value="24h">24 Hours</option>
+                                        <option value="7d">7 Days</option>
+                                        <option value="permanent">Indefinite</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Reason</label>
+                                    <textarea
+                                        value={blockReason}
+                                        onChange={(e) => setBlockReason(e.target.value)}
+                                        rows={3}
+                                        className="w-full bg-slate-50 border rounded-lg px-3 py-2 text-sm resize-none"
+                                    ></textarea>
+                                </div>
+                                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 border-dashed">
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Note to Student:</p>
+                                    <p className="text-[10px] text-slate-600 italic">
+                                        "Please contact the administrator (Learning Centre IV floor) to resolve this."
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3 mt-6">
+                                <button onClick={() => setIsBlockModalOpen(false)} className="flex-1 px-4 py-2 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50 border">
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleBlockSubmit}
+                                    disabled={isSubmittingBlock}
+                                    className="flex-1 px-4 py-2 rounded-lg text-sm font-bold bg-rose-600 text-white hover:bg-rose-700 shadow-lg shadow-rose-200"
+                                >
+                                    {isSubmittingBlock ? "..." : "Apply Block"}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
+
 

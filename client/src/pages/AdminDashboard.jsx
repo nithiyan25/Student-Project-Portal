@@ -23,7 +23,8 @@ import {
   CheckCircle,
   AlertCircle,
   UserX,
-  TrendingUp
+  TrendingUp,
+  ShieldAlert
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
@@ -52,6 +53,7 @@ import SettingsTab from '../components/admin/SettingsTab';
 import RubricsTab from '../components/admin/RubricsTab';
 import StudentRequestStatusTab from '../components/admin/StudentRequestStatusTab';
 import AbsenteesTab from '../components/admin/AbsenteesTab';
+import SecurityAlertsTab from '../components/admin/SecurityAlertsTab';
 
 export default function AdminDashboard() {
   const { user: currentUser } = useContext(AuthContext);
@@ -75,6 +77,7 @@ export default function AdminDashboard() {
   const [facultyAssignments, setFacultyAssignments] = useState([]);
   const [reviewTeams, setReviewTeams] = useState([]);
   const [adminStats, setAdminStats] = useState(null);
+  const [securityAlertsCount, setSecurityAlertsCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
   // Forms
@@ -354,6 +357,11 @@ export default function AdminDashboard() {
         keys.push('pendingReviews');
       }
 
+      if (activeTab === 'security-alerts') {
+        promises.push(api.get('/security/alerts'));
+        keys.push('securityAlerts');
+      }
+
       const results = await Promise.all(promises);
       const data = {};
       keys.forEach((key, i) => { data[key] = results[i].data; });
@@ -411,6 +419,10 @@ export default function AdminDashboard() {
         }
       }
       if (data.reviewTeams) setReviewTeams(data.reviewTeams.teams || data.reviewTeams || []);
+      if (data.securityAlerts) {
+        const unread = data.securityAlerts.filter(a => !a.isRead).length;
+        setSecurityAlertsCount(unread);
+      }
 
       setSelectedUserIds([]);
       setSelectedProjectIds([]);
@@ -787,6 +799,26 @@ export default function AdminDashboard() {
     }
   };
 
+  const blockUser = async (userId, duration, reason) => {
+    try {
+      await api.post(`/admin/users/${userId}/block`, { duration, reason });
+      addToast("User blocked successfully", 'success');
+      await refreshData();
+    } catch (err) {
+      addToast(err.response?.data?.error || "Error blocking user", 'error');
+    }
+  };
+
+  const unblockUser = async (userId) => {
+    try {
+      await api.post(`/admin/users/${userId}/unblock`);
+      addToast("User unblocked successfully", 'success');
+      await refreshData();
+    } catch (err) {
+      addToast(err.response?.data?.error || "Error unblocking user", 'error');
+    }
+  };
+
   const isRealAdmin = currentUser?.role === 'ADMIN';
 
   const deleteProject = async (projectId, projectTitle) => {
@@ -976,6 +1008,7 @@ export default function AdminDashboard() {
       title: "General",
       items: [
         { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+        { id: 'security-alerts', label: 'Security Alerts', icon: ShieldAlert, badge: securityAlertsCount },
         { id: 'settings', label: 'System Settings', icon: Settings },
       ]
     },
@@ -1083,7 +1116,7 @@ export default function AdminDashboard() {
                           <button
                             key={item.id}
                             onClick={() => setActiveTab(item.id)}
-                            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-200 group ${activeTab === item.id
+                            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200 group ${activeTab === item.id
                               ? 'bg-blue-50 text-blue-700 shadow-sm'
                               : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                               }`}
@@ -1095,7 +1128,12 @@ export default function AdminDashboard() {
                               />
                               <span className="text-sm font-bold tracking-tight">{item.label}</span>
                             </div>
-                            {activeTab === item.id && <ChevronRight size={14} className="text-blue-400" />}
+                            {item.badge > 0 && (
+                              <span className="bg-red-100 text-red-600 text-[10px] font-black px-2 py-0.5 rounded-full border border-red-200">
+                                {item.badge}
+                              </span>
+                            )}
+                            {activeTab === item.id && !item.badge && <ChevronRight size={14} className="text-blue-400" />}
                           </button>
                         ))}
                       </div>
@@ -1125,7 +1163,7 @@ export default function AdminDashboard() {
               <div className="flex items-center gap-3 w-full md:w-auto">
                 <button
                   onClick={() => setExportModalOpen(true)}
-                  className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-lg shadow-slate-200 active:scale-95"
+                  className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-lg text-sm font-bold transition-all shadow-lg shadow-slate-200 active:scale-95"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
                   Export Data
@@ -1133,7 +1171,7 @@ export default function AdminDashboard() {
                 <button
                   onClick={refreshData}
                   disabled={isLoading}
-                  className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 px-5 py-2.5 rounded-xl text-sm font-bold transition-all disabled:opacity-50"
+                  className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 px-5 py-2.5 rounded-lg text-sm font-bold transition-all disabled:opacity-50"
                 >
                   <RefreshCcw size={18} className={`${isLoading ? "animate-spin" : ""} text-slate-400`} />
                   {isLoading ? "Syncing..." : "Refresh"}
@@ -1145,6 +1183,7 @@ export default function AdminDashboard() {
 
               {/* Tab Content */}
               {activeTab === 'settings' && <SettingsTab />}
+              {activeTab === 'security-alerts' && <SecurityAlertsTab />}
               {activeTab === 'scopes' && <ProjectScopesTab />}
               {activeTab === 'overview' && (
                 <OverviewDashboardTab
@@ -1180,6 +1219,8 @@ export default function AdminDashboard() {
                   studentScopeFilter={studentScopeFilter}
                   setStudentScopeFilter={setStudentScopeFilter}
                   scopes={scopes}
+                  blockUser={blockUser}
+                  unblockUser={unblockUser}
                 />
               )}
 
@@ -1362,7 +1403,7 @@ export default function AdminDashboard() {
 
               {activeTab === 'review-assignments' && (
                 <div className="space-y-8 animate-in fade-in zoom-in-95 duration-300">
-                  <div className="flex flex-col gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                  <div className="flex flex-col gap-4 bg-white p-6 rounded-lg shadow-sm border border-slate-100">
                     <div className="flex justify-between items-center">
                       <div>
                         <h2 className="text-2xl font-black text-slate-800 tracking-tight">Review Assignments</h2>
@@ -1377,7 +1418,7 @@ export default function AdminDashboard() {
                         <button
                           onClick={() => handleAutoAssignReviews()}
                           disabled={selectedReviewIds.length === 0 || isAutoAssigning}
-                          className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200 active:scale-95 disabled:opacity-50 flex items-center gap-2 relative overflow-hidden"
+                          className="bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200 active:scale-95 disabled:opacity-50 flex items-center gap-2 relative overflow-hidden"
                         >
                           {isAutoAssigning ? (
                             <>
@@ -1404,7 +1445,7 @@ export default function AdminDashboard() {
                         <input
                           type="text"
                           placeholder="Search (Project, Student, Faculty)..."
-                          className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-100 placeholder:text-slate-400 placeholder:font-medium transition-all"
+                          className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border-none rounded-lg text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-100 placeholder:text-slate-400 placeholder:font-medium transition-all"
                           value={pendingReviewSearch}
                           onChange={(e) => setPendingReviewSearch(e.target.value)}
                         />
@@ -1416,7 +1457,7 @@ export default function AdminDashboard() {
                       <select
                         value={pendingReviewScopeFilter}
                         onChange={(e) => setPendingReviewScopeFilter(e.target.value)}
-                        className="px-4 py-2.5 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-600 outline-none focus:ring-2 focus:ring-indigo-100"
+                        className="px-4 py-2.5 bg-slate-50 border-none rounded-lg text-sm font-bold text-slate-600 outline-none focus:ring-2 focus:ring-indigo-100"
                       >
                         <option value="ALL">All Batches</option>
                         {scopes.map(scope => (
@@ -1427,7 +1468,7 @@ export default function AdminDashboard() {
                       <select
                         value={pendingReviewPhaseFilter}
                         onChange={(e) => setPendingReviewPhaseFilter(e.target.value)}
-                        className="px-4 py-2.5 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-600 outline-none focus:ring-2 focus:ring-indigo-100"
+                        className="px-4 py-2.5 bg-slate-50 border-none rounded-lg text-sm font-bold text-slate-600 outline-none focus:ring-2 focus:ring-indigo-100"
                       >
                         <option value="ALL">All Phases</option>
                         <option value="1">Phase 1</option>
@@ -1439,7 +1480,7 @@ export default function AdminDashboard() {
                       <select
                         value={pendingReviewActiveFilter}
                         onChange={(e) => setPendingReviewActiveFilter(e.target.value)}
-                        className="px-4 py-2.5 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-600 outline-none focus:ring-2 focus:ring-indigo-100"
+                        className="px-4 py-2.5 bg-slate-50 border-none rounded-lg text-sm font-bold text-slate-600 outline-none focus:ring-2 focus:ring-indigo-100"
                       >
                         <option value="ALL">All Sessions</option>
                         <option value="true">Active Session On-going</option>
@@ -1449,7 +1490,7 @@ export default function AdminDashboard() {
                   </div>
 
                   {pendingReviews.length === 0 ? (
-                    <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-200">
+                    <div className="text-center py-20 bg-white rounded-lg border border-dashed border-slate-200">
                       <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
                         <CheckSquare className="text-slate-300" size={32} />
                       </div>
@@ -1467,7 +1508,7 @@ export default function AdminDashboard() {
                         return acc;
                       }, {})
                     ).map(([groupTitle, groupTeams]) => (
-                      <div key={groupTitle} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                      <div key={groupTitle} className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
                         <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
                           <h3 className="font-bold text-slate-700 flex items-center gap-2">
                             <Folder size={18} className="text-indigo-500" />
@@ -1535,7 +1576,7 @@ export default function AdminDashboard() {
                                 <td className="p-4">
                                   {team.suggestedFaculty ? (
                                     <div className="flex items-center gap-3">
-                                      <div className="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-bold border border-indigo-200 shadow-sm">
+                                      <div className="w-9 h-9 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-bold border border-indigo-200 shadow-sm">
                                         {team.suggestedFaculty.name[0]}
                                       </div>
                                       <div>

@@ -29,7 +29,7 @@ const enrichScopeWithTimer = (scope) => {
 };
 
 // List Scopes
-router.get('/', authenticate, async (req, res, next) => {
+router.get('/', authenticate, authorize(['ADMIN', 'FACULTY']), async (req, res, next) => {
     try {
         const scopes = await prisma.projectscope.findMany({
             orderBy: { createdAt: 'desc' },
@@ -45,23 +45,27 @@ router.get('/', authenticate, async (req, res, next) => {
         const enrichedScopes = scopes.map(scope => {
             const timerEnriched = enrichScopeWithTimer(scope);
 
-            // Calculate team status counts
-            const statusCounts = (scope.teams || []).reduce((acc, team) => {
-                acc[team.status] = (acc[team.status] || 0) + 1;
-                return acc;
-            }, {});
-
-            // Add metadata about completed but potentially unpublished results
-            const completedCount = statusCounts['COMPLETED'] || 0;
-
             // Clean up the teams array before sending to avoid large response
             delete timerEnriched.teams;
 
-            return {
-                ...timerEnriched,
-                teamStatusCounts: statusCounts,
-                completedTeamsCount: completedCount
-            };
+            // Only include admin statistics for ADMIN/FACULTY roles
+            if (req.user.role === 'ADMIN' || req.user.role === 'FACULTY') {
+                // Calculate team status counts
+                const statusCounts = (scope.teams || []).reduce((acc, team) => {
+                    acc[team.status] = (acc[team.status] || 0) + 1;
+                    return acc;
+                }, {});
+                const completedCount = statusCounts['COMPLETED'] || 0;
+
+                return {
+                    ...timerEnriched,
+                    teamStatusCounts: statusCounts,
+                    completedTeamsCount: completedCount
+                };
+            }
+
+            // Students get a simplified scope object (no team statistics)
+            return timerEnriched;
         });
 
         res.json(enrichedScopes);
@@ -110,7 +114,7 @@ router.post(
                     description,
                     type,
                     isActive: isActive !== undefined ? isActive : true,
-                    resultsPublished: req.body.resultsPublished === true,
+
                     requireGuide: requireGuide === true,
                     requireSubjectExpert: requireSubjectExpert === true,
                     numberOfPhases: req.body.numberOfPhases ? parseInt(req.body.numberOfPhases) : 4,
@@ -145,7 +149,7 @@ router.patch('/:id', authenticate, authorize(['ADMIN']), async (req, res, next) 
         if (isActive !== undefined) updateData.isActive = isActive;
         if (requireGuide !== undefined) updateData.requireGuide = requireGuide;
         if (requireSubjectExpert !== undefined) updateData.requireSubjectExpert = requireSubjectExpert;
-        if (req.body.resultsPublished !== undefined) updateData.resultsPublished = req.body.resultsPublished;
+
         if (req.body.numberOfPhases !== undefined) updateData.numberOfPhases = parseInt(req.body.numberOfPhases);
 
         // Timer Logic

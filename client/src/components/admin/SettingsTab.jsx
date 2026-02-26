@@ -106,7 +106,7 @@ export default function SettingsTab() {
         <div className="space-y-8 animate-in fade-in duration-500">
 
             {/* 2. Faculty Role Eligibility */}
-            <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+            <div className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                     <div>
                         <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
@@ -121,7 +121,7 @@ export default function SettingsTab() {
                             <input
                                 type="text"
                                 placeholder="Search faculty..."
-                                className="pl-10 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-100 focus:border-purple-400 w-48"
+                                className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-100 focus:border-purple-400 w-48"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                             />
@@ -143,7 +143,7 @@ export default function SettingsTab() {
                     </div>
                 </div>
 
-                <div className="overflow-x-auto rounded-xl border border-gray-100">
+                <div className="overflow-x-auto rounded-lg border border-gray-100">
                     <table className="w-full text-left text-sm">
                         <thead className="bg-gray-50 text-gray-600 uppercase text-xs font-bold">
                             <tr>
@@ -206,3 +206,4 @@ export default function SettingsTab() {
         </div>
     );
 }
+

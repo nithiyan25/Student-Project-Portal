@@ -1,13 +1,15 @@
-import React, { useContext } from 'react';
+import React, { useContext, Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { ConfirmProvider } from './context/ConfirmContext';
-import Login from './pages/Login';
-import AdminDashboard from './pages/AdminDashboard';
-import FacultyDashboard from './pages/FacultyDashboard';
-import StudentDashboard from './pages/StudentDashboard';
-import StudentBatchDetail from './pages/StudentBatchDetail';
+
+// Lazy load pages
+const Login = lazy(() => import('./pages/Login'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const FacultyDashboard = lazy(() => import('./pages/FacultyDashboard'));
+const StudentDashboard = lazy(() => import('./pages/StudentDashboard'));
+const StudentBatchDetail = lazy(() => import('./pages/StudentBatchDetail'));
 
 // Google OAuth is managed in main.jsx via environment variables
 
@@ -42,33 +44,35 @@ export default function App() {
     <AuthProvider>
       <ToastProvider>
         <ConfirmProvider>
-          <Routes>
-            <Route path="/" element={<LoginWrapper />} />
+          <Suspense fallback={<div className="p-10 text-center font-semibold text-gray-500">Loading Page...</div>}>
+            <Routes>
+              <Route path="/" element={<LoginWrapper />} />
 
-            <Route path="/admin" element={
-              <ProtectedRoute roles={['ADMIN']}>
-                <AdminDashboard />
-              </ProtectedRoute>
-            } />
+              <Route path="/admin" element={
+                <ProtectedRoute roles={['ADMIN']}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } />
 
-            <Route path="/student" element={
-              <ProtectedRoute roles={['STUDENT']}>
-                <StudentDashboard />
-              </ProtectedRoute>
-            } />
+              <Route path="/student" element={
+                <ProtectedRoute roles={['STUDENT']}>
+                  <StudentDashboard />
+                </ProtectedRoute>
+              } />
 
-            <Route path="/student/batch/:scopeId" element={
-              <ProtectedRoute roles={['STUDENT']}>
-                <StudentBatchDetail />
-              </ProtectedRoute>
-            } />
+              <Route path="/student/batch/:scopeId" element={
+                <ProtectedRoute roles={['STUDENT']}>
+                  <StudentBatchDetail />
+                </ProtectedRoute>
+              } />
 
-            <Route path="/faculty" element={
-              <ProtectedRoute roles={['FACULTY', 'ADMIN']}>
-                <FacultyDashboard />
-              </ProtectedRoute>
-            } />
-          </Routes>
+              <Route path="/faculty" element={
+                <ProtectedRoute roles={['FACULTY', 'ADMIN']}>
+                  <FacultyDashboard />
+                </ProtectedRoute>
+              } />
+            </Routes>
+          </Suspense>
         </ConfirmProvider>
       </ToastProvider>
     </AuthProvider>

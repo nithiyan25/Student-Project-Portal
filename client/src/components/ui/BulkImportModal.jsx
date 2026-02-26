@@ -99,7 +99,7 @@ export default function BulkImportModal({ isOpen, onClose, type, onImport }) {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
                 <div className="bg-indigo-600 p-6 text-white flex justify-between items-center">
                     <div>
                         <h2 className="text-xl font-bold flex items-center gap-2">
@@ -113,7 +113,7 @@ export default function BulkImportModal({ isOpen, onClose, type, onImport }) {
                 </div>
 
                 <div className="p-6 space-y-4">
-                    <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex gap-3">
+                    <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg flex gap-3">
                         <Info className="text-blue-600 shrink-0" size={20} />
                         <div className="text-sm text-blue-800">
                             <strong>Instructions:</strong> {getInstructions()}
@@ -121,7 +121,7 @@ export default function BulkImportModal({ isOpen, onClose, type, onImport }) {
                     </div>
 
                     <textarea
-                        className="w-full h-64 border-2 border-gray-100 p-4 rounded-xl focus:ring-2 ring-indigo-500 outline-none resize-none font-mono text-sm shadow-inner"
+                        className="w-full h-64 border-2 border-gray-100 p-4 rounded-lg focus:ring-2 ring-indigo-500 outline-none resize-none font-mono text-sm shadow-inner"
                         placeholder={getPlaceholder()}
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
@@ -158,3 +158,4 @@ export default function BulkImportModal({ isOpen, onClose, type, onImport }) {
         </div>
     );
 }
+

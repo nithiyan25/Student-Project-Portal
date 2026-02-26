@@ -42,7 +42,7 @@ export default function ReleaseReviewsModal({ isOpen, onClose, scopes, onRelease
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[100] animate-in fade-in duration-300">
-            <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-white/20">
+            <div className="bg-white w-full max-w-lg rounded-lg shadow-2xl overflow-hidden flex flex-col border border-white/20">
                 {/* Header */}
                 <div className="p-6 bg-gradient-to-r from-purple-600 to-indigo-700 text-white shrink-0 relative overflow-hidden">
                     <div className="relative z-10 flex justify-between items-start">
@@ -61,7 +61,7 @@ export default function ReleaseReviewsModal({ isOpen, onClose, scopes, onRelease
                     <div>
                         <label className="text-xs font-black text-gray-500 uppercase tracking-widest block mb-2">1. Select Batch</label>
                         <select
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:ring-2 ring-purple-500 outline-none transition-all"
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:ring-2 ring-purple-500 outline-none transition-all"
                             value={selectedScopeId}
                             onChange={(e) => setSelectedScopeId(e.target.value)}
                         >
@@ -76,7 +76,7 @@ export default function ReleaseReviewsModal({ isOpen, onClose, scopes, onRelease
                     <div>
                         <label className="text-xs font-black text-gray-500 uppercase tracking-widest block mb-2">2. Review Phase</label>
                         <select
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:ring-2 ring-purple-500 outline-none transition-all"
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:ring-2 ring-purple-500 outline-none transition-all"
                             value={reviewPhase}
                             onChange={(e) => setReviewPhase(e.target.value)}
                         >
@@ -92,7 +92,7 @@ export default function ReleaseReviewsModal({ isOpen, onClose, scopes, onRelease
                             <label className="text-xs font-black text-gray-500 uppercase tracking-widest block mb-2">3. Access Starts</label>
                             <input
                                 type="datetime-local"
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:ring-2 ring-purple-500 outline-none transition-all"
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:ring-2 ring-purple-500 outline-none transition-all"
                                 value={accessStartsAt}
                                 onChange={(e) => setAccessStartsAt(e.target.value)}
                             />
@@ -100,7 +100,7 @@ export default function ReleaseReviewsModal({ isOpen, onClose, scopes, onRelease
                         <div>
                             <label className="text-xs font-black text-gray-500 uppercase tracking-widest block mb-2">4. Access Duration</label>
                             <select
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold text-gray-700 focus:ring-2 ring-purple-500 outline-none transition-all"
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold text-gray-700 focus:ring-2 ring-purple-500 outline-none transition-all"
                                 value={duration}
                                 onChange={(e) => setDuration(e.target.value)}
                             >
@@ -116,7 +116,7 @@ export default function ReleaseReviewsModal({ isOpen, onClose, scopes, onRelease
                         <button
                             onClick={handleSubmit}
                             disabled={isSubmitting || !selectedScopeId}
-                            className="w-full py-3 bg-purple-600 text-white rounded-xl font-bold text-sm uppercase tracking-widest shadow-lg shadow-purple-200 hover:bg-purple-700 hover:shadow-purple-300 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="w-full py-3 bg-purple-600 text-white rounded-lg font-bold text-sm uppercase tracking-widest shadow-lg shadow-purple-200 hover:bg-purple-700 hover:shadow-purple-300 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                             {isSubmitting ? "Releasing..." : (
                                 <>
@@ -131,3 +131,4 @@ export default function ReleaseReviewsModal({ isOpen, onClose, scopes, onRelease
         </div>
     );
 }
+

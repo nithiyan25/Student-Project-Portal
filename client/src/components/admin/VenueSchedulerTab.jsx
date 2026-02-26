@@ -145,7 +145,7 @@ export default function VenueSchedulerTab({ scopes }) {
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             {/* Header Controls */}
-            <div className="flex flex-col md:flex-row justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+            <div className="flex flex-col md:flex-row justify-between gap-4 bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
                 <div className="flex gap-4 items-center">
                     <div>
                         <label className="text-xs font-bold text-slate-500 uppercase">Project Batch</label>
@@ -228,7 +228,7 @@ export default function VenueSchedulerTab({ scopes }) {
             </div>
 
             {/* Period Reference */}
-            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
+            <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
                 <div className="text-xs font-bold text-blue-600 uppercase mb-2">College Periods (Reference)</div>
                 <div className="flex flex-wrap gap-3">
                     {periods.map((p, i) => (
@@ -242,7 +242,7 @@ export default function VenueSchedulerTab({ scopes }) {
 
             {/* Swap Mode Indicator */}
             {swapSource && (
-                <div className="bg-orange-600 text-white p-3 rounded-xl shadow-xl flex justify-between items-center animate-in slide-in-from-top-2 duration-300">
+                <div className="bg-orange-600 text-white p-3 rounded-lg shadow-xl flex justify-between items-center animate-in slide-in-from-top-2 duration-300">
                     <div className="flex items-center gap-3">
                         <div className="bg-white/20 p-2 rounded-lg">
                             <ArrowLeftRight size={20} />
@@ -265,7 +265,7 @@ export default function VenueSchedulerTab({ scopes }) {
                     return (
                         <div
                             key={venue.id}
-                            className={`bg-white rounded-xl border-2 p-5 transition-all ${isSelectedForSwap ? 'border-orange-400 bg-orange-50/20 ring-4 ring-orange-100 shadow-lg scale-[1.02]' : venueSessions.length > 0 ? 'border-blue-200 shadow-md' : 'border-slate-100 hover:border-blue-100'}`}
+                            className={`bg-white rounded-lg border-2 p-5 transition-all ${isSelectedForSwap ? 'border-orange-400 bg-orange-50/20 ring-4 ring-orange-100 shadow-lg scale-[1.02]' : venueSessions.length > 0 ? 'border-blue-200 shadow-md' : 'border-slate-100 hover:border-blue-100'}`}
                         >
                             <div className="flex justify-between items-start mb-4">
                                 <div>
@@ -293,7 +293,7 @@ export default function VenueSchedulerTab({ scopes }) {
                             {venueSessions.length > 0 ? (
                                 <div className="space-y-4">
                                     {venueSessions.map((session, idx) => (
-                                        <div key={session.id} className={`p-4 rounded-xl border ${idx > 0 ? 'border-dashed border-slate-200 pt-4' : 'bg-blue-50/50 border-blue-100'}`}>
+                                        <div key={session.id} className={`p-4 rounded-lg border ${idx > 0 ? 'border-dashed border-slate-200 pt-4' : 'bg-blue-50/50 border-blue-100'}`}>
                                             <div className="flex justify-between items-start mb-2">
                                                 <div className="flex items-center gap-2">
                                                     <User size={16} className="text-blue-600" />
@@ -366,7 +366,7 @@ export default function VenueSchedulerTab({ scopes }) {
                     );
                 })}
                 {venues.length === 0 && (
-                    <div className="col-span-full p-8 text-center text-slate-400 bg-white rounded-xl border-2 border-dashed">
+                    <div className="col-span-full p-8 text-center text-slate-400 bg-white rounded-lg border-2 border-dashed">
                         No venues found. Click "Manage Venues" to add one.
                     </div>
                 )}
@@ -454,7 +454,7 @@ function VenueManagerModal({ onClose, venues }) {
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl w-full max-w-lg p-6 shadow-2xl">
+            <div className="bg-white rounded-lg w-full max-w-lg p-6 shadow-2xl">
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="text-xl font-bold">Manage Venues</h3>
                     <button onClick={onClose}><X size={20} /></button>
@@ -659,7 +659,7 @@ function BookingModal({ venue, date, scopeId, periods, editingSession, onClose, 
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl w-full max-w-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-lg w-full max-w-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-6">
                     <div>
                         <h3 className="text-xl font-bold">Assign {venue.name}</h3>
@@ -678,7 +678,7 @@ function BookingModal({ venue, date, scopeId, periods, editingSession, onClose, 
                     </div>
 
                     {/* Filters Section */}
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
                         <div className="text-xs font-bold text-slate-500 uppercase mb-3">Filter Students</div>
                         <div className="grid grid-cols-3 gap-3">
                             <div>
@@ -748,7 +748,7 @@ function BookingModal({ venue, date, scopeId, periods, editingSession, onClose, 
                         </div>
 
                         {showBulkAdd && (
-                            <div className="mb-4 p-4 bg-orange-50 border border-orange-100 rounded-xl space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                            <div className="mb-4 p-4 bg-orange-50 border border-orange-100 rounded-lg space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
                                 <div className="text-xs font-bold text-orange-700 uppercase">Paste Roll Numbers or Emails</div>
                                 <textarea
                                     className="w-full h-32 p-3 text-sm border-2 border-orange-200 rounded-lg focus:ring-0 focus:border-orange-500 font-mono"
@@ -858,7 +858,7 @@ function SessionDetailsModal({ session, onClose }) {
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl w-full max-w-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-lg w-full max-w-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-start mb-6 border-b pb-4">
                     <div>
                         <h3 className="text-xl font-bold text-slate-800">{session.venue?.name}</h3>
@@ -871,7 +871,7 @@ function SessionDetailsModal({ session, onClose }) {
 
                 <div className="space-y-6">
                     {/* Faculty Details */}
-                    <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                    <div className="bg-blue-50/50 p-4 rounded-lg border border-blue-100">
                         <div className="flex items-start gap-4">
                             <div className="bg-blue-100 p-3 rounded-full text-blue-600">
                                 <User size={24} />
@@ -985,7 +985,7 @@ function SessionDetailsModal({ session, onClose }) {
                             </div>
                         </div>
 
-                        <div className="border rounded-xl overflow-hidden">
+                        <div className="border rounded-lg overflow-hidden">
                             <div className="max-h-60 overflow-y-auto">
                                 <table className="w-full text-sm text-left">
                                     <thead className="bg-slate-50 text-slate-500 uppercase text-xs font-bold sticky top-0">
@@ -1120,7 +1120,7 @@ function UnscheduledStudentsModal({ date, scopeId, onClose }) {
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl w-full max-w-3xl p-6 shadow-2xl max-h-[90vh] flex flex-col">
+            <div className="bg-white rounded-lg w-full max-w-3xl p-6 shadow-2xl max-h-[90vh] flex flex-col">
                 <div className="flex justify-between items-start mb-6">
                     <div>
                         <h3 className="text-xl font-bold flex items-center gap-2 text-slate-800">
@@ -1156,7 +1156,7 @@ function UnscheduledStudentsModal({ date, scopeId, onClose }) {
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto border rounded-xl bg-slate-50 relative">
+                <div className="flex-1 overflow-y-auto border rounded-lg bg-slate-50 relative">
                     {loading ? (
                         <div className="absolute inset-0 flex items-center justify-center">
                             <div className="flex flex-col items-center gap-2">
@@ -1263,7 +1263,7 @@ function ScheduledStudentsModal({ sessions, date, onClose }) {
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl w-full max-w-3xl p-6 shadow-2xl max-h-[90vh] flex flex-col">
+            <div className="bg-white rounded-lg w-full max-w-3xl p-6 shadow-2xl max-h-[90vh] flex flex-col">
                 <div className="flex justify-between items-start mb-6">
                     <div>
                         <h3 className="text-xl font-bold flex items-center gap-2 text-slate-800">
@@ -1331,7 +1331,7 @@ function ScheduledStudentsModal({ sessions, date, onClose }) {
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto border rounded-xl bg-slate-50 p-4">
+                <div className="flex-1 overflow-y-auto border rounded-lg bg-slate-50 p-4">
                     <div className="space-y-2">
                         {aggregatedStudents.length === 0 ? (
                             <div className="p-12 text-center text-slate-400 font-bold flex flex-col items-center gap-2">
@@ -1340,7 +1340,7 @@ function ScheduledStudentsModal({ sessions, date, onClose }) {
                             </div>
                         ) : (
                             aggregatedStudents.map((student, idx) => (
-                                <div key={student.id} className="flex items-center gap-4 p-3 bg-white border border-slate-100 rounded-xl hover:shadow-md transition-shadow">
+                                <div key={student.id} className="flex items-center gap-4 p-3 bg-white border border-slate-100 rounded-lg hover:shadow-md transition-shadow">
                                     <div className="w-8 text-xs font-bold text-slate-300">#{idx + 1}</div>
                                     <div className="flex-1 min-w-0">
                                         <div className="font-bold text-slate-800 text-sm truncate">{student.name}</div>
@@ -1412,3 +1412,4 @@ function ScheduledStudentsModal({ sessions, date, onClose }) {
         </div>
     );
 }
+

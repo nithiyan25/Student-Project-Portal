@@ -16,8 +16,13 @@ const settingsRoutes = require('./routes/settings');
 const scopesRoutes = require('./routes/scopes');
 
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
+const probingGuard = require('./middleware/probingGuard');
+const { logSecurityAlert } = require('./utils/securityUtils');
 
 const app = express();
+
+// Global Probing Guard (Catch malicious bots/scripts immediately)
+app.use(probingGuard);
 
 // Security Middleware
 app.use(helmet({
@@ -41,11 +46,28 @@ if (process.env.NODE_ENV === 'development') {
 
 // Rate Limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20000, // Limit each IP to 20000 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
+  windowMs: 15 * 60 * 1000,
+  max: 5000,
+  message: 'Too many requests, please try again later.',
+  handler: (req, res, next, options) => {
+    logSecurityAlert(null, 'RATE_LIMIT_EXCEEDED', `IP address exceeded global rate limit.`, req, 'LOW');
+    res.status(options.statusCode).send(options.message);
+  }
 });
+
+// Stricter limiter for Auth routes (Brute-force protection)
+const authLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 10, // 10 attempts per minute
+  message: 'Too many login attempts. Please wait a minute.',
+  handler: (req, res, next, options) => {
+    logSecurityAlert(null, 'BRUTE_FORCE_ATTEMPT', `Possible brute-force detected on auth route: ${req.originalUrl}`, req, 'HIGH');
+    res.status(options.statusCode).send(options.message);
+  }
+});
+
 app.use('/api/', limiter);
+app.use('/api/auth/', authLimiter);
 
 // Body Parser
 app.use(express.json({ limit: '50mb' }));
@@ -64,6 +86,7 @@ app.use('/api/scopes', scopesRoutes);
 app.use('/api/rubrics', require('./routes/rubrics'));
 app.use('/api/faculty', require('./routes/faculty'));
 app.use('/api/venues', require('./routes/venue'));
+app.use('/api/security', require('./routes/security'));
 
 
 const { authenticate, authorize } = require('./middleware/auth');
@@ -78,16 +101,34 @@ app.get('/api/my-team', authenticate, async (req, res) => {
         team: {
           include: {
             members: { include: { user: true } },
-            project: true,
+            project: {
+              include: { scope: true }
+            },
             reviews: {
-              include: { faculty: true },
+              include: {
+                faculty: true,
+                reviewMarks: true
+              },
               orderBy: { createdAt: 'desc' }
             }
           }
         }
       }
     });
-    res.json(member ? member.team : null);
+
+    if (!member) return res.json(null);
+
+    const team = member.team;
+
+    // Strip reviewMarks for students (enforce backend role check)
+    if (req.user.role === 'STUDENT' && team.reviews) {
+      team.reviews = team.reviews.map(r => {
+        const { reviewMarks, ...rest } = r;
+        return rest;
+      });
+    }
+
+    res.json(team);
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Failed to fetch team data" });

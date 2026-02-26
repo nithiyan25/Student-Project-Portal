@@ -248,7 +248,8 @@ router.post('/', authenticate, authorize(['FACULTY', 'ADMIN']), reviewValidation
                 prisma.reviewassignment.findFirst({
                     where: {
                         projectId: projectId,
-                        facultyId: req.user.id
+                        facultyId: req.user.id,
+                        ...(phaseToRecord ? { reviewPhase: phaseToRecord } : {})
                     }
                 }),
                 prisma.team.findUnique({

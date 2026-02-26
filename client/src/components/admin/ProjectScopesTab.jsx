@@ -47,7 +47,7 @@ export default function ProjectScopesTab() {
     const [scopes, setScopes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
-    const [newScope, setNewScope] = useState({ name: '', description: '', type: 'MAIN', numberOfPhases: 4, requireGuide: false, requireSubjectExpert: false, resultsPublished: false });
+    const [newScope, setNewScope] = useState({ name: '', description: '', type: 'MAIN', numberOfPhases: 4, requireGuide: false, requireSubjectExpert: false });
 
     const [showDeadlinesModal, setShowDeadlinesModal] = useState(false);
     const [deadlineTargetScope, setDeadlineTargetScope] = useState(null);
@@ -79,7 +79,7 @@ export default function ProjectScopesTab() {
         try {
             await api.post('/scopes', newScope);
             setShowCreateModal(false);
-            setNewScope({ name: '', description: '', type: 'MAIN', numberOfPhases: 4, requireGuide: false, requireSubjectExpert: false, resultsPublished: false });
+            setNewScope({ name: '', description: '', type: 'MAIN', numberOfPhases: 4, requireGuide: false, requireSubjectExpert: false });
             addToast('Scope created successfully', 'success');
             fetchScopes();
         } catch (error) {
@@ -389,7 +389,7 @@ export default function ProjectScopesTab() {
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             {/* Header */}
-            <div className="flex justify-between items-center bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+            <div className="flex justify-between items-center bg-white p-6 rounded-lg border border-gray-100 shadow-sm">
                 <div>
                     <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
                         <Folder className="text-blue-600" size={24} /> Project Scopes (Batches)
@@ -398,7 +398,7 @@ export default function ProjectScopesTab() {
                 </div>
                 <button
                     onClick={() => setShowCreateModal(true)}
-                    className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition flex items-center gap-2 shadow-lg shadow-blue-100"
+                    className="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-blue-700 transition flex items-center gap-2 shadow-lg shadow-blue-100"
                 >
                     <Plus size={18} /> Create Scope
                 </button>
@@ -407,11 +407,11 @@ export default function ProjectScopesTab() {
             {/* Scope List */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {scopes.map(scope => (
-                    <div key={scope.id} className={`bg-white rounded-2xl border transition-all hover:shadow-md ${scope.isActive ? 'border-gray-100' : 'border-gray-200 bg-gray-50 opacity-75'}`}>
+                    <div key={scope.id} className={`bg-white rounded-lg border transition-all hover:shadow-md ${scope.isActive ? 'border-gray-100' : 'border-gray-200 bg-gray-50 opacity-75'}`}>
                         {/* Card Header */}
                         <div className="p-6 pb-0">
                             <div className="flex justify-between items-start mb-4">
-                                <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                                <div className="p-3 bg-blue-50 text-blue-600 rounded-lg">
                                     <Folder size={24} />
                                 </div>
                                 <div className="flex items-center gap-1">
@@ -446,7 +446,7 @@ export default function ProjectScopesTab() {
                                     {scope._count?.students || 0} Students
                                 </div>
                                 {scope.completedTeamsCount > 0 && (
-                                    <div className={`px-2 py-1 text-[10px] font-bold rounded-lg border animate-pulse ${scope.resultsPublished ? 'bg-indigo-50 text-indigo-700 border-indigo-100' : 'bg-orange-50 text-orange-700 border-orange-200'}`}>
+                                    <div className="px-2 py-1 text-[10px] font-bold rounded-lg border bg-indigo-50 text-indigo-700 border-indigo-100">
                                         {scope.completedTeamsCount} Reviews Done
                                     </div>
                                 )}
@@ -499,20 +499,7 @@ export default function ProjectScopesTab() {
                                     {scope.requireSubjectExpert ? <ToggleRight size={22} className="text-green-500" /> : <ToggleLeft size={22} className="text-gray-300" />}
                                 </button>
                             </div>
-                            <div className="flex justify-between items-center text-xs mt-2 border-t border-gray-50 pt-2">
-                                <div className="flex flex-col gap-0.5">
-                                    <span className="text-gray-600 font-bold">Results Published</span>
-                                    {scope.completedTeamsCount > 0 && !scope.resultsPublished && (
-                                        <span className="text-[9px] text-orange-600 font-black uppercase tracking-tighter">Unpublished Results Alert</span>
-                                    )}
-                                </div>
-                                <button
-                                    onClick={() => toggleScopeSetting(scope.id, 'resultsPublished', scope.resultsPublished)}
-                                    className="transition"
-                                >
-                                    {scope.resultsPublished ? <ToggleRight size={22} className="text-blue-600" /> : <ToggleLeft size={22} className="text-gray-300" />}
-                                </button>
-                            </div>
+
                             <div className="flex justify-between items-center text-xs mt-2 border-t border-gray-50 pt-2">
                                 <span className="text-gray-600">Review Phases</span>
                                 <select
@@ -526,7 +513,7 @@ export default function ProjectScopesTab() {
                         </div>
 
                         {/* Timer Configuration */}
-                        <div className="mx-6 mt-4 mb-6 pt-4 px-4 pb-3 border-t-2 border-dashed border-gray-100 bg-slate-50/60 rounded-xl">
+                        <div className="mx-6 mt-4 mb-6 pt-4 px-4 pb-3 border-t-2 border-dashed border-gray-100 bg-slate-50/60 rounded-lg">
                             <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center gap-2">
                                     <Clock size={16} className="text-blue-600" />
@@ -599,7 +586,7 @@ export default function ProjectScopesTab() {
                 ))}
 
                 {scopes.length === 0 && (
-                    <div className="col-span-full py-12 text-center text-gray-400 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+                    <div className="col-span-full py-12 text-center text-gray-400 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
                         <Folder size={48} className="mx-auto mb-4 opacity-50" />
                         <p>No project scopes found. Create one to get started.</p>
                     </div>
@@ -609,7 +596,7 @@ export default function ProjectScopesTab() {
             {/* Create Modal */}
             {showCreateModal && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[60] flex items-center justify-center p-4 overflow-y-auto">
-                    <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl animate-in zoom-in-95">
+                    <div className="bg-white rounded-lg w-full max-w-md p-6 shadow-2xl animate-in zoom-in-95">
                         <h3 className="text-xl font-bold text-gray-800 mb-6">Create New Scope</h3>
                         <form onSubmit={handleCreateScope} className="space-y-4">
                             <div>
@@ -618,7 +605,7 @@ export default function ProjectScopesTab() {
                                     type="text"
                                     required
                                     placeholder="e.g. Mini Project 2026"
-                                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
+                                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
                                     value={newScope.name}
                                     onChange={e => setNewScope({ ...newScope, name: e.target.value })}
                                 />
@@ -626,7 +613,7 @@ export default function ProjectScopesTab() {
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-1">Description</label>
                                 <textarea
-                                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
+                                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
                                     rows="3"
                                     value={newScope.description}
                                     onChange={e => setNewScope({ ...newScope, description: e.target.value })}
@@ -635,7 +622,7 @@ export default function ProjectScopesTab() {
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-1">Type</label>
                                 <select
-                                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
+                                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
                                     value={newScope.type}
                                     onChange={e => setNewScope({ ...newScope, type: e.target.value })}
                                 >
@@ -648,7 +635,7 @@ export default function ProjectScopesTab() {
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-1">Review Phases</label>
                                 <select
-                                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
+                                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
                                     value={newScope.numberOfPhases}
                                     onChange={e => setNewScope({ ...newScope, numberOfPhases: parseInt(e.target.value) })}
                                 >
@@ -673,26 +660,18 @@ export default function ProjectScopesTab() {
                                     {newScope.requireSubjectExpert ? <ToggleRight size={28} className="text-green-500" /> : <ToggleLeft size={28} className="text-gray-300" />}
                                 </button>
                             </div>
-                            <div className="flex items-center justify-between py-2">
-                                <span className="text-sm font-bold text-gray-700">Publish Results Immediately</span>
-                                <button
-                                    type="button"
-                                    onClick={() => setNewScope({ ...newScope, resultsPublished: !newScope.resultsPublished })}
-                                >
-                                    {newScope.resultsPublished ? <ToggleRight size={28} className="text-blue-600" /> : <ToggleLeft size={28} className="text-gray-300" />}
-                                </button>
-                            </div>
+
                             <div className="flex gap-3 pt-4">
                                 <button
                                     type="button"
                                     onClick={() => setShowCreateModal(false)}
-                                    className="flex-1 px-4 py-2 text-gray-600 font-bold hover:bg-gray-50 rounded-xl transition"
+                                    className="flex-1 px-4 py-2 text-gray-600 font-bold hover:bg-gray-50 rounded-lg transition"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 px-4 py-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-100"
+                                    className="flex-1 px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition shadow-lg shadow-blue-100"
                                 >
                                     Create Scope
                                 </button>
@@ -705,7 +684,7 @@ export default function ProjectScopesTab() {
             {/* Manage Students Modal */}
             {managingScope && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[60] flex items-center justify-center p-4 overflow-y-auto">
-                    <div className={`bg-white rounded-2xl w-full ${manageMode === 'STATUS' ? 'max-w-6xl' : 'max-w-4xl'} h-[85vh] flex flex-col shadow-2xl animate-in zoom-in-95 transition-all duration-300`}>
+                    <div className={`bg-white rounded-lg w-full ${manageMode === 'STATUS' ? 'max-w-6xl' : 'max-w-4xl'} h-[85vh] flex flex-col shadow-2xl animate-in zoom-in-95 transition-all duration-300`}>
                         <div className="p-6 border-b flex justify-between items-center">
                             <div>
                                 <h3 className="text-xl font-bold text-gray-800">Manage Students</h3>
@@ -719,7 +698,7 @@ export default function ProjectScopesTab() {
 
                         <div className="flex-1 overflow-hidden p-6 gap-6 flex flex-col md:flex-row">
                             {/* Left: Available Students */}
-                            <div className="flex-1 flex flex-col bg-gray-50 rounded-xl border border-gray-100 overflow-hidden">
+                            <div className="flex-1 flex flex-col bg-gray-50 rounded-lg border border-gray-100 overflow-hidden">
                                 <div className="flex border-b border-gray-100 bg-white">
                                     <button
                                         onClick={() => setManageMode('SELECT')}
@@ -866,7 +845,7 @@ export default function ProjectScopesTab() {
                                                 <input
                                                     type="text"
                                                     placeholder="Search name or roll number across status lists..."
-                                                    className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs focus:ring-2 ring-indigo-500 outline-none transition-all shadow-sm"
+                                                    className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-xs focus:ring-2 ring-indigo-500 outline-none transition-all shadow-sm"
                                                     value={studentSearch}
                                                     onChange={(e) => setStudentSearch(e.target.value)}
                                                 />
@@ -881,7 +860,7 @@ export default function ProjectScopesTab() {
                                                         (s.rollNumber && s.rollNumber.toLowerCase().includes(studentSearch.toLowerCase()))
                                                     ) || [];
                                                     return (
-                                                        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm transition-all hover:shadow-md">
+                                                        <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm transition-all hover:shadow-md">
                                                             <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-50">
                                                                 <h5 className="text-[10px] font-black text-green-600 uppercase tracking-widest flex items-center gap-2">
                                                                     Selected Students <span className="bg-green-100 px-2 py-0.5 rounded-full">{filtered.length}</span>
@@ -950,7 +929,7 @@ export default function ProjectScopesTab() {
                                                         (s.rollNumber && s.rollNumber.toLowerCase().includes(studentSearch.toLowerCase()))
                                                     ) || [];
                                                     return (
-                                                        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm transition-all hover:shadow-md">
+                                                        <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm transition-all hover:shadow-md">
                                                             <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-50">
                                                                 <h5 className="text-[10px] font-black text-orange-600 uppercase tracking-widest flex items-center gap-2">
                                                                     Pending Students <span className="bg-orange-100 px-2 py-0.5 rounded-full">{filtered.length}</span>
@@ -1021,7 +1000,7 @@ export default function ProjectScopesTab() {
                                         </label>
                                         <p className="text-[10px] text-gray-400 mb-4">You can paste a list separated by commas, spaces, or newlines.</p>
                                         <textarea
-                                            className={`flex-1 p-4 border rounded-2xl bg-gray-50 focus:bg-white outline-none focus:ring-2 transition text-sm font-mono ${manageMode === 'BULK_REMOVE' ? 'focus:ring-red-100 border-red-50' : 'focus:ring-blue-100'}`}
+                                            className={`flex-1 p-4 border rounded-lg bg-gray-50 focus:bg-white outline-none focus:ring-2 transition text-sm font-mono ${manageMode === 'BULK_REMOVE' ? 'focus:ring-red-100 border-red-50' : 'focus:ring-blue-100'}`}
                                             placeholder="e.g. 21CS001, student@example.com, 21IT055..."
                                             value={bulkStudentIdentifiers}
                                             onChange={e => setBulkStudentIdentifiers(e.target.value)}
@@ -1030,7 +1009,7 @@ export default function ProjectScopesTab() {
                                             <button
                                                 onClick={handleBulkIdentifierAdd}
                                                 disabled={isBulkProcessingStudents || !bulkStudentIdentifiers.trim()}
-                                                className="mt-4 w-full py-3 bg-blue-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-blue-700 transition shadow-lg shadow-blue-100 disabled:opacity-50"
+                                                className="mt-4 w-full py-3 bg-blue-600 text-white rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-blue-700 transition shadow-lg shadow-blue-100 disabled:opacity-50"
                                             >
                                                 {isBulkProcessingStudents ? "Adding Students..." : "Add Students (Bulk)"}
                                             </button>
@@ -1038,7 +1017,7 @@ export default function ProjectScopesTab() {
                                             <button
                                                 onClick={handleBulkIdentifierRemove}
                                                 disabled={isBulkProcessingStudents || !bulkStudentIdentifiers.trim()}
-                                                className="mt-4 w-full py-3 bg-red-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-red-700 transition shadow-lg shadow-red-100 disabled:opacity-50"
+                                                className="mt-4 w-full py-3 bg-red-600 text-white rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-red-700 transition shadow-lg shadow-red-100 disabled:opacity-50"
                                             >
                                                 {isBulkProcessingStudents ? "Removing Students..." : "Remove Students (Bulk)"}
                                             </button>
@@ -1049,7 +1028,7 @@ export default function ProjectScopesTab() {
 
                             {/* Right: Assigned Students */}
                             {manageMode !== 'STATUS' && (
-                                <div className="flex-1 flex flex-col bg-blue-50/30 rounded-xl border border-blue-100 overflow-hidden">
+                                <div className="flex-1 flex flex-col bg-blue-50/30 rounded-lg border border-blue-100 overflow-hidden">
                                     <div className="p-3 border-b border-blue-100 bg-white">
                                         <h4 className="font-bold text-blue-800 text-sm">Assigned Students ({scopeStudents.length})</h4>
                                     </div>
@@ -1092,7 +1071,7 @@ export default function ProjectScopesTab() {
 
             {showAddProjectModal && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[60] flex items-center justify-center p-4 overflow-y-auto">
-                    <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl animate-in zoom-in-95">
+                    <div className="bg-white rounded-lg w-full max-w-md p-6 shadow-2xl animate-in zoom-in-95">
                         <h3 className="text-xl font-bold text-gray-800 mb-6">Add Project to Batch</h3>
                         <p className="text-sm text-gray-500 mb-4 -mt-4">Adding to: <span className="font-bold text-blue-600">{targetScope?.name}</span></p>
                         <form onSubmit={handleCreateProject} className="space-y-4">
@@ -1102,7 +1081,7 @@ export default function ProjectScopesTab() {
                                     type="text"
                                     required
                                     placeholder="e.g. Smart Attendance System"
-                                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
+                                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
                                     value={newProject.title}
                                     onChange={e => setNewProject({ ...newProject, title: e.target.value })}
                                 />
@@ -1113,7 +1092,7 @@ export default function ProjectScopesTab() {
                                     type="text"
                                     required
                                     placeholder="e.g. Web Development"
-                                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
+                                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
                                     value={newProject.category}
                                     onChange={e => setNewProject({ ...newProject, category: e.target.value })}
                                 />
@@ -1125,7 +1104,7 @@ export default function ProjectScopesTab() {
                                     min="1"
                                     max="10"
                                     required
-                                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
+                                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
                                     value={newProject.maxTeamSize}
                                     onChange={e => setNewProject({ ...newProject, maxTeamSize: parseInt(e.target.value) })}
                                 />
@@ -1133,7 +1112,7 @@ export default function ProjectScopesTab() {
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-1">Description</label>
                                 <textarea
-                                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
+                                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
                                     rows="3"
                                     value={newProject.description}
                                     onChange={e => setNewProject({ ...newProject, description: e.target.value })}
@@ -1144,7 +1123,7 @@ export default function ProjectScopesTab() {
                                 <input
                                     type="text"
                                     placeholder="e.g. React, Node.js, MongoDB"
-                                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
+                                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
                                     value={newProject.techStack || ''}
                                     onChange={e => setNewProject({ ...newProject, techStack: e.target.value })}
                                 />
@@ -1154,7 +1133,7 @@ export default function ProjectScopesTab() {
                                 <input
                                     type="text"
                                     placeholder="https://example.com/srs"
-                                    className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
+                                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
                                     value={newProject.srs || ''}
                                     onChange={e => setNewProject({ ...newProject, srs: e.target.value })}
                                 />
@@ -1163,13 +1142,13 @@ export default function ProjectScopesTab() {
                                 <button
                                     type="button"
                                     onClick={() => setShowAddProjectModal(false)}
-                                    className="flex-1 px-4 py-2 text-gray-600 font-bold hover:bg-gray-50 rounded-xl transition"
+                                    className="flex-1 px-4 py-2 text-gray-600 font-bold hover:bg-gray-50 rounded-lg transition"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 px-4 py-2 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-100"
+                                    className="flex-1 px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition shadow-lg shadow-blue-100"
                                 >
                                     Create Project
                                 </button>
@@ -1190,3 +1169,4 @@ export default function ProjectScopesTab() {
         </div>
     );
 }
+

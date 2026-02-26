@@ -141,6 +141,26 @@ model reviewmark {
   @@index([studentId], map: "ReviewMark_studentId_fkey")
 }
 
+model SecurityAlert {
+  id          String   @id @default(cuid())
+  userId      String?
+  type        String   @default("UNAUTHORIZED_ACCESS")
+  description String   @db.Text
+  path        String?
+  method      String?
+  ipAddress   String?
+  userAgent   String?  @db.Text
+  metadata    Json?
+  severity    String   @default("MEDIUM")
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  user        user?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([type])
+  @@index([severity])
+}
+
 model rubric {
   id         String   @id @default(cuid())
   name       String
@@ -225,6 +245,10 @@ model user {
   teamMemberships                       teammember[]
   scopes                                projectscope[]     @relation("projectscopetouser")
   labsession_sessionstudents            labsession[]       @relation("sessionstudents")
+  securityAlerts                        SecurityAlert[]
+  isBlocked                             Boolean            @default(false)
+  blockedUntil                          DateTime?
+  blockReason                           String?            @db.Text
 
   @@index([department], map: "User_department_idx")
   @@index([role], map: "User_role_idx")

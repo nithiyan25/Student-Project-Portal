@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Users, Briefcase, Folder, PieChart, CheckCircle2, Clock, PlayCircle, Shield, Filter, LayoutGrid, BarChart3, ChevronRight, AlertCircle } from 'lucide-react';
 
 const StatusCard = ({ title, value, icon: Icon, color, subValue, trend }) => (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-start justify-between group hover:shadow-md transition-all">
+    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-start justify-between group hover:shadow-md transition-all">
         <div>
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">{title}</p>
             <div className="flex items-baseline gap-2">
@@ -11,7 +11,7 @@ const StatusCard = ({ title, value, icon: Icon, color, subValue, trend }) => (
             </div>
             {subValue && <p className="text-xs text-gray-500 mt-1">{subValue}</p>}
         </div>
-        <div className={`p-3 rounded-xl ${color} text-white shadow-lg group-hover:scale-110 transition-transform`}>
+        <div className={`p-3 rounded-lg ${color} text-white shadow-lg group-hover:scale-110 transition-transform`}>
             <Icon size={24} />
         </div>
     </div>
@@ -39,12 +39,12 @@ const ProgressItem = ({ label, count, total, color, icon: Icon }) => {
 };
 
 const CheckboxToggle = ({ label, checked, onChange, icon: Icon }) => (
-    <label className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-white border border-gray-100 cursor-pointer hover:border-blue-200 hover:bg-blue-50/30 transition-all select-none group">
+    <label className="flex items-center gap-3 px-5 py-3 rounded-lg bg-white border border-gray-100 cursor-pointer hover:border-blue-200 hover:bg-blue-50/30 transition-all select-none group">
         <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${checked ? 'bg-blue-600 border-blue-600 shadow-sm shadow-blue-200' : 'bg-transparent border-gray-200 group-hover:border-gray-300'
             }`}>
             {checked && <CheckCircle2 size={16} className="text-white" strokeWidth={3} />}
         </div>
-        <div className={`p-2 rounded-xl transition-colors ${checked ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'}`}>
+        <div className={`p-2 rounded-lg transition-colors ${checked ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'}`}>
             <Icon size={18} />
         </div>
         <span className={`font-bold transition-colors ${checked ? 'text-gray-800' : 'text-gray-400'}`}>{label}</span>
@@ -71,7 +71,7 @@ export default function OverviewDashboardTab({ users, projects, teams, stats, on
 
     if (!stats) {
         return (
-            <div className="flex flex-col items-center justify-center p-20 bg-white rounded-3xl border border-gray-100 shadow-sm animate-pulse">
+            <div className="flex flex-col items-center justify-center p-20 bg-white rounded-lg border border-gray-100 shadow-sm animate-pulse">
                 <LayoutGrid size={48} className="text-blue-200 mb-4 animate-bounce" />
                 <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">Loading Dashboard Intelligence...</p>
             </div>
@@ -89,7 +89,7 @@ export default function OverviewDashboardTab({ users, projects, teams, stats, on
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Batch Filter */}
-            <div className="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between bg-white p-4 rounded-lg shadow-sm border border-gray-100">
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
                         <Folder size={20} />
@@ -102,7 +102,7 @@ export default function OverviewDashboardTab({ users, projects, teams, stats, on
                 <select
                     value={statsScopeFilter}
                     onChange={(e) => setStatsScopeFilter(e.target.value)}
-                    className="px-4 py-2 border border-gray-200 rounded-xl font-bold text-gray-700 shadow-sm focus:ring-2 ring-blue-500 outline-none bg-white cursor-pointer hover:border-blue-300 transition-colors"
+                    className="px-4 py-2 border border-gray-200 rounded-lg font-bold text-gray-700 shadow-sm focus:ring-2 ring-blue-500 outline-none bg-white cursor-pointer hover:border-blue-300 transition-colors"
                 >
                     <option value="ALL">All Batches</option>
                     {scopes?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -142,7 +142,7 @@ export default function OverviewDashboardTab({ users, projects, teams, stats, on
                 />
             </div>            <div className="grid lg:grid-cols-3 gap-8 items-stretch">
                 {/* Team Progress Breakdown */}
-                <div className="lg:col-span-2 bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+                <div className="lg:col-span-2 bg-white p-8 rounded-lg shadow-sm border border-gray-100">
                     <div className="flex items-center gap-3 mb-8">
                         <div className="p-2 bg-orange-100 text-orange-600 rounded-lg">
                             <PieChart size={20} />
@@ -183,7 +183,7 @@ export default function OverviewDashboardTab({ users, projects, teams, stats, on
                         </div>
 
                         {/* Visual Summary */}
-                        <div className="bg-gray-50 rounded-2xl p-6 flex flex-col items-center justify-center text-center space-y-2 border border-gray-100">
+                        <div className="bg-gray-50 rounded-lg p-6 flex flex-col items-center justify-center text-center space-y-2 border border-gray-100">
                             <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">Global Completion</p>
                             <h4 className="text-5xl font-black text-gray-800">
                                 {coreStats.teamsTotal > 0 ? Math.round((coreStats.teamsCompleted / coreStats.teamsTotal) * 100) : 0}%
@@ -196,7 +196,7 @@ export default function OverviewDashboardTab({ users, projects, teams, stats, on
                 </div>
 
                 {/* Team Enrollment Breakdown */}
-                <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col">
+                <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 flex flex-col">
                     <div className="flex items-center gap-3 mb-6">
                         <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
                             <Users size={20} />
@@ -219,7 +219,7 @@ export default function OverviewDashboardTab({ users, projects, teams, stats, on
                             color="bg-orange-400"
                             icon={Clock}
                         />
-                        <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 mt-4">
+                        <div className="p-4 bg-gray-50 rounded-lg border border-gray-100 mt-4">
                             <p className="text-xs text-gray-500 leading-relaxed italic text-center">
                                 <strong>{coreStats.studentsWithoutTeam}</strong> students have not joined any project team yet.
                             </p>
@@ -230,7 +230,7 @@ export default function OverviewDashboardTab({ users, projects, teams, stats, on
                     <div className="mt-6 pt-6 border-t border-gray-100">
                         <button
                             onClick={() => onNavigate('individual-stats')}
-                            className="w-full flex items-center justify-between p-4 bg-blue-600 rounded-2xl text-white hover:bg-blue-700 transition-all group overflow-hidden relative shadow-lg shadow-blue-200"
+                            className="w-full flex items-center justify-between p-4 bg-blue-600 rounded-lg text-white hover:bg-blue-700 transition-all group overflow-hidden relative shadow-lg shadow-blue-200"
                         >
                             <div className="relative z-10 flex items-center gap-3">
                                 <div className="p-2 bg-white/20 rounded-lg">
@@ -252,7 +252,7 @@ export default function OverviewDashboardTab({ users, projects, teams, stats, on
             </div>
 
             {/* Phase Progress Breakdown */}
-            <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-700">
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-purple-100 text-purple-600 rounded-lg">
@@ -274,7 +274,7 @@ export default function OverviewDashboardTab({ users, projects, teams, stats, on
                         const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
                         return (
-                            <div key={ps.phase} className="p-6 bg-gray-50 rounded-2xl border border-gray-100 space-y-4 group hover:border-purple-200 transition-all hover:shadow-md relative overflow-hidden">
+                            <div key={ps.phase} className="p-6 bg-gray-50 rounded-lg border border-gray-100 space-y-4 group hover:border-purple-200 transition-all hover:shadow-md relative overflow-hidden">
                                 <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                                     <BarChart3 size={64} />
                                 </div>
@@ -289,14 +289,14 @@ export default function OverviewDashboardTab({ users, projects, teams, stats, on
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4 relative z-10">
-                                    <div className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
+                                    <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
                                         <p className="text-[9px] font-black text-gray-400 uppercase tracking-tighter leading-none mb-1">Attended</p>
                                         <div className="flex items-baseline gap-1">
                                             <span className="text-lg font-black text-blue-600">{attended}</span>
                                             <span className="text-[10px] font-bold text-gray-300">/ {total}</span>
                                         </div>
                                     </div>
-                                    <div className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
+                                    <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
                                         <p className="text-[9px] font-black text-gray-400 uppercase tracking-tighter leading-none mb-1">Not Attended</p>
                                         <span className="text-lg font-black text-gray-400">{notAttended}</span>
                                     </div>
@@ -321,10 +321,10 @@ export default function OverviewDashboardTab({ users, projects, teams, stats, on
             </div>
 
             {/* Dashboard Control Panel - Grouped with Analytics Content at the bottom */}
-            <div className="bg-gray-50/50 p-6 rounded-3xl border border-gray-100/50 backdrop-blur-sm mt-4">
+            <div className="bg-gray-50/50 p-6 rounded-lg border border-gray-100/50 backdrop-blur-sm mt-4">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div className="flex items-center gap-4">
-                        <div className="p-3 bg-white rounded-2xl shadow-sm border border-gray-100 text-blue-600">
+                        <div className="p-3 bg-white rounded-lg shadow-sm border border-gray-100 text-blue-600">
                             <Filter size={20} />
                         </div>
                         <div>
@@ -361,7 +361,7 @@ export default function OverviewDashboardTab({ users, projects, teams, stats, on
                 <div className="grid lg:grid-cols-2 gap-8 animate-in fade-in zoom-in-95 duration-300">
                     {/* Departmental Breakdown */}
                     {viewSettings.dept && (
-                        <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 transition-all">
+                        <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 transition-all">
                             <div className="flex items-center justify-between mb-6">
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 bg-purple-100 text-purple-600 rounded-lg">
@@ -373,7 +373,7 @@ export default function OverviewDashboardTab({ users, projects, teams, stats, on
                             </div>
                             <div className="space-y-4">
                                 {deptStats.map(dept => (
-                                    <div key={dept.name} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 group hover:border-purple-200 transition-colors">
+                                    <div key={dept.name} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100 group hover:border-purple-200 transition-colors">
                                         <div>
                                             <p className="font-bold text-gray-800">{dept.name}</p>
                                             <p className="text-xs text-gray-500">{dept.total} Total Students</p>
@@ -396,7 +396,7 @@ export default function OverviewDashboardTab({ users, projects, teams, stats, on
 
                     {/* Academic Year Insights */}
                     {viewSettings.year && (
-                        <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 transition-all">
+                        <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 transition-all">
                             <div className="flex items-center justify-between mb-6">
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg">
@@ -408,7 +408,7 @@ export default function OverviewDashboardTab({ users, projects, teams, stats, on
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 {yearStats.map(year => (
-                                    <div key={year.name} className="p-6 bg-gray-50 rounded-2xl border border-gray-100 flex flex-col items-center text-center space-y-2 group hover:border-indigo-200 transition-all">
+                                    <div key={year.name} className="p-6 bg-gray-50 rounded-lg border border-gray-100 flex flex-col items-center text-center space-y-2 group hover:border-indigo-200 transition-all">
                                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">{year.name}</p>
                                         <p className="text-3xl font-black text-gray-800">{year.total}</p>
                                         <p className={`text-[10px] font-black px-2 py-1 rounded-full ${year.pending > 0 ? 'bg-orange-100 text-orange-600' : 'bg-green-100 text-green-600'}`}>
@@ -424,7 +424,7 @@ export default function OverviewDashboardTab({ users, projects, teams, stats, on
 
             {/* Department + Year Cross-Matrix */}
             {viewSettings.matrix && (
-                <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 animate-in fade-in zoom-in-95 duration-300">
+                <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 animate-in fade-in zoom-in-95 duration-300">
                     <div className="flex items-center justify-between mb-8">
                         <div className="flex items-center gap-3">
                             <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
@@ -456,7 +456,7 @@ export default function OverviewDashboardTab({ users, projects, teams, stats, on
                                             </td>
                                             {years.map(y => (
                                                 <td key={y} className="py-4 text-center">
-                                                    <span className={`inline-block min-w-[2.5rem] py-1.5 px-2 rounded-xl font-bold text-sm transition-all ${row[y] > 0
+                                                    <span className={`inline-block min-w-[2.5rem] py-1.5 px-2 rounded-lg font-bold text-sm transition-all ${row[y] > 0
                                                         ? 'bg-blue-50 text-blue-600 border border-blue-100 group-hover:scale-110'
                                                         : 'text-gray-200'
                                                         }`}>
@@ -493,7 +493,7 @@ export default function OverviewDashboardTab({ users, projects, teams, stats, on
             )}
 
             {/* Quick Info Box */}
-            <div className="bg-gradient-to-br from-indigo-600 to-blue-700 p-8 rounded-3xl text-white shadow-xl relative overflow-hidden">
+            <div className="bg-gradient-to-br from-indigo-600 to-blue-700 p-8 rounded-lg text-white shadow-xl relative overflow-hidden">
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div className="max-w-xl">
                         <h3 className="text-xl font-bold mb-2">Proactive Monitoring</h3>
@@ -502,14 +502,14 @@ export default function OverviewDashboardTab({ users, projects, teams, stats, on
                         </p>
                     </div>
                     <div className="flex gap-4">
-                        <div className="flex items-center gap-3 bg-white/10 p-4 rounded-xl backdrop-blur-sm border border-white/10">
+                        <div className="flex items-center gap-3 bg-white/10 p-4 rounded-lg backdrop-blur-sm border border-white/10">
                             <Users size={20} />
                             <div>
                                 <p className="text-[10px] text-indigo-200 uppercase font-bold">Platform Status</p>
                                 <p className="text-sm font-bold">Healthy & Stable</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3 bg-white/10 p-4 rounded-xl backdrop-blur-sm border border-white/10">
+                        <div className="flex items-center gap-3 bg-white/10 p-4 rounded-lg backdrop-blur-sm border border-white/10">
                             <Folder size={20} />
                             <div>
                                 <p className="text-[10px] text-indigo-200 uppercase font-bold">Project Access</p>
@@ -524,3 +524,4 @@ export default function OverviewDashboardTab({ users, projects, teams, stats, on
         </div>
     );
 }
+

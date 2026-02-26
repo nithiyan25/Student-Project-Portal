@@ -41,7 +41,7 @@ export default function SearchableDropdown({
         <div className={`relative ${className}`} ref={dropdownRef}>
             <div
                 onClick={() => setIsOpen(!isOpen)}
-                className={`flex items-center justify-between bg-gray-50 px-4 py-2.5 rounded-xl border border-gray-200 cursor-pointer transition-all hover:border-blue-400 hover:bg-white ${isOpen ? 'ring-2 ring-blue-100 border-blue-400 bg-white' : ''}`}
+                className={`flex items-center justify-between bg-gray-50 px-4 py-2.5 rounded-lg border border-gray-200 cursor-pointer transition-all hover:border-blue-400 hover:bg-white ${isOpen ? 'ring-2 ring-blue-100 border-blue-400 bg-white' : ''}`}
             >
                 <div className="flex items-center gap-2 truncate">
                     {selectedOption ? (
@@ -72,7 +72,7 @@ export default function SearchableDropdown({
             </div>
 
             {isOpen && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 z-[110] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-2xl border border-gray-100 z-[110] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                     <div className="p-3 border-b border-gray-50 flex items-center gap-3 bg-gray-50/50">
                         <Search size={16} className="text-gray-400" />
                         <input
@@ -126,3 +126,4 @@ export default function SearchableDropdown({
         </div>
     );
 }
+

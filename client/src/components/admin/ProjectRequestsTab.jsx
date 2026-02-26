@@ -170,7 +170,7 @@ export default function ProjectRequestsTab({ scopes = [] }) {
     return (
         <div className="space-y-6">
             {/* Header & Filters */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-lg shadow-sm border border-gray-100">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
                         <MessageSquare className="text-blue-600" size={28} />
@@ -185,13 +185,13 @@ export default function ProjectRequestsTab({ scopes = [] }) {
                         <input
                             type="text"
                             placeholder="Search team or project..."
-                            className="pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none w-full md:w-64 transition-all"
+                            className="pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none w-full md:w-64 transition-all"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
 
-                    <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-xl border border-gray-200">
+                    <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-lg border border-gray-200">
                         {['PENDING', 'APPROVED', 'REJECTED', 'ALL'].map((status) => (
                             <button
                                 key={status}
@@ -221,7 +221,7 @@ export default function ProjectRequestsTab({ scopes = [] }) {
             </div>
 
             {/* Additional Filters Row */}
-            <div className="flex flex-wrap items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+            <div className="flex flex-wrap items-center gap-4 bg-white p-4 rounded-lg shadow-sm border border-gray-100">
                 <div className="flex items-center gap-2">
                     <Filter size={16} className="text-gray-400" />
                     <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Filters:</span>
@@ -236,7 +236,7 @@ export default function ProjectRequestsTab({ scopes = [] }) {
                             setSelectedScope(e.target.value);
                             setPagination(prev => ({ ...prev, page: 1 }));
                         }}
-                        className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-xs font-bold text-gray-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                        className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-xs font-bold text-gray-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                     >
                         <option value="ALL">All Batches</option>
                         {scopes.map(scope => (
@@ -248,7 +248,7 @@ export default function ProjectRequestsTab({ scopes = [] }) {
                 <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-xs font-bold text-gray-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                    className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-xs font-bold text-gray-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                 >
                     <option value="">All Categories</option>
                     {categories.map(cat => (
@@ -262,7 +262,7 @@ export default function ProjectRequestsTab({ scopes = [] }) {
                         setSelectedDepartment(e.target.value);
                         setPagination(prev => ({ ...prev, page: 1 }));
                     }}
-                    className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-xs font-bold text-gray-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                    className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-xs font-bold text-gray-600 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                 >
                     <option value="">All Departments</option>
                     {departments.map(dept => (
@@ -275,7 +275,7 @@ export default function ProjectRequestsTab({ scopes = [] }) {
                     <select
                         value={pagination.limit}
                         onChange={(e) => setPagination(prev => ({ ...prev, limit: parseInt(e.target.value), page: 1 }))}
-                        className="bg-gray-50 border border-gray-200 rounded-xl px-2 py-1 text-xs font-bold text-gray-600 outline-none transition-all"
+                        className="bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 text-xs font-bold text-gray-600 outline-none transition-all"
                     >
                         {[12, 24, 50, 100, 500].map(l => (
                             <option key={l} value={l}>{l}</option>
@@ -303,7 +303,7 @@ export default function ProjectRequestsTab({ scopes = [] }) {
                 {requests.length > 0 && (
                     <button
                         onClick={toggleSelectAll}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border ${selectedIds.length === requests.length && requests.length > 0
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all border ${selectedIds.length === requests.length && requests.length > 0
                             ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-100'
                             : 'bg-white border-gray-200 text-gray-600 hover:border-blue-400'
                             }`}
@@ -316,7 +316,7 @@ export default function ProjectRequestsTab({ scopes = [] }) {
 
             {/* Bulk Actions Toolbar */}
             {selectedIds.length > 0 && (
-                <div className="flex items-center justify-between bg-blue-600 text-white p-4 rounded-2xl shadow-lg sticky top-4 z-10 animate-in slide-in-from-top duration-300">
+                <div className="flex items-center justify-between bg-blue-600 text-white p-4 rounded-lg shadow-lg sticky top-4 z-10 animate-in slide-in-from-top duration-300">
                     <div className="flex items-center gap-4">
                         <button
                             onClick={toggleSelectAll}
@@ -332,14 +332,14 @@ export default function ProjectRequestsTab({ scopes = [] }) {
                         <button
                             onClick={handleBulkApprove}
                             disabled={isSubmitting}
-                            className="bg-green-500 hover:bg-green-600 px-6 py-2 rounded-xl font-bold text-sm transition-all shadow-md flex items-center gap-2"
+                            className="bg-green-500 hover:bg-green-600 px-6 py-2 rounded-lg font-bold text-sm transition-all shadow-md flex items-center gap-2"
                         >
                             <CheckCircle size={18} /> Bulk Approve
                         </button>
                         <button
                             onClick={handleBulkReject}
                             disabled={isSubmitting}
-                            className="bg-red-500 hover:bg-red-600 px-6 py-2 rounded-xl font-bold text-sm transition-all shadow-md flex items-center gap-2"
+                            className="bg-red-500 hover:bg-red-600 px-6 py-2 rounded-lg font-bold text-sm transition-all shadow-md flex items-center gap-2"
                         >
                             <XCircle size={18} /> Bulk Reject
                         </button>
@@ -349,18 +349,18 @@ export default function ProjectRequestsTab({ scopes = [] }) {
 
             {/* Requests List */}
             {loading ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm">
+                <div className="flex flex-col items-center justify-center py-20 bg-white rounded-lg border border-gray-100 shadow-sm">
                     <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
                     <p className="text-gray-500 font-medium">Loading requests...</p>
                 </div>
             ) : error ? (
-                <div className="bg-red-50 p-8 rounded-3xl border border-red-100 text-center">
+                <div className="bg-red-50 p-8 rounded-lg border border-red-100 text-center">
                     <AlertCircle className="text-red-500 mx-auto mb-3" size={40} />
                     <h3 className="text-lg font-bold text-red-800">{error}</h3>
-                    <button onClick={fetchRequests} className="mt-4 px-6 py-2 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition">Try Again</button>
+                    <button onClick={fetchRequests} className="mt-4 px-6 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition">Try Again</button>
                 </div>
             ) : requests.length === 0 ? (
-                <div className="bg-white p-20 rounded-3xl border border-gray-100 shadow-sm text-center">
+                <div className="bg-white p-20 rounded-lg border border-gray-100 shadow-sm text-center">
                     <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
                         <Clock className="text-gray-300" size={40} />
                     </div>
@@ -371,7 +371,7 @@ export default function ProjectRequestsTab({ scopes = [] }) {
                 <>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {requests.map((req) => (
-                            <div key={req.id} className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col">
+                            <div key={req.id} className="bg-white rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col">
                                 {/* Card Header */}
                                 <div className="p-6 pb-4">
                                     <div className="flex justify-between items-start mb-4">
@@ -412,7 +412,7 @@ export default function ProjectRequestsTab({ scopes = [] }) {
                                     </p>
                                     <div className="space-y-2">
                                         {req.team?.members?.map(m => (
-                                            <div key={m.id} className="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-gray-100 shadow-sm">
+                                            <div key={m.id} className="flex items-center justify-between bg-white px-3 py-2 rounded-lg border border-gray-100 shadow-sm">
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-[10px] font-bold text-blue-700">
                                                         {m.user?.name[0].toUpperCase()}
@@ -433,13 +433,13 @@ export default function ProjectRequestsTab({ scopes = [] }) {
                                         <div className="flex gap-3">
                                             <button
                                                 onClick={() => handleApprove(req.id)}
-                                                className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white py-2.5 rounded-xl font-bold text-sm hover:bg-green-700 transition active:scale-95 shadow-lg shadow-green-100"
+                                                className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white py-2.5 rounded-lg font-bold text-sm hover:bg-green-700 transition active:scale-95 shadow-lg shadow-green-100"
                                             >
                                                 <CheckCircle size={18} /> Approve
                                             </button>
                                             <button
                                                 onClick={() => openRejectModal(req.id)}
-                                                className="flex-1 flex items-center justify-center gap-2 bg-red-50 text-red-600 py-2.5 rounded-xl font-bold text-sm hover:bg-red-100 transition active:scale-95 border border-red-100"
+                                                className="flex-1 flex items-center justify-center gap-2 bg-red-50 text-red-600 py-2.5 rounded-lg font-bold text-sm hover:bg-red-100 transition active:scale-95 border border-red-100"
                                             >
                                                 <XCircle size={18} /> Reject
                                             </button>
@@ -451,7 +451,7 @@ export default function ProjectRequestsTab({ scopes = [] }) {
                                                 <span className="font-bold text-gray-700">{req.reviewedAt ? new Date(req.reviewedAt).toLocaleString() : 'N/A'}</span>
                                             </div>
                                             {req.status === 'REJECTED' && req.rejectionReason && (
-                                                <div className="bg-red-50 p-3 rounded-xl border border-red-100">
+                                                <div className="bg-red-50 p-3 rounded-lg border border-red-100">
                                                     <p className="text-[10px] font-black text-red-400 uppercase tracking-widest mb-1">Rejection Reason</p>
                                                     <p className="text-xs text-red-700 italic">"{req.rejectionReason}"</p>
                                                 </div>
@@ -469,7 +469,7 @@ export default function ProjectRequestsTab({ scopes = [] }) {
                             <button
                                 onClick={() => handlePageChange(pagination.page - 1)}
                                 disabled={pagination.page === 1}
-                                className="p-2 rounded-xl bg-white border border-gray-200 text-gray-600 disabled:opacity-50 hover:bg-gray-50 transition-all font-bold text-sm"
+                                className="p-2 rounded-lg bg-white border border-gray-200 text-gray-600 disabled:opacity-50 hover:bg-gray-50 transition-all font-bold text-sm"
                             >
                                 Previous
                             </button>
@@ -484,7 +484,7 @@ export default function ProjectRequestsTab({ scopes = [] }) {
                                     <button
                                         key={pageNum}
                                         onClick={() => handlePageChange(pageNum)}
-                                        className={`w-10 h-10 rounded-xl font-bold text-sm transition-all ${pagination.page === pageNum
+                                        className={`w-10 h-10 rounded-lg font-bold text-sm transition-all ${pagination.page === pageNum
                                             ? 'bg-blue-600 text-white shadow-lg shadow-blue-100'
                                             : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
                                             }`}
@@ -499,7 +499,7 @@ export default function ProjectRequestsTab({ scopes = [] }) {
                             <button
                                 onClick={() => handlePageChange(pagination.page + 1)}
                                 disabled={pagination.page === pagination.totalPages}
-                                className="p-2 rounded-xl bg-white border border-gray-200 text-gray-600 disabled:opacity-50 hover:bg-gray-50 transition-all font-bold text-sm"
+                                className="p-2 rounded-lg bg-white border border-gray-200 text-gray-600 disabled:opacity-50 hover:bg-gray-50 transition-all font-bold text-sm"
                             >
                                 Next
                             </button>
@@ -511,7 +511,7 @@ export default function ProjectRequestsTab({ scopes = [] }) {
             {/* Rejection Modal */}
             {isRejectModalOpen && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                    <div className="bg-white w-full max-w-md rounded-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
                         <div className="p-6 bg-red-600 text-white">
                             <h3 className="text-xl font-bold flex items-center gap-2">
                                 <XCircle size={24} /> Reject Project Request
@@ -524,21 +524,21 @@ export default function ProjectRequestsTab({ scopes = [] }) {
                                 value={rejectionReason}
                                 onChange={(e) => setRejectionReason(e.target.value)}
                                 placeholder="Reason for rejection (e.g., Team size mismatch, project already reserved...)"
-                                className="w-full h-32 bg-gray-50 border border-gray-200 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-red-500 outline-none resize-none transition-all"
+                                className="w-full h-32 bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm focus:ring-2 focus:ring-red-500 outline-none resize-none transition-all"
                                 autoFocus
                             ></textarea>
 
                             <div className="flex gap-3 mt-6">
                                 <button
                                     onClick={() => setIsRejectModalOpen(false)}
-                                    className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-2xl font-bold hover:bg-gray-200 transition"
+                                    className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-lg font-bold hover:bg-gray-200 transition"
                                     disabled={isSubmitting}
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleReject}
-                                    className="flex-3 py-3 bg-red-600 text-white rounded-2xl font-bold hover:bg-red-700 transition disabled:opacity-50 shadow-lg shadow-red-100 flex items-center justify-center gap-2"
+                                    className="flex-3 py-3 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition disabled:opacity-50 shadow-lg shadow-red-100 flex items-center justify-center gap-2"
                                     disabled={isSubmitting}
                                 >
                                     {isSubmitting ? (
@@ -555,3 +555,4 @@ export default function ProjectRequestsTab({ scopes = [] }) {
         </div>
     );
 }
+
