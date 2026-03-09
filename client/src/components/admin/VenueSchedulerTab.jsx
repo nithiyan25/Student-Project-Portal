@@ -453,7 +453,7 @@ function VenueManagerModal({ onClose, venues }) {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
+        <div className="fixed -top-[200px] -bottom-[200px] left-0 right-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
             <div className="bg-white rounded-lg w-full max-w-lg p-6 shadow-2xl">
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="text-xl font-bold">Manage Venues</h3>
@@ -658,7 +658,7 @@ function BookingModal({ venue, date, scopeId, periods, editingSession, onClose, 
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
+        <div className="fixed -top-[200px] -bottom-[200px] left-0 right-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
             <div className="bg-white rounded-lg w-full max-w-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-6">
                     <div>
@@ -857,7 +857,7 @@ function SessionDetailsModal({ session, onClose }) {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
+        <div className="fixed -top-[200px] -bottom-[200px] left-0 right-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
             <div className="bg-white rounded-lg w-full max-w-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-start mb-6 border-b pb-4">
                     <div>
@@ -1119,7 +1119,7 @@ function UnscheduledStudentsModal({ date, scopeId, onClose }) {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
+        <div className="fixed -top-[200px] -bottom-[200px] left-0 right-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
             <div className="bg-white rounded-lg w-full max-w-3xl p-6 shadow-2xl max-h-[90vh] flex flex-col">
                 <div className="flex justify-between items-start mb-6">
                     <div>
@@ -1262,7 +1262,7 @@ function ScheduledStudentsModal({ sessions, date, onClose }) {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
+        <div className="fixed -top-[200px] -bottom-[200px] left-0 right-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
             <div className="bg-white rounded-lg w-full max-w-3xl p-6 shadow-2xl max-h-[90vh] flex flex-col">
                 <div className="flex justify-between items-start mb-6">
                     <div>

@@ -316,7 +316,8 @@ router.get('/all', authenticate, authorize(['ADMIN']), async (req, res, next) =>
 // Export Individual Student Statistics with Filters
 router.get('/student-stats', authenticate, authorize(['ADMIN']), async (req, res, next) => {
     try {
-        const { status, department, year, phase, search, scopeId } = req.query;
+        console.log('[Export] student-stats route HIT', req.query);
+        const { status, department, year, phase, assignment, search, scopeId, facultySearch } = req.query;
 
         // Determine the number of phases to report on
         let numPhases = 3;
@@ -363,8 +364,21 @@ router.get('/student-stats', authenticate, authorize(['ADMIN']), async (req, res
 
         // Process students with team and review data
         const processedStudents = students.map(student => {
-            const teamMembership = student.teamMemberships[0];
-            const team = teamMembership?.team;
+            const studentTeams = student.teamMemberships.map(tm => tm.team);
+
+            // Prioritize the team matching the batch filter (scopeId)
+            let selectedTeam = null;
+            if (scopeId && scopeId !== 'ALL') {
+                selectedTeam = studentTeams.find(t => t.scopeId === scopeId || t.project?.scopeId === scopeId);
+            }
+
+            // If no match or ALL, pick the most recent
+            if (!selectedTeam && studentTeams.length > 0) {
+                selectedTeam = studentTeams.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
+            }
+
+            const teamMembership = student.teamMemberships.find(tm => tm.teamId === selectedTeam?.id);
+            const team = selectedTeam;
             const teamReviews = team?.reviews || [];
 
             // Calculate phase-specific marks (one per phase)
@@ -391,6 +405,12 @@ router.get('/student-stats', authenticate, authorize(['ADMIN']), async (req, res
                 return latest.status === 'COMPLETED' ? 'COMPLETED' : 'IN_PROGRESS';
             };
 
+            // Collect team members info
+            const teamMembers = (team?.members || []).map(m => ({
+                name: m.user?.name || 'N/A',
+                rollNumber: m.user?.rollNumber || 'N/A'
+            }));
+
             return {
                 id: student.id,
                 name: student.name,
@@ -401,25 +421,37 @@ router.get('/student-stats', authenticate, authorize(['ADMIN']), async (req, res
                 isInTeam: !!team,
                 isLeader: teamMembership?.isLeader || false,
                 project: team?.project?.title || 'No Project',
+                projectDescription: team?.project?.description || '',
                 teamStatus: team?.status || 'N/A',
+                teamMembers,
                 overallScore,
                 ...Array.from({ length: 10 }, (_, i) => i + 1).reduce((acc, p) => ({
                     ...acc,
                     [`phase${p}`]: getPhaseStatus(p),
                     [`phase${p}Score`]: phaseMarksMap.get(p) || '-'
                 }), {}),
-                scopeId: team?.scopeId || team?.project?.scopeId || student.scopes?.[0]?.id
+                scopeId: team?.scopeId || team?.project?.scopeId || student.scopes?.[0]?.id,
+                teamReviews // Pass teamReviews for filtering
             };
         });
 
         // Apply filters
         const searchLower = search ? search.toLowerCase() : '';
+        const facultySearchLower = facultySearch ? facultySearch.toLowerCase() : '';
+
         const filteredStudents = processedStudents.filter(s => {
             const matchesSearch = !search ||
                 s.name.toLowerCase().includes(searchLower) ||
                 s.email.toLowerCase().includes(searchLower) ||
-                s.rollNumber.toLowerCase().includes(searchLower) ||
-                s.department.toLowerCase().includes(searchLower);
+                (s.rollNumber && s.rollNumber.toLowerCase().includes(searchLower)) ||
+                (s.department && s.department.toLowerCase().includes(searchLower)) ||
+                (s.project && s.project.toLowerCase().includes(searchLower)) ||
+                (s.projectDescription && s.projectDescription.toLowerCase().includes(searchLower));
+
+            // Faculty Filter - check if any review in this student's team was given by the searched faculty
+            const matchesFaculty = !facultySearch || (s.teamReviews || []).some(r =>
+                r.faculty?.name?.toLowerCase().includes(facultySearchLower)
+            );
 
             const matchesStatus = !status || status === 'ALL' ||
                 (status === 'IN_TEAM' && s.isInTeam) ||
@@ -429,36 +461,60 @@ router.get('/student-stats', authenticate, authorize(['ADMIN']), async (req, res
 
             const matchesYear = !year || year === 'ALL' || String(s.year) === year;
 
+            const isANC = Array.from({ length: 10 }, (_, i) => i + 1).some(p => s[`phase${p}`] === 'IN_PROGRESS');
+
             const matchesPhase = !phase || phase === 'ALL' ||
-                (phase.startsWith('P') && s[`phase${phase.substring(1)}`] === 'COMPLETED') ||
-                (phase === 'NOT_STARTED' && s.phase1 === 'NOT_STARTED');
+                (phase.startsWith('P') && (s[`phase${phase.substring(1)}`] === 'COMPLETED' || s[`phase${phase.substring(1)}`] === 'IN_PROGRESS')) ||
+                (phase === 'NOT_STARTED' && s.phase1 === 'NOT_STARTED' && !isANC);
+
+            const matchesAssignment = !assignment || assignment === 'ALL' ||
+                (assignment === 'ASSIGNED' && isANC) ||
+                (assignment === 'NOT_ASSIGNED' && !isANC);
 
             const matchesScope = !scopeId || scopeId === 'ALL' || s.scopeId === scopeId;
 
-            return matchesSearch && matchesStatus && matchesDept && matchesYear && matchesPhase && matchesScope;
+            return matchesSearch && matchesFaculty && matchesStatus && matchesDept && matchesYear && matchesPhase && matchesAssignment && matchesScope;
         });
+
+        console.log(`[Export Debug] Total students fetched: ${students.length}, Processed: ${processedStudents.length}, After filters: ${filteredStudents.length}`);
+        console.log(`[Export Debug] Filters: status=${status}, department=${department}, year=${year}, phase=${phase}, assignment=${assignment}, scopeId=${scopeId}, search=${search}, facultySearch=${facultySearch}`);
 
         // Create workbook
         const workbook = XLSX.utils.book_new();
 
+        // Determine max team size for dynamic member columns
+        const maxTeamMembers = Math.max(1, ...filteredStudents.map(s => (s.teamMembers || []).length));
+
         // Prepare data for Excel
-        const excelData = filteredStudents.map((s, index) => ({
-            'S.No': index + 1,
-            'Name': s.name,
-            'Roll Number': s.rollNumber,
-            'Email': s.email,
-            'Department': s.department,
-            'Year': s.year,
-            'Team Status': s.isInTeam ? s.teamStatus : 'No Team',
-            'Project': s.project,
-            'Role': s.isInTeam ? (s.isLeader ? 'Leader' : 'Member') : '-',
-            'Overall Score': s.overallScore,
-            ...Array.from({ length: numPhases }, (_, i) => i + 1).reduce((acc, p) => ({
-                ...acc,
-                [`Phase ${p} Status`]: s[`phase${p}`],
-                [`Phase ${p} Score`]: s[`phase${p}Score`]
-            }), {})
-        }));
+        const excelData = filteredStudents.map((s, index) => {
+            // Build dynamic member columns
+            const memberCols = {};
+            for (let i = 0; i < maxTeamMembers; i++) {
+                const member = s.teamMembers?.[i];
+                memberCols[`Member ${i + 1} Name`] = member?.name || '';
+                memberCols[`Member ${i + 1} Roll`] = member?.rollNumber || '';
+            }
+
+            return {
+                'S.No': index + 1,
+                'Name': s.name,
+                'Roll Number': s.rollNumber,
+                'Email': s.email,
+                'Department': s.department,
+                'Year': s.year,
+                'Team Status': s.isInTeam ? s.teamStatus : 'No Team',
+                'Project': s.project,
+                'Project Description': s.projectDescription,
+                'Role': s.isInTeam ? (s.isLeader ? 'Leader' : 'Member') : '-',
+                ...memberCols,
+                'Overall Score': s.overallScore,
+                ...Array.from({ length: numPhases }, (_, i) => i + 1).reduce((acc, p) => ({
+                    ...acc,
+                    [`Phase ${p} Status`]: s[`phase${p}`],
+                    [`Phase ${p} Score`]: s[`phase${p}Score`]
+                }), {})
+            };
+        });
 
         const worksheet = XLSX.utils.json_to_sheet(excelData.length > 0 ? excelData : [{ 'Info': 'No students match the selected filters' }]);
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Student Statistics');

@@ -26,9 +26,15 @@ export default function PhaseDeadlinesModal({ isOpen, onClose, scope }) {
             const initial = Array.from({ length: numPhases }, (_, i) => {
                 const phase = i + 1;
                 const match = existing.find(d => d.phase === phase);
+                let localStr = '';
+                if (match && match.deadline) {
+                    const d = new Date(match.deadline);
+                    const pad = (n) => n.toString().padStart(2, '0');
+                    localStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                }
                 return {
                     phase,
-                    deadline: match ? new Date(match.deadline).toISOString().split('T')[0] : ''
+                    deadline: localStr
                 };
             });
             setDeadlines(initial);
@@ -68,7 +74,7 @@ export default function PhaseDeadlinesModal({ isOpen, onClose, scope }) {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+        <div className="fixed -top-[200px] -bottom-[200px] left-0 right-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
             <div className="bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-300">
                 {/* Header */}
                 <div className="p-6 bg-gradient-to-r from-blue-600 to-indigo-700 text-white flex justify-between items-center">
@@ -101,7 +107,7 @@ export default function PhaseDeadlinesModal({ isOpen, onClose, scope }) {
                                             <span className="text-sm font-bold text-gray-700">Phase {d.phase}</span>
                                         </div>
                                         <input
-                                            type="date"
+                                            type="datetime-local"
                                             value={d.deadline}
                                             onChange={(e) => updateDeadline(d.phase, e.target.value)}
                                             className="bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium text-gray-600 shadow-sm"

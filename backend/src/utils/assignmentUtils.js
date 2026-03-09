@@ -14,7 +14,20 @@ const { addDurationExcludingSundays } = require('./timerUtils');
 async function reassignPendingReview(tx, team, facultyIdToAssign, nextPhase, now, adminId) {
     let assignedVia = '';
 
-    // 1. Check for EXISTING Pending Review for this phase
+    // 1. NEW GUARD: Check if there's already a completed review for this phase
+    const completedReview = await tx.review.findFirst({
+        where: {
+            teamId: team.id,
+            reviewPhase: nextPhase,
+            status: { in: ['COMPLETED', 'APPROVED'] }
+        }
+    });
+
+    if (completedReview) {
+        return ' (Skipped: Review already completed for this phase)';
+    }
+
+    // 2. Check for EXISTING Pending Review for this phase
     const existingReview = await tx.review.findFirst({
         where: {
             teamId: team.id,
@@ -24,8 +37,31 @@ async function reassignPendingReview(tx, team, facultyIdToAssign, nextPhase, now
     });
 
     // 2. Re-assignment Logic
+    let previousExpiresAt = null;
+
     if (existingReview) {
         if (existingReview.facultyId !== facultyIdToAssign) {
+            // Check previous assignment to preserve remaining time or prevent reassignment if expired
+            if (team.projectId) {
+                const previousAssignment = await tx.reviewassignment.findUnique({
+                    where: {
+                        projectId_facultyId_reviewPhase: {
+                            projectId: team.projectId,
+                            facultyId: existingReview.facultyId,
+                            reviewPhase: nextPhase
+                        }
+                    }
+                });
+
+                if (previousAssignment && previousAssignment.accessExpiresAt) {
+                    previousExpiresAt = previousAssignment.accessExpiresAt;
+                    if (new Date(previousExpiresAt) < now) {
+                        // The original assignment has already expired, do not allow new faculty to get time
+                        return ` (Skipped: Existing assignment expired)`;
+                    }
+                }
+            }
+
             // Transfer the review to the new faculty
             await tx.review.update({
                 where: { id: existingReview.id },
@@ -59,7 +95,10 @@ async function reassignPendingReview(tx, team, facultyIdToAssign, nextPhase, now
     }
 
     // Upsert Review Assignment to ensure faculty can see it in their dashboard
-    const accessExpiresAt = addDurationExcludingSundays(now, 24 * 60 * 60 * 1000);
+    // Use the previous expiration time if available, otherwise give 24 hours
+    const accessExpiresAt = previousExpiresAt
+        ? previousExpiresAt
+        : addDurationExcludingSundays(now, 24 * 60 * 60 * 1000);
 
     if (team.projectId) {
         await tx.reviewassignment.upsert({
@@ -124,13 +163,25 @@ async function syncTeamReviewsWithSession(tx, studentIds, facultyIdToAssign, adm
         ]);
         const nextPhase = Math.max(team.submissionPhase || 0, Math.max(0, ...Array.from(passedPhases)));
 
-        await reassignPendingReview(tx, team, facultyIdToAssign, nextPhase, now, adminId);
+        // Check if there is an active (unexpired) assignment for this phase
+        const hasActiveAssignment = team.project?.assignedFaculty?.some(a =>
+            a.reviewPhase === nextPhase && a.accessExpiresAt && new Date(a.accessExpiresAt) > now
+        );
+
+        if (!hasActiveAssignment) {
+            // Unassigned or already expired -> Skip transferring this team entirely
+            continue;
+        }
+
+        const assignmentMethod = await reassignPendingReview(tx, team, facultyIdToAssign, nextPhase, now, adminId);
 
         // Ensure team status is IN_PROGRESS
-        await tx.team.update({
-            where: { id: team.id },
-            data: { status: 'IN_PROGRESS' }
-        });
+        if (!assignmentMethod.includes('Skipped')) {
+            await tx.team.update({
+                where: { id: team.id },
+                data: { status: 'IN_PROGRESS' }
+            });
+        }
     }
 }
 

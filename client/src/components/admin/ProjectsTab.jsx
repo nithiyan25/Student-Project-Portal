@@ -34,7 +34,7 @@ const EditProjectModal = ({ project, isOpen, onClose, onSave, scopes }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed -top-[200px] -bottom-[200px] left-0 right-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-lg shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[calc(100vh-2rem)] animate-in fade-in zoom-in duration-200">
                 <div className="flex justify-between items-center p-6 border-b shrink-0">
                     <h3 className="text-xl font-bold text-gray-800">Edit Project</h3>
@@ -155,7 +155,7 @@ const ProjectDetailModal = ({ project, isOpen, onClose }) => {
     if (!isOpen || !project) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[60] flex items-center justify-center p-4 animate-in fade-in duration-300">
+        <div className="fixed -top-[200px] -bottom-[200px] left-0 right-0 bg-black/60 backdrop-blur-md z-[60] flex items-center justify-center p-4 animate-in fade-in duration-300">
             <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
                 {/* Header */}
                 <div className="relative bg-gradient-to-br from-indigo-600 via-blue-600 to-blue-700 p-8 text-white">

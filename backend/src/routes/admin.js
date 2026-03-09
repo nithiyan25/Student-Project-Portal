@@ -316,18 +316,9 @@ router.get('/pending-reviews', authenticate, authorize(['ADMIN']), async (req, r
             whereClause.scopeId = scopeId;
         }
 
-        if (search) {
-            whereClause.OR = [
-                { project: { title: { contains: search } } }, // Removed mode: 'insensitive' for compatibility
-                { members: { some: { user: { name: { contains: search } } } } },
-                { members: { some: { user: { rollNumber: { contains: search } } } } },
-                { project: { assignedFaculty: { some: { faculty: { name: { contains: search } } } } } } // Search by assigned faculty too? Maybe not needed but good to have. User asked for "Faculty Name" - technically this is for *pending* reviews, so maybe they mean the Guide? Or any faculty associated? Let's stick to Project/Student/Faculty(Guide?)
-                // Actually user said "search box with name , roll number , project name , faculty name". 
-                // For pending reviews, "Faculty Name" could mean the Guide.
-            ];
-            // Add Guide search
-            whereClause.OR.push({ guide: { name: { contains: search } } });
-        }
+        // We DO NOT filter by 'search' in the DB query anymore.
+        // We need to fetch all candidates, calculate 'suggestedFaculty',
+        // and THEN filter by search so we can match against the suggested faculty name.
 
         const teams = await prisma.team.findMany({
             where: whereClause,
@@ -391,14 +382,20 @@ router.get('/pending-reviews', authenticate, authorize(['ADMIN']), async (req, r
 
             const studentIds = team.members.map(m => m.userId);
 
-            // Find ANY active session for the team members
+            // Find active session for today
+            const startOfToday = new Date();
+            startOfToday.setHours(0, 0, 0, 0);
+            const endOfToday = new Date();
+            endOfToday.setHours(23, 59, 59, 999);
+
             const activeSessionData = await prisma.labsession.findFirst({
                 where: {
                     user_sessionstudents: { some: { id: { in: studentIds } } },
-                    endTime: { gte: new Date() } // Active or Future
+                    startTime: { lte: endOfToday },
+                    endTime: { gte: startOfToday }
                 },
                 include: { user_labsession_facultyIdTouser: true },
-                orderBy: { startTime: 'asc' }
+                orderBy: { startTime: 'desc' } // Favor most recent session today
             });
 
             return {
@@ -408,8 +405,22 @@ router.get('/pending-reviews', authenticate, authorize(['ADMIN']), async (req, r
             };
         }));
 
-        // Filter by Active Session (if provided)
+        // Filter by Active Session (if provided) and Search query for faculty
         let finalResult = enrichedTeams;
+
+        if (search) {
+            const term = search.toLowerCase();
+            finalResult = finalResult.filter(t => {
+                const matchProject = t.project?.title?.toLowerCase().includes(term);
+                const matchGuide = t.guide?.name?.toLowerCase().includes(term);
+                const matchSuggested = t.suggestedFaculty?.name?.toLowerCase().includes(term);
+                const matchMemberName = t.members.some(m => m.user?.name?.toLowerCase().includes(term));
+                const matchMemberRoll = t.members.some(m => m.user?.rollNumber?.toLowerCase().includes(term));
+
+                return matchProject || matchGuide || matchSuggested || matchMemberName || matchMemberRoll;
+            });
+        }
+
         if (activeSession && activeSession !== 'ALL') {
             const wantActive = activeSession === 'true';
             finalResult = finalResult.filter(t => wantActive ? t.suggestedFaculty !== null : t.suggestedFaculty === null);
@@ -526,8 +537,10 @@ router.get('/absentees', authenticate, authorize(['ADMIN']), async (req, res, ne
                 });
 
                 return {
+                    id: a.id,
                     student: a.student,
                     type: 'MARKED_ABSENT',
+                    isExplicit: true,
                     phase: a.review.reviewPhase,
                     teamId: a.review.teamId,
                     projectTitle: a.review.team.project?.title,
@@ -552,6 +565,8 @@ router.get('/absentees', authenticate, authorize(['ADMIN']), async (req, res, ne
 
                 return {
                     ...a,
+                    id: a.id, // Ensure ID is present
+                    isExplicit: false,
                     sessionName: session?.title || "Missed Deadline",
                     venue: session?.venue?.name || "N/A",
                     timeSlot: session ? `${new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(session.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : "N/A"
@@ -560,6 +575,186 @@ router.get('/absentees', authenticate, authorize(['ADMIN']), async (req, res, ne
         ]);
 
         res.json(report);
+    } catch (e) {
+        next(e);
+    }
+});
+
+// DELETE ABSENTEE RECORDS (Multi-select)
+router.post('/delete-absentee', authenticate, authorize(['ADMIN']), async (req, res, next) => {
+    const { records } = req.body; // Array of { id, isExplicit, teamId }
+    try {
+        if (!records || !Array.isArray(records)) {
+            return res.status(400).json({ error: "Invalid records format" });
+        }
+
+        const affectedTeamIds = new Set();
+
+        await prisma.$transaction(async (tx) => {
+            for (const record of records) {
+                if (record.teamId) affectedTeamIds.add(record.teamId);
+
+                if (record.isExplicit) {
+                    // Reset isAbsent flag in reviewmark
+                    const mark = await tx.reviewmark.update({
+                        where: { id: record.id },
+                        data: { isAbsent: false },
+                        include: { review: true }
+                    });
+
+                    // If everyone in this review is no longer absent, set review back to PENDING/Incomplete state
+                    const otherAbsentMarks = await tx.reviewmark.count({
+                        where: { reviewId: mark.reviewId, isAbsent: true }
+                    });
+
+                    if (otherAbsentMarks === 0) {
+                        await tx.review.update({
+                            where: { id: mark.reviewId },
+                            data: {
+                                status: 'PENDING',
+                                completedAt: null
+                            }
+                        });
+                    }
+                } else {
+                    // Implicit (Missed Deadline). Delete the expired reviewassignment.
+                    // Note: This record ID comes from reviewassignment
+                    await tx.reviewassignment.delete({
+                        where: { id: record.id }
+                    });
+                }
+            }
+
+            // Sync Team Statuses
+            for (const teamId of Array.from(affectedTeamIds)) {
+                const teamReviews = await tx.review.findMany({
+                    where: { teamId, status: { in: ['COMPLETED', 'APPROVED'] } },
+                    orderBy: { reviewPhase: 'desc' }
+                });
+
+                if (teamReviews.length > 0) {
+                    const latestCompletedPhase = teamReviews[0].reviewPhase;
+                    await tx.team.update({
+                        where: { id: teamId },
+                        data: {
+                            status: 'COMPLETED',
+                            submissionPhase: latestCompletedPhase
+                        }
+                    });
+                } else {
+                    // No completed reviews -> Revert to NOT_COMPLETED
+                    await tx.team.update({
+                        where: { id: teamId },
+                        data: {
+                            status: 'NOT_COMPLETED',
+                            submissionPhase: 0
+                        }
+                    });
+                }
+            }
+        });
+
+        res.json({ success: true, message: `Successfully processed ${records.length} records and updated team statuses.` });
+    } catch (e) {
+        next(e);
+    }
+});
+
+// CLEAR ALL ABSENTEES (Based on filters)
+router.post('/clear-absentees', authenticate, authorize(['ADMIN']), async (req, res, next) => {
+    const { scopeId, phase, department } = req.body;
+    try {
+        const now = new Date();
+        const affectedTeamIds = new Set();
+
+        await prisma.$transaction(async (tx) => {
+            // 1. Gather all affected explicit absentees
+            const explicitMarks = await tx.reviewmark.findMany({
+                where: {
+                    isAbsent: true,
+                    ...(phase && phase !== 'ALL' ? { review: { reviewPhase: parseInt(phase) } } : {}),
+                    ...(scopeId && scopeId !== 'ALL' ? { review: { team: { scopeId } } } : {}),
+                    ...(department && department !== 'ALL' ? { student: { department } } : {})
+                },
+                select: { id: true, reviewId: true, review: { select: { teamId: true } } }
+            });
+
+            for (const m of explicitMarks) {
+                if (m.review?.teamId) affectedTeamIds.add(m.review.teamId);
+
+                await tx.reviewmark.update({
+                    where: { id: m.id },
+                    data: { isAbsent: false }
+                });
+
+                // Check parent review
+                const otherAbsent = await tx.reviewmark.count({
+                    where: { reviewId: m.reviewId, isAbsent: true }
+                });
+                if (otherAbsent === 0) {
+                    await tx.review.update({
+                        where: { id: m.reviewId },
+                        data: { status: 'PENDING', completedAt: null }
+                    });
+                }
+            }
+
+            // 2. Gather all affected implicit absentees (Expired Assignments)
+            const expiredAssignments = await tx.reviewassignment.findMany({
+                where: {
+                    accessExpiresAt: { lt: now },
+                    ...(phase && phase !== 'ALL' ? { reviewPhase: parseInt(phase) } : {}),
+                    ...(scopeId && scopeId !== 'ALL' ? { project: { scopeId } } : {})
+                },
+                include: { project: { include: { teams: true } } }
+            });
+
+            for (const a of expiredAssignments) {
+                const teams = a.project?.teams || [];
+                for (const t of teams) {
+                    // Only if no review exists for this phase
+                    const hasReview = await tx.review.findFirst({
+                        where: { teamId: t.id, reviewPhase: a.reviewPhase }
+                    });
+
+                    if (!hasReview) {
+                        // Students check (for department filter)
+                        const members = await tx.teammember.findMany({
+                            where: { teamId: t.id, approved: true, user: { department: department && department !== 'ALL' ? department : undefined } }
+                        });
+                        if (members.length > 0) {
+                            affectedTeamIds.add(t.id);
+                            // We delete the assignment (one assignment per project/faculty/phase)
+                            // This might affect multiple teams if they share the same project
+                            await tx.reviewassignment.delete({ where: { id: a.id } }).catch(() => { });
+                        }
+                    }
+                }
+            }
+
+            // 3. Sync Team Statuses
+            for (const teamId of Array.from(affectedTeamIds)) {
+                const teamReviews = await tx.review.findMany({
+                    where: { teamId, status: { in: ['COMPLETED', 'APPROVED'] } },
+                    orderBy: { reviewPhase: 'desc' }
+                });
+
+                if (teamReviews.length > 0) {
+                    const latestPhase = teamReviews[0].reviewPhase;
+                    await tx.team.update({
+                        where: { id: teamId },
+                        data: { status: 'COMPLETED', submissionPhase: latestPhase }
+                    });
+                } else {
+                    await tx.team.update({
+                        where: { id: teamId },
+                        data: { status: 'NOT_COMPLETED', submissionPhase: 0 }
+                    });
+                }
+            }
+        });
+
+        res.json({ success: true, message: "Absentees report cleared and team statuses reverted successfully." });
     } catch (e) {
         next(e);
     }
@@ -576,6 +771,7 @@ router.post('/auto-assign-reviews', authenticate, authorize(['ADMIN']), async (r
         const now = new Date();
 
         for (const teamId of teamIds) {
+            console.log(`[AutoAssign] Processing teamId=${teamId}`);
             const team = await prisma.team.findUnique({
                 where: { id: teamId },
                 include: {
@@ -586,6 +782,7 @@ router.post('/auto-assign-reviews', authenticate, authorize(['ADMIN']), async (r
             });
 
             if (!team) {
+                console.log(`[AutoAssign] Team ${teamId} not found`);
                 results.push({ teamId, message: 'Team not found', status: 'failed' });
                 failCount++;
                 continue;
@@ -593,44 +790,39 @@ router.post('/auto-assign-reviews', authenticate, authorize(['ADMIN']), async (r
 
             let facultyIdToAssign = manualAssignments[teamId];
             let assignedVia = 'manual override';
+            console.log(`[AutoAssign] Manual override for ${teamId}?`, facultyIdToAssign);
 
             if (!facultyIdToAssign) {
                 // Find Active Session / Faculty
                 const studentIds = team.members.map(m => m.userId);
 
-                // Try to find session happening EXACTLY NOW
+                // Find active session for today (same logic as pending-reviews)
+                const startOfToday = new Date(now);
+                startOfToday.setHours(0, 0, 0, 0);
+                const endOfToday = new Date(now);
+                endOfToday.setHours(23, 59, 59, 999);
+
                 let activeSession = await prisma.labsession.findFirst({
                     where: {
                         user_sessionstudents: { some: { id: { in: studentIds } } },
-                        startTime: { lte: now },
-                        endTime: { gte: now }
+                        startTime: { lte: endOfToday },
+                        endTime: { gte: startOfToday }
                     },
                     include: { user_labsession_facultyIdTouser: true },
-                    orderBy: { startTime: 'desc' }
+                    orderBy: { startTime: 'desc' } // Favor most recent session today
                 });
-
-                // Fallback: Find earliest future session today
-                if (!activeSession) {
-                    const endOfDay = new Date(now);
-                    endOfDay.setHours(23, 59, 59, 999);
-
-                    activeSession = await prisma.labsession.findFirst({
-                        where: {
-                            user_sessionstudents: { some: { id: { in: studentIds } } },
-                            startTime: { gt: now, lte: endOfDay }
-                        },
-                        include: { user_labsession_facultyIdTouser: true },
-                        orderBy: { startTime: 'asc' }
-                    });
-                }
 
                 if (activeSession) {
                     facultyIdToAssign = activeSession.facultyId;
                     assignedVia = `active session (${activeSession.user_labsession_facultyIdTouser.name})`;
+                    console.log(`[AutoAssign] Found session for team ${teamId}: session_faculty=${activeSession.facultyId}, assignedVia=${assignedVia}`);
+                } else {
+                    console.log(`[AutoAssign] No session found for team ${teamId}`);
                 }
             }
 
             if (!facultyIdToAssign) {
+                console.log(`[AutoAssign] Failing ${teamId} due to no active session and no manual override`);
                 results.push({ teamId, teamName: team.project?.title || teamId, message: 'No active lab session found and no manual override provided', status: 'failed' });
                 failCount++;
                 continue;
@@ -651,10 +843,12 @@ router.post('/auto-assign-reviews', authenticate, authorize(['ADMIN']), async (r
                 assignedVia += assignmentMethod;
 
                 // Update Team Status
-                await tx.team.update({
-                    where: { id: team.id },
-                    data: { status: 'IN_PROGRESS' }
-                });
+                if (!assignmentMethod.includes('Skipped')) {
+                    await tx.team.update({
+                        where: { id: team.id },
+                        data: { status: 'IN_PROGRESS' }
+                    });
+                }
             }, { timeout: 30000 });
 
             results.push({ teamId, teamName: team.project?.title || team.id, message: `Assigned via ${assignedVia} (Phase ${nextPhase})`, status: 'success' });
@@ -1196,12 +1390,20 @@ router.post('/bulk-assign-faculty', authenticate, authorize(['ADMIN']), adminVal
 
                 if (team) {
                     const memberIds = team.members.map(m => m.userId);
-                    // Find session in this scope that includes any of these members
+                    const startOfToday = new Date();
+                    startOfToday.setHours(0, 0, 0, 0);
+                    const endOfToday = new Date();
+                    endOfToday.setHours(23, 59, 59, 999);
+
+                    // Find session on CURRENT DAY that includes any of these members
                     const session = await prisma.labsession.findFirst({
                         where: {
                             scopeId: scopeId,
-                            user_sessionstudents: { some: { id: { in: memberIds } } }
+                            user_sessionstudents: { some: { id: { in: memberIds } } },
+                            startTime: { lte: endOfToday },
+                            endTime: { gte: startOfToday }
                         },
+                        orderBy: { startTime: 'desc' }, // Favor most recent session today
                         select: { facultyId: true }
                     });
 
@@ -1969,7 +2171,7 @@ router.post('/update-faculty-access', authenticate, authorize(['ADMIN']), async 
 
         // Calculate new expiration time
         let accessExpiresAt = null;
-        const startTime = accessStartsAt ? new Date(accessStartsAt) : (assignment.accessStartsAt || new Date());
+        const startTime = accessStartsAt ? new Date(accessStartsAt) : new Date();
 
         if (accessDurationHours && accessDurationHours > 0) {
             accessExpiresAt = new Date(startTime.getTime() + accessDurationHours * 60 * 60 * 1000);

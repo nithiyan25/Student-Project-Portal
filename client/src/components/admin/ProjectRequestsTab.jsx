@@ -510,7 +510,7 @@ export default function ProjectRequestsTab({ scopes = [] }) {
 
             {/* Rejection Modal */}
             {isRejectModalOpen && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="fixed -top-[200px] -bottom-[200px] left-0 right-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white w-full max-w-md rounded-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
                         <div className="p-6 bg-red-600 text-white">
                             <h3 className="text-xl font-bold flex items-center gap-2">

@@ -595,7 +595,7 @@ export default function ProjectScopesTab() {
 
             {/* Create Modal */}
             {showCreateModal && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[60] flex items-center justify-center p-4 overflow-y-auto">
+                <div className="fixed -top-[200px] -bottom-[200px] left-0 right-0 bg-black/60 backdrop-blur-md z-[60] flex items-center justify-center p-4 overflow-y-auto">
                     <div className="bg-white rounded-lg w-full max-w-md p-6 shadow-2xl animate-in zoom-in-95">
                         <h3 className="text-xl font-bold text-gray-800 mb-6">Create New Scope</h3>
                         <form onSubmit={handleCreateScope} className="space-y-4">
@@ -683,7 +683,7 @@ export default function ProjectScopesTab() {
 
             {/* Manage Students Modal */}
             {managingScope && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[60] flex items-center justify-center p-4 overflow-y-auto">
+                <div className="fixed -top-[200px] -bottom-[200px] left-0 right-0 bg-black/60 backdrop-blur-md z-[60] flex items-center justify-center p-4 overflow-y-auto">
                     <div className={`bg-white rounded-lg w-full ${manageMode === 'STATUS' ? 'max-w-6xl' : 'max-w-4xl'} h-[85vh] flex flex-col shadow-2xl animate-in zoom-in-95 transition-all duration-300`}>
                         <div className="p-6 border-b flex justify-between items-center">
                             <div>
@@ -1070,7 +1070,7 @@ export default function ProjectScopesTab() {
             />
 
             {showAddProjectModal && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[60] flex items-center justify-center p-4 overflow-y-auto">
+                <div className="fixed -top-[200px] -bottom-[200px] left-0 right-0 bg-black/60 backdrop-blur-md z-[60] flex items-center justify-center p-4 overflow-y-auto">
                     <div className="bg-white rounded-lg w-full max-w-md p-6 shadow-2xl animate-in zoom-in-95">
                         <h3 className="text-xl font-bold text-gray-800 mb-6">Add Project to Batch</h3>
                         <p className="text-sm text-gray-500 mb-4 -mt-4">Adding to: <span className="font-bold text-blue-600">{targetScope?.name}</span></p>

@@ -393,7 +393,7 @@ export default function SecurityAlertsTab() {
 
             {/* BLOCK MODAL */}
             {isBlockModalOpen && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                <div className="fixed -top-[200px] -bottom-[200px] left-0 right-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
                     <div className="bg-white w-full max-w-md rounded-lg shadow-2xl border border-slate-100 overflow-hidden animate-in zoom-in-95 duration-200">
                         <div className="p-6">
                             <div className="flex justify-between items-center mb-6">

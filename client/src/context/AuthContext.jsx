@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { googleLogout } from '@react-oauth/google';
 import api from '../api';
+import { encryptData, decryptData } from '../utils/encryption';
 
 export const AuthContext = createContext();
 
@@ -34,11 +35,9 @@ export const AuthProvider = ({ children }) => {
           const storedUserStr = localStorage.getItem('user');
           let claimedRole = null;
           if (storedUserStr) {
-            try {
-              const parsed = JSON.parse(storedUserStr);
+            const parsed = decryptData(storedUserStr);
+            if (parsed) {
               claimedRole = parsed.role;
-            } catch (e) {
-              console.error("Failed to parse stored user", e);
             }
           }
 
@@ -62,7 +61,7 @@ export const AuthProvider = ({ children }) => {
 
           setUser(realUser);
           setBlockedInfo(null);
-          localStorage.setItem('user', JSON.stringify(realUser));
+          localStorage.setItem('user', encryptData(realUser));
         } catch (err) {
           console.error("Session verification failed:", err.message);
           logout();
@@ -113,8 +112,8 @@ export const AuthProvider = ({ children }) => {
       }
 
       const now = Date.now().toString();
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user', JSON.stringify(res.data.user));
+      localStorage.setItem('token', res.data.token); // Note: Keep Token as-is, since it is a JWT string
+      localStorage.setItem('user', encryptData(res.data.user));
       localStorage.setItem('lastActivityTime', now);
       setLastActivityTime(parseInt(now));
       setUser(res.data.user);

@@ -252,7 +252,7 @@ export default function RubricsTab() {
 
             {/* Create/Edit Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="fixed -top-[200px] -bottom-[200px] left-0 right-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl animate-in zoom-in-95">
                         <div className="p-6 border-b flex justify-between items-center">
                             <h3 className="text-xl font-bold text-gray-800">

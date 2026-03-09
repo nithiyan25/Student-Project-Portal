@@ -22,7 +22,7 @@ const EditFacultyModal = ({ faculty, isOpen, onClose, onSave }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed -top-[200px] -bottom-[200px] left-0 right-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
                 <div className="flex justify-between items-center p-6 border-b">
                     <h3 className="text-xl font-bold text-gray-800">Edit Faculty</h3>
@@ -84,7 +84,7 @@ const FacultyDetailsModal = ({ faculty, isOpen, onClose }) => {
     if (!isOpen || !faculty) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed -top-[200px] -bottom-[200px] left-0 right-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
                 <div className="flex justify-between items-center p-6 border-b bg-gray-50">
                     <div>
@@ -283,7 +283,7 @@ const TempAdminModal = ({ faculty, isOpen, onClose, onSave }) => {
     }, {});
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed -top-[200px] -bottom-[200px] left-0 right-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-lg shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
                 <div className="flex justify-between items-center p-6 border-b bg-gradient-to-r from-orange-50 to-amber-50">
                     <div>

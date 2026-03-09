@@ -34,7 +34,7 @@ const FacultyDetailModal = ({ faculty, onClose }) => {
     }, [faculty]);
 
     return (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-[100] animate-in fade-in duration-300" onClick={onClose}>
+        <div className="fixed -top-[200px] -bottom-[200px] left-0 right-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-[100] animate-in fade-in duration-300" onClick={onClose}>
             <div className="bg-white w-full max-w-5xl max-h-[90vh] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
                 {/* Header */}
                 <div className="p-8 bg-gradient-to-br from-slate-900 to-indigo-900 text-white shrink-0 relative">

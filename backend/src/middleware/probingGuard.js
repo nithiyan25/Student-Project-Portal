@@ -7,6 +7,11 @@ const { logSecurityAlert } = require('../utils/securityUtils');
 const probingGuard = (req, res, next) => {
     const url = req.originalUrl || req.url || '';
 
+    // skip check for legitimate API routes
+    if (url.startsWith('/api/') || url.startsWith('/api')) {
+        return next();
+    }
+
     // Common probing patterns for malicious tools/bots
     const suspiciousPatterns = [
         /\.env/i,

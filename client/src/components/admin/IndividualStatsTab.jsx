@@ -62,7 +62,7 @@ const StudentDetailView = ({ student, onClose, updateMark, updateReview, addToas
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[100] animate-in fade-in duration-200" onClick={onClose}>
+        <div className="fixed -top-[200px] -bottom-[200px] left-0 right-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[100] animate-in fade-in duration-200" onClick={onClose}>
             <div className="bg-white w-full max-w-4xl max-h-[90vh] rounded-lg shadow-2xl overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
                 <div className="p-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex justify-between items-start shrink-0">
                     <div>
@@ -86,7 +86,7 @@ const StudentDetailView = ({ student, onClose, updateMark, updateReview, addToas
                                 <div className="p-2 bg-white rounded-lg shadow-sm text-blue-600"><Folder size={20} /></div>
                                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Project</p>
                             </div>
-                            <h3 className="text-sm font-bold text-gray-800 line-clamp-1">{student.project}</h3>
+                            <h3 className="text-sm font-bold text-gray-800">{student.project}</h3>
                             <div className="flex flex-col gap-1 mt-1">
                                 <p className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100 w-fit">Batch: {student.batch}</p>
                                 {student.projectDescription && (
@@ -308,6 +308,7 @@ export default function IndividualStatsTab({ users, teams, onBack, updateMark, u
     const [deptFilter, setDeptFilter] = useState('ALL');
     const [yearFilter, setYearFilter] = useState('ALL');
     const [phaseFilter, setPhaseFilter] = useState('ALL');
+    const [assignmentFilter, setAssignmentFilter] = useState('ALL');
     const [batchFilter, setBatchFilter] = useState('ALL');
     const [selectedStudentId, setSelectedStudentId] = useState(null);
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
@@ -330,6 +331,7 @@ export default function IndividualStatsTab({ users, teams, onBack, updateMark, u
         setDeptFilter('ALL');
         setYearFilter('ALL');
         setPhaseFilter('ALL');
+        setAssignmentFilter('ALL');
         setBatchFilter('ALL');
         setLocalPage(1);
     };
@@ -427,7 +429,7 @@ export default function IndividualStatsTab({ users, teams, onBack, updateMark, u
         const facSearchLower = facultySearch.toLowerCase();
 
         return students.filter(s => {
-            const matchesSearch = s.name.toLowerCase().includes(searchLower) || s.email.toLowerCase().includes(searchLower) || (s.rollNumber && s.rollNumber.toLowerCase().includes(searchLower)) || (s.department && s.department.toLowerCase().includes(searchLower));
+            const matchesSearch = s.name.toLowerCase().includes(searchLower) || s.email.toLowerCase().includes(searchLower) || (s.rollNumber && s.rollNumber.toLowerCase().includes(searchLower)) || (s.department && s.department.toLowerCase().includes(searchLower)) || (s.project && s.project.toLowerCase().includes(searchLower)) || (s.projectDescription && s.projectDescription.toLowerCase().includes(searchLower));
 
             // Faculty Search - check if any review in this student's team was given by the searched faculty
             const matchesFaculty = !facultySearch || (s.teamData?.reviews || []).some(r =>
@@ -437,17 +439,25 @@ export default function IndividualStatsTab({ users, teams, onBack, updateMark, u
             const matchesStatus = statusFilter === 'ALL' || (statusFilter === 'IN_TEAM' && s.isInTeam) || (statusFilter === 'NO_TEAM' && !s.isInTeam);
             const matchesDept = deptFilter === 'ALL' || (s.department || 'Unassigned') === deptFilter;
             const matchesYear = yearFilter === 'ALL' || String(s.year) === yearFilter;
+
+            const isANC = Array.from({ length: 10 }, (_, i) => i + 1).some(p => s[`phase${p}`] === 'IN_PROGRESS');
+
             const matchesPhase = phaseFilter === 'ALL' ||
-                (phaseFilter.startsWith('P') && s[`phase${phaseFilter.substring(1)}`] === 'COMPLETED') ||
-                (phaseFilter === 'NOT_STARTED' && s.phase1 === 'NOT_STARTED');
+                (phaseFilter.startsWith('P') && (s[`phase${phaseFilter.substring(1)}`] === 'COMPLETED' || s[`phase${phaseFilter.substring(1)}`] === 'IN_PROGRESS')) ||
+                (phaseFilter === 'NOT_STARTED' && s.phase1 === 'NOT_STARTED' && !isANC);
+
+            const matchesAssignment = assignmentFilter === 'ALL' ||
+                (assignmentFilter === 'ASSIGNED' && isANC) ||
+                (assignmentFilter === 'NOT_ASSIGNED' && !isANC);
+
             const matchesBatch = batchFilter === 'ALL' ||
                 s.teamData?.scopeId === batchFilter ||
                 s.teamData?.project?.scopeId === batchFilter ||
                 s.scopes?.some(sc => sc.id === batchFilter);
 
-            return matchesSearch && matchesFaculty && matchesStatus && matchesDept && matchesYear && matchesPhase && matchesBatch;
+            return matchesSearch && matchesFaculty && matchesStatus && matchesDept && matchesYear && matchesPhase && matchesAssignment && matchesBatch;
         });
-    }, [students, search, facultySearch, statusFilter, deptFilter, yearFilter, phaseFilter, batchFilter]);
+    }, [students, search, facultySearch, statusFilter, deptFilter, yearFilter, phaseFilter, assignmentFilter, batchFilter]);
 
 
     const selectedStudent = useMemo(() => {
@@ -487,7 +497,9 @@ export default function IndividualStatsTab({ users, teams, onBack, updateMark, u
             if (deptFilter && deptFilter !== 'ALL') params.append('department', deptFilter);
             if (yearFilter && yearFilter !== 'ALL') params.append('year', yearFilter);
             if (phaseFilter && phaseFilter !== 'ALL') params.append('phase', phaseFilter);
+            if (assignmentFilter && assignmentFilter !== 'ALL') params.append('assignment', assignmentFilter);
             if (batchFilter && batchFilter !== 'ALL') params.append('scopeId', batchFilter);
+            if (facultySearch) params.append('facultySearch', facultySearch);
             if (search) params.append('search', search);
 
             const response = await api.get(`/export/student-stats?${params.toString()}`, { responseType: 'blob' });
@@ -513,61 +525,71 @@ export default function IndividualStatsTab({ users, teams, onBack, updateMark, u
                 Back to Dashboard Overview
             </button>
 
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-                <div className="flex items-center gap-4">
-                    <div className="p-3 bg-blue-100 text-blue-600 rounded-lg"><Users size={24} /></div>
-                    <div>
-                        <h2 className="text-xl font-bold text-gray-800 flex items-center gap-3">
-                            Individual Student Statistics
-                            <span className="text-xs font-black bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full border border-blue-100 shrink-0">
-                                {filteredStudents.length} Students
-                            </span>
-                        </h2>
-                        <p className="text-sm text-gray-500">Click on any student to view detailed performance</p>
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 space-y-6">
+                {/* Header Row: Title & Primary Actions */}
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-gray-50">
+                    <div className="flex items-center gap-4">
+                        <div className="p-3 bg-blue-100 text-blue-600 rounded-lg shrink-0"><Users size={24} /></div>
+                        <div>
+                            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-3 flex-wrap">
+                                Individual Student Statistics
+                                <span className="text-xs font-black bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full border border-blue-100">
+                                    {filteredStudents.length} Students
+                                </span>
+                            </h2>
+                            <p className="text-sm text-gray-500">Click on any student to view detailed performance</p>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                        <SearchInput value={search} onChange={(v) => { setSearch(v); setLocalPage(1); }} placeholder="Search students..." className="w-full sm:w-64" />
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={resetFilters}
+                                className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 py-2 rounded-lg font-bold text-sm transition-all active:scale-95"
+                                title="Clear all filters"
+                            >
+                                <RotateCcw size={16} />
+                                Reset
+                            </button>
+                            <button
+                                onClick={handleExportStats}
+                                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all shadow-md active:scale-95"
+                            >
+                                <Download size={16} />
+                                Export
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <div className="flex flex-wrap gap-3 items-center">
-                    <button
-                        onClick={resetFilters}
-                        className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 py-2 rounded-lg font-bold text-sm transition-all active:scale-95"
-                        title="Clear all filters"
-                    >
-                        <RotateCcw size={16} />
-                        Reset
-                    </button>
-                    <button
-                        onClick={handleExportStats}
-                        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-bold text-sm transition-all shadow-md active:scale-95"
-                    >
-                        <Download size={16} />
-                        Export
-                    </button>
-                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
+                {/* Filter Grid: Categorical Selects */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
                         <Filter size={16} className="text-gray-400" />
-                        <select className="bg-transparent text-sm font-bold text-gray-600 outline-none cursor-pointer" value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setLocalPage(1); }}>
+                        <select className="bg-transparent text-sm font-bold text-gray-600 outline-none cursor-pointer w-full" value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setLocalPage(1); }}>
                             <option value="ALL">Status</option>
                             <option value="IN_TEAM">In Team</option>
                             <option value="NO_TEAM">No Team</option>
                         </select>
                     </div>
 
-                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
-                        <select className="bg-transparent text-sm font-bold text-gray-600 outline-none cursor-pointer" value={deptFilter} onChange={(e) => { setDeptFilter(e.target.value); setLocalPage(1); }}>
+                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
+                        <select className="bg-transparent text-sm font-bold text-gray-600 outline-none cursor-pointer w-full" value={deptFilter} onChange={(e) => { setDeptFilter(e.target.value); setLocalPage(1); }}>
                             <option value="ALL">All Departments</option>
                             {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
                         </select>
                     </div>
 
-                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
-                        <select className="bg-transparent text-sm font-bold text-gray-600 outline-none cursor-pointer" value={yearFilter} onChange={(e) => { setYearFilter(e.target.value); setLocalPage(1); }}>
+                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
+                        <select className="bg-transparent text-sm font-bold text-gray-600 outline-none cursor-pointer w-full" value={yearFilter} onChange={(e) => { setYearFilter(e.target.value); setLocalPage(1); }}>
                             <option value="ALL">All Years</option>
                             {[1, 2, 3, 4].map(y => <option key={y} value={String(y)}>Year {y}</option>)}
                         </select>
                     </div>
 
-                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
-                        <select className="bg-transparent text-sm font-bold text-gray-600 outline-none cursor-pointer" value={phaseFilter} onChange={(e) => { setPhaseFilter(e.target.value); setLocalPage(1); }}>
+                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
+                        <select className="bg-transparent text-sm font-bold text-gray-600 outline-none cursor-pointer w-full" value={phaseFilter} onChange={(e) => { setPhaseFilter(e.target.value); setLocalPage(1); }}>
                             <option value="ALL">All Phases</option>
                             {Array.from({ length: maxPhases }, (_, i) => i + 1).map(p => (
                                 <option key={p} value={`P${p}`}>P{p} Completed</option>
@@ -576,23 +598,35 @@ export default function IndividualStatsTab({ users, teams, onBack, updateMark, u
                         </select>
                     </div>
 
-                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-100">
-                        <select className="bg-transparent text-sm font-bold text-gray-600 outline-none cursor-pointer" value={batchFilter} onChange={(e) => { setBatchFilter(e.target.value); setLocalPage(1); }}>
+                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
+                        <Clock size={16} className="text-gray-400" />
+                        <select className="bg-transparent text-sm font-bold text-gray-600 outline-none cursor-pointer w-full" value={assignmentFilter} onChange={(e) => { setAssignmentFilter(e.target.value); setLocalPage(1); }}>
+                            <option value="ALL">All Assignments</option>
+                            <option value="ASSIGNED">Assigned & Not Completed</option>
+                            <option value="NOT_ASSIGNED">Not Assigned</option>
+                        </select>
+                    </div>
+
+                    <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
+                        <select className="bg-transparent text-sm font-bold text-gray-600 outline-none cursor-pointer w-full" value={batchFilter} onChange={(e) => { setBatchFilter(e.target.value); setLocalPage(1); }}>
                             <option value="ALL">All Batches</option>
                             {scopes?.map(scope => (
                                 <option key={scope.id} value={scope.id}>{scope.name}</option>
                             ))}
                         </select>
                     </div>
-                    <SearchInput value={search} onChange={(v) => { setSearch(v); setLocalPage(1); }} placeholder="Search students..." className="w-full md:w-64" />
+                </div>
 
+                {/* Advanced Search: Faculty */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 bg-blue-50/50 p-4 rounded-lg border border-blue-100/50">
+                    <span className="text-xs font-black text-blue-600 uppercase tracking-widest whitespace-nowrap">Faculty Filter:</span>
                     <SearchableDropdown
                         options={facultyList}
                         value={facultySearch}
                         onChange={(v) => { setFacultySearch(v); setLocalPage(1); }}
-                        placeholder="Filter by Faculty"
-                        searchPlaceholder="Search faculty name..."
-                        className="w-full md:w-80"
+                        placeholder="Search for faculty name..."
+                        searchPlaceholder="Type to search..."
+                        className="w-full max-w-xl"
                     />
                 </div>
             </div>
@@ -652,8 +686,8 @@ export default function IndividualStatsTab({ users, teams, onBack, updateMark, u
                                     </td>
                                     <td className="px-3 py-4">
                                         <div className="flex items-center gap-1.5">
-                                            <div className="flex flex-col min-w-0">
-                                                <span className={`text-xs font-bold truncate max-w-[140px] ${s.project !== "No Project" ? "text-gray-700" : "text-gray-300 italic"}`} title={s.project}>{s.project}</span>
+                                            <div className="flex flex-col min-w-[140px] max-w-[200px]">
+                                                <span className={`text-xs font-bold leading-tight ${s.project !== "No Project" ? "text-gray-700" : "text-gray-300 italic"}`} title={s.project}>{s.project}</span>
                                             </div>
                                         </div>
                                     </td>

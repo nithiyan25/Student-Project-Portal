@@ -41,7 +41,7 @@ export default function ReleaseReviewsModal({ isOpen, onClose, scopes, onRelease
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[100] animate-in fade-in duration-300">
+        <div className="fixed -top-[200px] -bottom-[200px] left-0 right-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[100] animate-in fade-in duration-300">
             <div className="bg-white w-full max-w-lg rounded-lg shadow-2xl overflow-hidden flex flex-col border border-white/20">
                 {/* Header */}
                 <div className="p-6 bg-gradient-to-r from-purple-600 to-indigo-700 text-white shrink-0 relative overflow-hidden">

@@ -26,7 +26,7 @@ export const ConfirmProvider = ({ children }) => {
         <ConfirmContext.Provider value={{ confirm }}>
             {children}
             {modalState.isOpen && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+                <div className="fixed -top-[200px] -bottom-[200px] left-0 right-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
                     <div className="bg-white rounded-lg shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-100 animate-in zoom-in-95 duration-200">
                         <div className={`p-6 border-b flex items-center gap-3 ${modalState.type === 'danger' ? 'bg-red-50' : 'bg-gray-50'}`}>
                             <div className={`p-2 rounded-full ${modalState.type === 'danger' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'}`}>
@@ -59,8 +59,8 @@ export const ConfirmProvider = ({ children }) => {
                             <button
                                 onClick={() => handleClose(true)}
                                 className={`px-4 py-2 text-white rounded-lg font-bold shadow-md transition-all ${modalState.type === 'danger'
-                                        ? 'bg-red-600 hover:bg-red-700 shadow-red-200'
-                                        : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200'
+                                    ? 'bg-red-600 hover:bg-red-700 shadow-red-200'
+                                    : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200'
                                     }`}
                             >
                                 Confirm
