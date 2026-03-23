@@ -23,10 +23,14 @@ api.interceptors.response.use(
   (error) => {
     // Handle 401 Unauthorized - Token expired or invalid
     if (error.response && error.response.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      localStorage.removeItem('lastActivityTime');
-      window.location.href = '/';
+      if (!error.config?._isPolling) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('lastActivityTime');
+        window.location.href = '/';
+      } else {
+        console.warn('Background poll returned 401. Ignoring redirect.');
+      }
     }
 
     // Handle 403 Forbidden - Insufficient permissions

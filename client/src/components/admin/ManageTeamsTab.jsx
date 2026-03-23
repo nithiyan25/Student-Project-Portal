@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { UserPlus, Users, FolderPlus, Crown, UserX, UserCheck, Trash2, ShieldAlert } from 'lucide-react';
+import { UserPlus, Users, FolderPlus, Crown, UserX, UserCheck, Trash2, ShieldAlert, CheckSquare, Square } from 'lucide-react';
+import { useToast } from '../../context/ToastContext';
+import { useConfirm } from '../../context/ConfirmContext';
 import StatusBadge from '../ui/StatusBadge';
 import SearchInput from '../ui/SearchInput';
 
@@ -28,8 +30,10 @@ export default function ManageTeamsTab({
     assignFacultyToTeam,
     facultyList = [],
     scopes = [],
+    refreshData
 
 }) {
+    const { addToast } = useToast();
     const [selectedTeam, setSelectedTeam] = useState(null);
     const [teamSearchTerm, setTeamSearchTerm] = useState('');
     const [selectedExistingBatchId, setSelectedExistingBatchId] = useState('');
@@ -335,6 +339,32 @@ export default function ManageTeamsTab({
                                     </div>
                                 )}
 
+                                {/* UNLOCK PHASE OVERRIDE */}
+                                <TeamPhaseUnlock
+                                    team={selectedTeam}
+                                    onOverride={async (phase, enabled, reason) => {
+                                        try {
+                                            const res = await fetch(`${import.meta.env.VITE_API_URL}/admin/teams/${selectedTeam.id}/late-submission-override`, {
+                                                method: 'POST',
+                                                headers: {
+                                                    'Content-Type': 'application/json',
+                                                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                                                },
+                                                body: JSON.stringify({ phase, enabled, reason })
+                                            });
+                                            if (!res.ok) {
+                                                const data = await res.json();
+                                                throw new Error(data.error || 'Failed to toggle override');
+                                            }
+                                            // Refresh teams to show updated overrides
+                                            addToast(`Successfully ${enabled ? 'enabled' : 'disabled'} override for Phase ${phase}`, 'success');
+                                            if (refreshData) refreshData();
+                                        } catch (err) {
+                                            addToast(err.message, 'error');
+                                        }
+                                    }}
+                                />
+
                             </div>
                         )}
                     </div>
@@ -561,3 +591,88 @@ export default function ManageTeamsTab({
         </div >
     );
 }
+
+const TeamPhaseUnlock = ({ team, onOverride }) => {
+    const { addToast } = useToast();
+    const { confirm } = useConfirm();
+    const [reason, setReason] = useState('');
+    const totalPhases = team.scope?.numberOfPhases || 3;
+    const deadlines = team.scope?.deadlines || [];
+    const allPhases = Array.from({ length: totalPhases }, (_, i) => i + 1);
+
+    const candidatePhases = allPhases.filter(p => {
+        // Show if it's already overridden
+        const isOverridden = team.deadlineOverrides?.some(o => o.phase === p);
+        if (isOverridden) return true;
+
+        // Otherwise, check if it's "missed"
+        const deadline = deadlines.find(d => d.phase === p);
+        if (!deadline) return false;
+
+        const isPassed = new Date(deadline.deadline) < new Date();
+        const isReviewed = team.reviews?.some(r => r.reviewPhase === p && (r.status === 'APPROVED' || r.status === 'COMPLETED'));
+
+        // Missed = Deadline passed AND not successfully reviewed
+        return isPassed && !isReviewed;
+    });
+
+    if (candidatePhases.length === 0) return null;
+
+    const handleToggle = async (phase, isOverridden) => {
+        const action = !isOverridden ? "UNLOCK" : "RELOCK";
+        if (!isOverridden && !reason.trim()) {
+            addToast("Please provide a reason before enabling an override.", "warning");
+            return;
+        }
+
+        const message = !isOverridden 
+            ? `Are you sure you want to UNLOCK Phase ${phase} for this team? They will be able to submit even after the deadline. Reason: ${reason}`
+            : `Are you sure you want to REMOVE the override for Phase ${phase}? Global deadlines will apply again.`;
+
+        if (await confirm(message, `${action} Phase ${phase}`)) {
+            onOverride(phase, !isOverridden, reason);
+            if (!isOverridden) setReason(''); // Clear reason after successful unlock
+        }
+    }
+
+    return (
+        <div className="mt-4 border-t border-indigo-100 pt-4">
+            <h4 className="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <ShieldAlert size={14} className="text-orange-500" /> Unlock Phase Exceptions
+            </h4>
+            
+            <div className="bg-white rounded-lg border border-indigo-50 p-4 space-y-4">
+                <div className="flex flex-col gap-2">
+                    <label className="text-[10px] font-black uppercase text-indigo-300">Override Reason</label>
+                    <textarea 
+                        value={reason}
+                        onChange={e => setReason(e.target.value)}
+                        placeholder="e.g. Approved medical extension"
+                        className="w-full text-xs border border-indigo-100 rounded p-2 focus:ring-1 ring-indigo-500 outline-none h-16 resize-none"
+                    />
+                </div>
+
+                <div className="flex flex-wrap gap-4">
+                    {candidatePhases.map(p => {
+                        const isOverridden = team.deadlineOverrides?.some(o => o.phase === p);
+                        return (
+                            <div 
+                                key={p}
+                                onClick={() => handleToggle(p, isOverridden)}
+                                className="flex items-center gap-2 cursor-pointer group"
+                            >
+                                <div className={`transition-all ${isOverridden ? 'text-orange-500' : 'text-slate-300 group-hover:text-indigo-400'}`}>
+                                    {isOverridden ? <CheckSquare size={18} /> : <Square size={18} />}
+                                </div>
+                                <span className={`text-xs font-bold ${isOverridden ? 'text-slate-800' : 'text-slate-500'}`}>
+                                    Phase {p}
+                                </span>
+                            </div>
+                        );
+                    })}
+                </div>
+                <p className="text-[9px] text-gray-400 italic">Only showing missed phases or active overrides. Selecting a phase will prompt for confirmation.</p>
+            </div>
+        </div>
+    );
+};

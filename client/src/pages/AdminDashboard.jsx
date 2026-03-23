@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useMemo } from 'react';
 import api from '../api';
 import Navbar from '../components/Navbar';
 import {
@@ -54,6 +54,7 @@ import RubricsTab from '../components/admin/RubricsTab';
 import StudentRequestStatusTab from '../components/admin/StudentRequestStatusTab';
 import AbsenteesTab from '../components/admin/AbsenteesTab';
 import SecurityAlertsTab from '../components/admin/SecurityAlertsTab';
+import AuditLogTab from '../components/admin/AuditLogTab';
 
 export default function AdminDashboard() {
   const { user: currentUser } = useContext(AuthContext);
@@ -66,6 +67,7 @@ export default function AdminDashboard() {
   const [students, setStudents] = useState([]);
   const [allStudents, setAllStudents] = useState([]);
   const [faculty, setFaculty] = useState([]);
+  const [allFaculty, setAllFaculty] = useState([]);
   const [admins, setAdmins] = useState([]);
   const [unassignedStudents, setUnassignedStudents] = useState([]);
   const [allAvailableProjects, setAllAvailableProjects] = useState([]);
@@ -119,6 +121,8 @@ export default function AdminDashboard() {
   const [assignmentSearch, setAssignmentSearch] = useState('');
   const [debouncedAssignmentSearch, setDebouncedAssignmentSearch] = useState('');
   const [assignmentExpiredFilter, setAssignmentExpiredFilter] = useState(false);
+  const [assignmentCompletedFilter, setAssignmentCompletedFilter] = useState(false);
+  const [assignmentExpiredNotFinishedFilter, setAssignmentExpiredNotFinishedFilter] = useState(false);
 
   // Sorting States
   const [studentSort, setStudentSort] = useState({ sortBy: 'createdAt', order: 'desc' });
@@ -234,6 +238,7 @@ export default function AdminDashboard() {
       const isFacultyStats = activeTab === 'faculty-stats';
       const isFacultyAssignments = activeTab === 'faculty-assignments';
       const isReviews = activeTab === 'reviews';
+      const isReviewAssignments = activeTab === 'review-assignments';
 
       // Always fetch stats for overview
       if (isOverview) {
@@ -258,9 +263,15 @@ export default function AdminDashboard() {
       }
 
       // Faculty data
-      if (isFaculty || isManageTeams || isFacultyAssignments || isReviews || isStats || isFacultyStats) {
+      if (isFaculty || isFacultyStats) {
         promises.push(api.get('/admin/faculty-stats', { params: { search: debouncedUserSearch } }));
         keys.push('faculty_stats');
+      }
+
+      // Lightweight Faculty List for dropdowns/labels
+      if (isManageTeams || isFacultyAssignments || isReviews || isStats || isReviewAssignments) {
+        promises.push(api.get('/users/faculty-list'));
+        keys.push('allFaculty');
       }
 
       // Admins data
@@ -336,7 +347,9 @@ export default function AdminDashboard() {
             page: facultyAssignmentsPagination.page,
             limit: facultyAssignmentsPagination.limit,
             search: debouncedAssignmentSearch,
-            expired: assignmentExpiredFilter
+            expired: assignmentExpiredFilter,
+            completed: assignmentCompletedFilter,
+            expiredNotFinished: assignmentExpiredNotFinishedFilter
           }
         }));
         keys.push('facultyAssignments');
@@ -379,8 +392,10 @@ export default function AdminDashboard() {
       }
       if (data.faculty_stats) {
         setFaculty(data.faculty_stats || []);
-        // Client-side pagination setup if needed, or just show all
         setFacultyPagination(prev => ({ ...prev, total: data.faculty_stats.length, totalPages: 1 }));
+      }
+      if (data.allFaculty) {
+        setAllFaculty(data.allFaculty.users || data.allFaculty || []);
       }
       if (data.admins) setAdmins(data.admins.users || data.admins || []);
       if (data.projects_paginated) {
@@ -469,7 +484,9 @@ export default function AdminDashboard() {
     facultyAssignmentsPagination.page,
     facultyAssignmentsPagination.limit,
     debouncedAssignmentSearch,
-    assignmentExpiredFilter
+    assignmentExpiredFilter,
+    assignmentCompletedFilter,
+    assignmentExpiredNotFinishedFilter
   ]);
 
   // Pagination reset is now handled in the debouncing logic above
@@ -924,6 +941,13 @@ export default function AdminDashboard() {
   // --- FILTER LOGIC ---
   const safeIncludes = (text, term) => text && text.toLowerCase().includes(term.toLowerCase());
 
+  // Memoize faculty options for performance across many dropdowns
+  const facultyOptions = useMemo(() => {
+    return allFaculty.map(f => (
+      <option key={f.id} value={f.id}>{f.name} ({f.email})</option>
+    ));
+  }, [allFaculty]);
+
   const allUsers = [...students, ...faculty, ...admins];
 
   const filteredStudents = students;
@@ -948,7 +972,7 @@ export default function AdminDashboard() {
   });
 
   // Calculate Eligible Faculty (Load < 4 teams)
-  const eligibleFaculty = faculty.map(f => {
+  const eligibleFaculty = allFaculty.map(f => {
     // Count teams where this faculty is guide or expert
     const count = teams.filter(t => t.guideId === f.id || t.subjectExpertId === f.id).length;
     return { ...f, count, isEligible: count < 4 };
@@ -1009,6 +1033,7 @@ export default function AdminDashboard() {
       items: [
         { id: 'overview', label: 'Overview', icon: LayoutDashboard },
         { id: 'security-alerts', label: 'Security Alerts', icon: ShieldAlert, badge: securityAlertsCount },
+        { id: 'audit-logs', label: 'Late Submission Audit', icon: ClipboardCheck },
         { id: 'settings', label: 'System Settings', icon: Settings },
       ]
     },
@@ -1184,6 +1209,7 @@ export default function AdminDashboard() {
               {/* Tab Content */}
               {activeTab === 'settings' && <SettingsTab />}
               {activeTab === 'security-alerts' && <SecurityAlertsTab />}
+              {activeTab === 'audit-logs' && <AuditLogTab />}
               {activeTab === 'scopes' && <ProjectScopesTab />}
               {activeTab === 'overview' && (
                 <OverviewDashboardTab
@@ -1236,7 +1262,7 @@ export default function AdminDashboard() {
                 <IndividualStatsTab
                   users={allStudents}
                   teams={teams}
-                  facultyList={faculty}
+                  facultyList={allFaculty}
                   onBack={() => setActiveTab('overview')}
                   updateMark={updateMark}
                   updateReview={updateReview}
@@ -1354,7 +1380,7 @@ export default function AdminDashboard() {
                   unassignFacultyFromTeam={unassignFacultyFromTeam}
                   assignFacultyToTeam={assignFacultyToTeam}
                   facultyList={eligibleFaculty}
-
+                  refreshData={refreshData}
                 />
               )}
 
@@ -1383,13 +1409,17 @@ export default function AdminDashboard() {
                   unassignFaculty={unassignFaculty}
                   updateFacultyAccess={updateFacultyAccess}
                   bulkUpdateFacultyAccess={bulkUpdateFacultyAccess}
-                  users={faculty}
+                  users={allFaculty}
                   assignmentSearch={assignmentSearch}
                   setAssignmentSearch={setAssignmentSearch}
                   pagination={facultyAssignmentsPagination}
                   setPagination={setFacultyAssignmentsPagination}
                   expiredFilter={assignmentExpiredFilter}
                   setExpiredFilter={setAssignmentExpiredFilter}
+                  completedFilter={assignmentCompletedFilter}
+                  setCompletedFilter={setAssignmentCompletedFilter}
+                  expiredNotFinishedFilter={assignmentExpiredNotFinishedFilter}
+                  setExpiredNotFinishedFilter={setAssignmentExpiredNotFinishedFilter}
                   loadData={refreshData}
                   onOpenReleaseReviews={() => setReleaseReviewsModalOpen(true)}
                   scopes={scopes}
@@ -1501,8 +1531,19 @@ export default function AdminDashboard() {
                     Object.entries(
                       pendingReviews.reduce((acc, team) => {
                         const batchName = team.scope?.name || 'Unknown Batch';
-                        const phase = `Phase ${team.nextPhase}`;
-                        const key = `${batchName} - ${phase}`;
+                        const maxPhases = team.scope?.numberOfPhases || 4;
+                        const rawPhase = team.nextPhase || team.submissionPhase;
+                        
+                        let phaseStr = 'Phase TBD';
+                        if (rawPhase) {
+                          if (rawPhase > maxPhases) {
+                            phaseStr = 'All Phases Complete';
+                          } else {
+                            phaseStr = `Phase ${rawPhase}`;
+                          }
+                        }
+                        
+                        const key = `${batchName} - ${phaseStr}`;
                         if (!acc[key]) acc[key] = [];
                         acc[key].push(team);
                         return acc;
@@ -1599,9 +1640,7 @@ export default function AdminDashboard() {
                                         onChange={(e) => setManualFacultyAssignments(prev => ({ ...prev, [team.id]: e.target.value }))}
                                       >
                                         <option value="">Pick Faculty Override...</option>
-                                        {faculty.map(f => (
-                                          <option key={f.id} value={f.id}>{f.name}</option>
-                                        ))}
+                                        {facultyOptions}
                                       </select>
                                     </div>
                                   )}
@@ -1629,6 +1668,7 @@ export default function AdminDashboard() {
                 <ReviewsTab
                   api={api}
                   scopes={scopes}
+                  currentUser={currentUser}
                 />
               )}
 

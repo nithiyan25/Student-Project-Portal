@@ -45,7 +45,10 @@ router.get('/teams', authenticate, authorize(['ADMIN', 'FACULTY']), commonValida
                     project: {
                         include: { scope: true }
                     },
-                    scope: true,
+                    scope: {
+                        include: { deadlines: true }
+                    },
+                    deadlineOverrides: true,
 
                     guide: true,
                     subjectExpert: true,
@@ -226,6 +229,28 @@ router.post('/teams/bulk-status', authenticate, authorize(['ADMIN']), async (req
     }
 });
 
+// GET ALL LATE SUBMISSION OVERRIDES (Audit Logs)
+router.get('/late-submission-overrides', authenticate, authorize(['ADMIN']), async (req, res, next) => {
+    try {
+        const overrides = await prisma.teamPhaseDeadlineOverride.findMany({
+            include: {
+                team: {
+                    include: {
+                        members: {
+                            include: { user: true },
+                            where: { isLeader: true }
+                        }
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+        res.json(overrides);
+    } catch (e) {
+        next(e);
+    }
+});
+
 // GET SINGLE TEAM BY ID (For Admin/Faculty)
 router.get('/teams/:id', authenticate, authorize(['ADMIN', 'FACULTY']), async (req, res, next) => {
     try {
@@ -247,6 +272,7 @@ router.get('/teams/:id', authenticate, authorize(['ADMIN', 'FACULTY']), async (r
                 },
                 guide: true,
                 subjectExpert: true,
+                deadlineOverrides: true,
                 reviews: {
                     include: {
                         reviewMarks: true,
@@ -299,6 +325,54 @@ router.get('/teams/:id', authenticate, authorize(['ADMIN', 'FACULTY']), async (r
     }
 });
 
+// TOGGLE LATE SUBMISSION OVERRIDE FOR A TEAM/PHASE
+router.post('/teams/:id/late-submission-override', authenticate, authorize(['ADMIN']), async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { phase, enabled, reason } = req.body;
+
+        if (!phase || typeof enabled !== 'boolean') {
+            return res.status(400).json({ error: "Phase and enabled status are required" });
+        }
+
+        if (enabled && !reason) {
+            return res.status(400).json({ error: "Reason is required to enable late submission override" });
+        }
+
+        if (enabled) {
+            await prisma.teamPhaseDeadlineOverride.upsert({
+                where: {
+                    teamId_phase: {
+                        teamId: id,
+                        phase: parseInt(phase)
+                    }
+                },
+                update: {
+                    reason,
+                    grantedBy: req.user.name || req.user.email
+                },
+                create: {
+                    teamId: id,
+                    phase: parseInt(phase),
+                    reason,
+                    grantedBy: req.user.name || req.user.email
+                }
+            });
+        } else {
+            await prisma.teamPhaseDeadlineOverride.deleteMany({
+                where: {
+                    teamId: id,
+                    phase: parseInt(phase)
+                }
+            });
+        }
+
+        res.json({ message: `Late submission ${enabled ? 'enabled' : 'disabled'} for Phase ${phase}` });
+    } catch (e) {
+        next(e);
+    }
+});
+
 
 
 // GET PENDING REVIEW ASSIGNMENTS
@@ -331,6 +405,7 @@ router.get('/pending-reviews', authenticate, authorize(['ADMIN']), async (req, r
                 scope: true,
                 guide: true, // Include guide for display/search
                 members: { include: { user: true } },
+                deadlineOverrides: true,
                 reviews: {
                     include: { faculty: true }
                 }
@@ -347,11 +422,15 @@ router.get('/pending-reviews', authenticate, authorize(['ADMIN']), async (req, r
                 ...(team.project?.assignedFaculty || [])
                     .filter(a => a.accessExpiresAt && new Date(a.accessExpiresAt) < now)
                     .map(a => a.reviewPhase),
-                ...(team.deadlineGroup?.deadlines || [])
-                    .filter(d => new Date(d.deadline) < now)
+                ...(team.scope?.deadlines || [])
+                    .filter(d => {
+                        const hasOverride = team.deadlineOverrides?.some(o => o.phase === d.phase);
+                        return new Date(d.deadline) < now && !d.allowLateSubmission && !hasOverride;
+                    })
                     .map(d => d.phase)
             ]);
-            const nextPhase = Math.max(team.submissionPhase || 0, Math.max(0, ...Array.from(passedPhases)) + 1);
+            const nextPhaseValue = team.submissionPhase || (Math.max(0, ...Array.from(passedPhases)) + 1);
+            const nextPhase = (team.scope && nextPhaseValue > team.scope.numberOfPhases) ? null : nextPhaseValue;
 
             // Filter by Phase (if provided)
             if (phase && phase !== 'ALL' && nextPhase !== parseInt(phase)) {
@@ -374,11 +453,15 @@ router.get('/pending-reviews', authenticate, authorize(['ADMIN']), async (req, r
                 ...(team.project?.assignedFaculty || [])
                     .filter(a => a.accessExpiresAt && new Date(a.accessExpiresAt) < now)
                     .map(a => a.reviewPhase),
-                ...(team.deadlineGroup?.deadlines || [])
-                    .filter(d => new Date(d.deadline) < now)
+                ...(team.scope?.deadlines || [])
+                    .filter(d => {
+                        const hasOverride = team.deadlineOverrides?.some(o => o.phase === d.phase);
+                        return new Date(d.deadline) < now && !d.allowLateSubmission && !hasOverride;
+                    })
                     .map(d => d.phase)
             ]);
-            const nextPhase = Math.max(team.submissionPhase || 0, Math.max(0, ...Array.from(passedPhases)) + 1);
+            const nextPhaseValue = team.submissionPhase || (Math.max(0, ...Array.from(passedPhases)) + 1);
+            const nextPhase = (team.scope && nextPhaseValue > team.scope.numberOfPhases) ? null : nextPhaseValue;
 
             const studentIds = team.members.map(m => m.userId);
 
@@ -835,7 +918,8 @@ router.post('/auto-assign-reviews', authenticate, authorize(['ADMIN']), async (r
                     .filter(a => a.accessExpiresAt && new Date(a.accessExpiresAt) < now)
                     .map(a => a.reviewPhase)
             ]);
-            const nextPhase = Math.max(team.submissionPhase || 0, Math.max(0, ...Array.from(passedPhases)) + 1);
+            const nextPhaseValue = team.submissionPhase || (Math.max(0, ...Array.from(passedPhases)) + 1);
+            const nextPhase = (team.scope && nextPhaseValue > team.scope.numberOfPhases) ? null : nextPhaseValue;
 
             // Perform assignment/reassignment using utility
             await prisma.$transaction(async (tx) => {
@@ -1549,7 +1633,7 @@ router.get('/faculty-assignments', authenticate, authorize(['ADMIN']), commonVal
         const limit = Math.min(parseInt(req.query.limit) || DEFAULT_LIMIT, MAX_LIMIT);
         const skip = (page - 1) * limit;
 
-        const { search, expired } = req.query;
+        const { search, expired, completed, expiredNotFinished } = req.query;
         const now = new Date();
 
         const whereClause = {
@@ -1568,6 +1652,51 @@ router.get('/faculty-assignments', authenticate, authorize(['ADMIN']), commonVal
                 } : {}
             ]
         };
+
+        if (completed === 'true') {
+            const completedGroups = await prisma.review.groupBy({
+                by: ['projectId', 'facultyId', 'reviewPhase'],
+                where: { status: 'COMPLETED' }
+            });
+
+            if (completedGroups.length > 0) {
+                whereClause.AND.push({
+                    OR: completedGroups.map(g => ({
+                        projectId: g.projectId,
+                        facultyId: g.facultyId,
+                        reviewPhase: g.reviewPhase
+                    }))
+                });
+            } else {
+                whereClause.AND.push({ id: 'none' });
+            }
+        }
+
+        if (expiredNotFinished === 'true') {
+            // Must be expired
+            whereClause.AND.push({ accessExpiresAt: { lt: now } });
+
+            // Must have a PENDING review record for THIS faculty/project/phase
+            // This naturally excludes COMPLETED ones (they are no longer PENDING)
+            // and REASSIGNED ones (the PENDING record was moved to the new faculty)
+            const pendingReviews = await prisma.review.findMany({
+                where: { status: 'PENDING' },
+                select: { projectId: true, facultyId: true, reviewPhase: true }
+            });
+
+            if (pendingReviews.length > 0) {
+                whereClause.AND.push({
+                    OR: pendingReviews.map(g => ({
+                        projectId: g.projectId,
+                        facultyId: g.facultyId,
+                        reviewPhase: g.reviewPhase
+                    }))
+                });
+            } else {
+                // If no pending reviews exist, then no assignment can be "expired and not finished"
+                whereClause.AND.push({ id: 'none' });
+            }
+        }
 
         const [assignments, total] = await Promise.all([
             prisma.reviewassignment.findMany({

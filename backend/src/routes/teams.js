@@ -3,6 +3,7 @@ const prisma = require('../utils/prisma');
 const { authenticate, authorize } = require('../middleware/auth');
 const { teamValidation } = require('../middleware/validation');
 const { addDurationExcludingSundays } = require('../utils/timerUtils');
+const { calculateTeamPhase } = require('../utils/phaseUtils');
 
 const router = express.Router();
 
@@ -133,6 +134,7 @@ router.get('/my-teams', authenticate, async (req, res, next) => {
                         scope: {
                             include: { deadlines: true }
                         },
+                        deadlineOverrides: true,
 
                         project: {
                             include: {
@@ -163,26 +165,7 @@ router.get('/my-teams', authenticate, async (req, res, next) => {
         for (const membership of memberships) {
             const team = membership.team;
 
-            // Enrich team with currentPhase logic based on deadlines
-            const passedPhases = new Set([
-                ...(team.reviews || []).filter(r => r.status && r.status !== 'PENDING').map(r => r.reviewPhase),
-                ...(team.project?.assignedFaculty || [])
-                    .filter(a => a.accessExpiresAt && new Date(a.accessExpiresAt) < now)
-                    .map(a => a.reviewPhase),
-                ...(team.scope?.deadlines || [])
-                    .filter(d => new Date(d.deadline) < now)
-                    .map(d => d.phase)
-
-            ]);
-            const reviewedPhaseSet = new Set(
-                (team.reviews || []).filter(r => r.status === 'COMPLETED' || r.status === 'NOT_COMPLETED').map(r => r.reviewPhase)
-            );
-            const activeAssignment = (team.project?.assignedFaculty || []).find(a => {
-                if (!a.accessExpiresAt) return false;
-                if (reviewedPhaseSet.has(a.reviewPhase)) return false;
-                return new Date(a.accessExpiresAt) > now;
-            });
-            team.currentPhase = activeAssignment?.reviewPhase || (Math.max(0, ...Array.from(passedPhases)) + 1);
+            team.currentPhase = calculateTeamPhase(team, now);
 
             if (team.project && team.project.assignedFaculty.length > 0 && team.project.scopeId) {
                 for (const assignment of team.project.assignedFaculty) {
@@ -239,6 +222,7 @@ router.get('/my-team', authenticate, async (req, res, next) => {
                         scope: {
                             include: { deadlines: true }
                         },
+                        deadlineOverrides: true,
 
                         project: {
                             include: {
@@ -272,26 +256,7 @@ router.get('/my-team', authenticate, async (req, res, next) => {
         const team = member.team;
         const now = new Date();
 
-        // Enrich team with currentPhase logic based on deadlines
-        const passedPhases = new Set([
-            ...(team.reviews || []).filter(r => r.status && r.status !== 'PENDING').map(r => r.reviewPhase),
-            ...(team.project?.assignedFaculty || [])
-                .filter(a => a.accessExpiresAt && new Date(a.accessExpiresAt) < now)
-                .map(a => a.reviewPhase),
-            ...(team.scope?.deadlines || [])
-                .filter(d => new Date(d.deadline) < now)
-                .map(d => d.phase)
-
-        ]);
-        const reviewedPhaseSet = new Set(
-            (team.reviews || []).filter(r => r.status === 'COMPLETED' || r.status === 'NOT_COMPLETED').map(r => r.reviewPhase)
-        );
-        const activeAssignment = (team.project?.assignedFaculty || []).find(a => {
-            if (!a.accessExpiresAt) return false;
-            if (reviewedPhaseSet.has(a.reviewPhase)) return false;
-            return new Date(a.accessExpiresAt) > now;
-        });
-        team.currentPhase = activeAssignment?.reviewPhase || (Math.max(0, ...Array.from(passedPhases)) + 1);
+        team.currentPhase = calculateTeamPhase(team, now);
 
         if (team.project && team.project.assignedFaculty.length > 0 && team.project.scopeId) {
             for (const assignment of team.project.assignedFaculty) {
@@ -547,7 +512,10 @@ router.post('/submit-for-review', authenticate, authorize(['STUDENT']), async (r
             include: {
                 team: {
                     include: {
-
+                        scope: {
+                            include: { deadlines: true }
+                        },
+                        deadlineOverrides: true,
                         reviews: { where: { status: { in: ['COMPLETED', 'NOT_COMPLETED'] } } },
                         project: {
                             include: { assignedFaculty: true }
@@ -582,33 +550,25 @@ router.post('/submit-for-review', authenticate, authorize(['STUDENT']), async (r
             return res.status(400).json({ error: "Team status does not allow submission for review. Current status: " + team.status });
         }
 
-        // Calculate Next Phase
-        // Support flexible progression: check for active assignments first, 
-        // fallback to completed count + 1.
-        const reviewedPhaseSetForSubmit = new Set(
-            team.reviews.map(r => r.reviewPhase)
-        );
-        const activeAssignment = team.project.assignedFaculty?.find(a => {
-            if (!a.accessExpiresAt) return false;
-            if (reviewedPhaseSetForSubmit.has(a.reviewPhase)) return false; // Skip completed or missed phases
-            return new Date(a.accessExpiresAt) > new Date();
-        });
+        const nextPhase = calculateTeamPhase(team);
 
-        const completedReviewsCount = team.reviews.length;
-
-        // Count unique phases that are either handled by a review (non-pending), MISSED (expired slot), or PASSED DEADLINE
-        const passedPhases = new Set([
-            ...team.reviews.filter(r => r.status && r.status !== 'PENDING').map(r => r.reviewPhase),
-            ...(team.project.assignedFaculty || [])
-                .filter(a => a.accessExpiresAt && new Date(a.accessExpiresAt) < new Date())
-                .map(a => a.reviewPhase),
-
-        ]);
-
-        const nextPhase = activeAssignment?.reviewPhase || (Math.max(0, ...Array.from(passedPhases)) + 1);
-
-        if (team.scope && nextPhase > team.scope.numberOfPhases) {
+        if (nextPhase === null) {
             return res.status(400).json({ error: "All phases for this batch are already completed." });
+        }
+        
+        // Anti-bypass check: Ensure the phase being submitted hasn't passed its deadline (unless overridden)
+        const passedPhases = new Set(
+            (team.scope?.deadlines || [])
+                .filter(d => {
+                    const hasOverride = team.deadlineOverrides?.some(o => o.phase === d.phase);
+                    const isPassed = new Date(d.deadline) < new Date();
+                    return isPassed && !d.allowLateSubmission && !hasOverride;
+                })
+                .map(d => d.phase)
+        );
+
+        if (passedPhases.has(nextPhase)) {
+             return res.status(400).json({ error: `The deadline for Phase ${nextPhase} has passed and no late submission is allowed.` });
         }
 
         await prisma.$transaction(async (tx) => {
@@ -828,16 +788,39 @@ router.patch('/:id/status', authenticate, authorize(['ADMIN']), async (req, res,
 
         const team = await prisma.team.findUnique({
             where: { id },
-            include: { project: true }
+            include: {
+                project: {
+                    include: { assignedFaculty: true }
+                },
+                scope: {
+                    include: { deadlines: true }
+                },
+                deadlineOverrides: true,
+                reviews: {
+                    where: { status: { in: ['APPROVED', 'COMPLETED'] } }
+                }
+            }
         });
 
         if (!team) return res.status(404).json({ error: "Team not found" });
 
         const result = await prisma.$transaction(async (tx) => {
-            // Update Team Status
+            // Determine the phase to submit if we're setting status to READY_FOR_REVIEW
+            let nextPhaseValue = undefined;
+            if (status === 'READY_FOR_REVIEW') {
+                const now = new Date();
+                nextPhaseValue = calculateTeamPhase(team, now);
+            }
+
+            // Update Team Status (and optionally submissionPhase)
+            const updateData = { status };
+            if (nextPhaseValue) {
+                updateData.submissionPhase = nextPhaseValue;
+            }
+
             const updatedTeam = await tx.team.update({
                 where: { id },
-                data: { status }
+                data: updateData
             });
 
             // If status is not PENDING, ensure all members and assigned faculty are approved

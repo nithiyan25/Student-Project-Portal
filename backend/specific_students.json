@@ -1,0 +1,202 @@
+[
+  {
+    "id": "cml7sm8q003am126s21gv93qx",
+    "email": "mohamedriyas.bm23@bitsathy.ac.in",
+    "rollNumber": "7376231BM127",
+    "name": "MOHAMED RIYAS K S",
+    "role": "STUDENT",
+    "department": "Biomedical Engineering",
+    "year": 3,
+    "isTemporaryAdmin": false,
+    "createdAt": "2026-02-04T08:56:09.384Z",
+    "isGuide": false,
+    "isSubjectExpert": false,
+    "tempAdminTabs": null,
+    "isBlocked": false,
+    "blockedUntil": null,
+    "blockReason": null,
+    "lastLoginIp": "45.127.110.98",
+    "lastLoginDevice": {
+      "os": {
+        "name": "Windows",
+        "version": "10"
+      },
+      "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+      "cpu": {
+        "architecture": "amd64"
+      },
+      "device": {},
+      "engine": {
+        "name": "Blink",
+        "version": "145.0.0.0"
+      },
+      "browser": {
+        "name": "Chrome",
+        "major": "145",
+        "version": "145.0.0.0"
+      }
+    },
+    "lastLoginAt": "2026-03-14T03:41:46.922Z",
+    "teamMemberships": [
+      {
+        "id": "cml7sm8se03ao126sq5hrrc0o",
+        "userId": "cml7sm8q003am126s21gv93qx",
+        "teamId": "cml7sm8n703al126sn9by46tr",
+        "approved": true,
+        "isLeader": true,
+        "team": {
+          "id": "cml7sm8n703al126sn9by46tr",
+          "projectId": "cml7sm8la03aj126s6rg69wbt",
+          "scopeId": "cml7sgd560000126s84y5dkpo",
+          "status": "READY_FOR_REVIEW",
+          "createdAt": "2026-02-04T08:56:09.283Z",
+          "guideId": null,
+          "guideStatus": "PENDING",
+          "subjectExpertId": null,
+          "expertStatus": "PENDING",
+          "submissionPhase": null,
+          "projectRequests": [],
+          "reviews": [],
+          "deadlineOverrides": [],
+          "scope": {
+            "id": "cml7sgd560000126s84y5dkpo",
+            "name": "Mini Project",
+            "description": "3rd Year",
+            "isActive": true,
+            "type": null,
+            "requireGuide": false,
+            "requireSubjectExpert": false,
+            "numberOfPhases": 3,
+            "createdAt": "2026-02-04T08:51:35.179Z",
+            "updatedAt": "2026-03-04T06:25:26.995Z",
+            "resultsPublished": false,
+            "isTimerRunning": true,
+            "timerLastUpdated": "2026-03-04T06:25:26.995Z",
+            "timerRemainingSeconds": 518400,
+            "timerTotalHours": 144,
+            "deadlines": [
+              {
+                "id": "cmlm1g7la002bsoxmeyx1n0x0",
+                "phase": 1,
+                "deadline": "2026-03-13T11:00:00.000Z",
+                "allowLateSubmission": false,
+                "scopeId": "cml7sgd560000126s84y5dkpo",
+                "createdAt": "2026-02-14T08:12:10.991Z",
+                "updatedAt": "2026-03-12T05:03:57.801Z"
+              },
+              {
+                "id": "cmmbnfvi900048i6vbgny1j6w",
+                "phase": 2,
+                "deadline": "2026-03-13T11:00:00.000Z",
+                "allowLateSubmission": false,
+                "scopeId": "cml7sgd560000126s84y5dkpo",
+                "createdAt": "2026-03-04T06:22:01.281Z",
+                "updatedAt": "2026-03-12T05:03:57.804Z"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "cml7so64304f2126sasa99qtm",
+    "email": "rahulsanjay.it23@bitsathy.ac.in",
+    "rollNumber": "7376232IT235",
+    "name": "RAHUL SANJAY G",
+    "role": "STUDENT",
+    "department": "Information Technology",
+    "year": 3,
+    "isTemporaryAdmin": false,
+    "createdAt": "2026-02-04T08:57:39.315Z",
+    "isGuide": false,
+    "isSubjectExpert": false,
+    "tempAdminTabs": null,
+    "isBlocked": false,
+    "blockedUntil": null,
+    "blockReason": null,
+    "lastLoginIp": "45.127.110.98",
+    "lastLoginDevice": {
+      "os": {
+        "name": "Windows",
+        "version": "10"
+      },
+      "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+      "cpu": {
+        "architecture": "amd64"
+      },
+      "device": {},
+      "engine": {
+        "name": "Blink",
+        "version": "145.0.0.0"
+      },
+      "browser": {
+        "name": "Chrome",
+        "major": "145",
+        "version": "145.0.0.0"
+      }
+    },
+    "lastLoginAt": "2026-03-14T06:31:43.134Z",
+    "teamMemberships": [
+      {
+        "id": "cml7so67704f4126s3bygfrpz",
+        "userId": "cml7so64304f2126sasa99qtm",
+        "teamId": "cml7so61i04f1126s91fdy44s",
+        "approved": true,
+        "isLeader": true,
+        "team": {
+          "id": "cml7so61i04f1126s91fdy44s",
+          "projectId": "cml7so5z804ez126swvzc38zg",
+          "scopeId": "cml7sgd560000126s84y5dkpo",
+          "status": "NOT_COMPLETED",
+          "createdAt": "2026-02-04T08:57:39.222Z",
+          "guideId": null,
+          "guideStatus": "PENDING",
+          "subjectExpertId": null,
+          "expertStatus": "PENDING",
+          "submissionPhase": null,
+          "projectRequests": [],
+          "reviews": [],
+          "deadlineOverrides": [],
+          "scope": {
+            "id": "cml7sgd560000126s84y5dkpo",
+            "name": "Mini Project",
+            "description": "3rd Year",
+            "isActive": true,
+            "type": null,
+            "requireGuide": false,
+            "requireSubjectExpert": false,
+            "numberOfPhases": 3,
+            "createdAt": "2026-02-04T08:51:35.179Z",
+            "updatedAt": "2026-03-04T06:25:26.995Z",
+            "resultsPublished": false,
+            "isTimerRunning": true,
+            "timerLastUpdated": "2026-03-04T06:25:26.995Z",
+            "timerRemainingSeconds": 518400,
+            "timerTotalHours": 144,
+            "deadlines": [
+              {
+                "id": "cmlm1g7la002bsoxmeyx1n0x0",
+                "phase": 1,
+                "deadline": "2026-03-13T11:00:00.000Z",
+                "allowLateSubmission": false,
+                "scopeId": "cml7sgd560000126s84y5dkpo",
+                "createdAt": "2026-02-14T08:12:10.991Z",
+                "updatedAt": "2026-03-12T05:03:57.801Z"
+              },
+              {
+                "id": "cmmbnfvi900048i6vbgny1j6w",
+                "phase": 2,
+                "deadline": "2026-03-13T11:00:00.000Z",
+                "allowLateSubmission": false,
+                "scopeId": "cml7sgd560000126s84y5dkpo",
+                "createdAt": "2026-03-04T06:22:01.281Z",
+                "updatedAt": "2026-03-12T05:03:57.804Z"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+]

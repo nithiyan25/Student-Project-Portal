@@ -1,6 +1,8 @@
 const prisma = require('./prisma');
 const { addDurationExcludingSundays } = require('./timerUtils');
 
+const { calculateTeamPhase } = require('./phaseUtils');
+
 /**
  * Reassigns pending reviews for a team to a new faculty.
  * @param {Object} tx - Prisma transaction client
@@ -149,19 +151,17 @@ async function syncTeamReviewsWithSession(tx, studentIds, facultyIdToAssign, adm
         include: {
             members: { include: { user: true } },
             reviews: true,
-            project: { include: { assignedFaculty: true } }
+            project: { include: { assignedFaculty: true, scope: { include: { deadlines: true } } } },
+            scope: { include: { deadlines: true } },
+            deadlineOverrides: true
         }
     });
 
     for (const team of teams) {
-        // Determine Phase
-        const passedPhases = new Set([
-            ...(team.reviews || []).map(r => r.reviewPhase),
-            ...(team.project?.assignedFaculty || [])
-                .filter(a => a.accessExpiresAt && new Date(a.accessExpiresAt) < now)
-                .map(a => a.reviewPhase)
-        ]);
-        const nextPhase = Math.max(team.submissionPhase || 0, Math.max(0, ...Array.from(passedPhases)));
+        // Determine Phase using centralized logic
+        const nextPhase = calculateTeamPhase(team, now);
+
+        if (!nextPhase) continue;
 
         // Check if there is an active (unexpired) assignment for this phase
         const hasActiveAssignment = team.project?.assignedFaculty?.some(a =>

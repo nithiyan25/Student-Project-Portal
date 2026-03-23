@@ -34,7 +34,8 @@ export default function PhaseDeadlinesModal({ isOpen, onClose, scope }) {
                 }
                 return {
                     phase,
-                    deadline: localStr
+                    deadline: localStr,
+                    allowLateSubmission: match ? match.allowLateSubmission : false
                 };
             });
             setDeadlines(initial);
@@ -53,7 +54,8 @@ export default function PhaseDeadlinesModal({ isOpen, onClose, scope }) {
             // Only send deadlines that have been set
             const toSave = deadlines.filter(d => d.deadline !== '').map(d => ({
                 phase: d.phase,
-                deadline: new Date(d.deadline).toISOString()
+                deadline: new Date(d.deadline).toISOString(),
+                allowLateSubmission: d.allowLateSubmission
             }));
 
             const url = `/scopes/${scope.id}/deadlines`;
@@ -67,8 +69,8 @@ export default function PhaseDeadlinesModal({ isOpen, onClose, scope }) {
         }
     };
 
-    const updateDeadline = (phase, value) => {
-        setDeadlines(prev => prev.map(d => d.phase === phase ? { ...d, deadline: value } : d));
+    const updateDeadline = (phase, field, value) => {
+        setDeadlines(prev => prev.map(d => d.phase === phase ? { ...d, [field]: value } : d));
     };
 
     if (!isOpen) return null;
@@ -106,12 +108,28 @@ export default function PhaseDeadlinesModal({ isOpen, onClose, scope }) {
                                             </div>
                                             <span className="text-sm font-bold text-gray-700">Phase {d.phase}</span>
                                         </div>
-                                        <input
-                                            type="datetime-local"
-                                            value={d.deadline}
-                                            onChange={(e) => updateDeadline(d.phase, e.target.value)}
-                                            className="bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium text-gray-600 shadow-sm"
-                                        />
+                                        <div className="flex flex-col gap-2 flex-1">
+                                            <input
+                                                type="datetime-local"
+                                                value={d.deadline}
+                                                onChange={(e) => updateDeadline(d.phase, 'deadline', e.target.value)}
+                                                className="bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium text-gray-600 shadow-sm"
+                                            />
+                                            <label className="flex items-center gap-2 cursor-pointer group">
+                                                <div className="relative">
+                                                    <input
+                                                        type="checkbox"
+                                                        className="sr-only peer"
+                                                        checked={d.allowLateSubmission}
+                                                        onChange={(e) => updateDeadline(d.phase, 'allowLateSubmission', e.target.checked)}
+                                                    />
+                                                    <div className="w-8 h-4 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-600"></div>
+                                                </div>
+                                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider group-hover:text-blue-600 transition-colors">
+                                                    Allow Late Submission
+                                                </span>
+                                            </label>
+                                        </div>
                                     </div>
                                 ))}
                             </div>

@@ -11,14 +11,29 @@ const UAParser = require('ua-parser-js');
  */
 const logSecurityAlert = async (userId, type, description, req, severity = 'MEDIUM') => {
     try {
+        const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+
+        // If userId is missing, try to find the most recent user who used this IP
+        let attributedUserId = userId || null;
+        if (!attributedUserId && ipAddress) {
+            const user = await prisma.user.findFirst({
+                where: { lastLoginIp: ipAddress },
+                orderBy: { lastLoginAt: 'desc' }
+            });
+            if (user) {
+                attributedUserId = user.id;
+                description = `[Attributed to ${user.email}] ${description}`;
+            }
+        }
+
         await prisma.securityAlert.create({
             data: {
-                userId: userId || null,
+                userId: attributedUserId,
                 type: type,
                 description: description,
                 path: req.originalUrl || req.url,
                 method: req.method,
-                ipAddress: req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress,
+                ipAddress: ipAddress,
                 userAgent: req.headers['user-agent'],
                 metadata: {
                     host: req.headers.host,

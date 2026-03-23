@@ -106,7 +106,8 @@ router.get('/assignments', authenticate, authorize(['FACULTY', 'ADMIN']), common
             }
         };
 
-        if (req.user.role === 'ADMIN') {
+        const isTempAdminView = req.user.isTemporaryAdmin && req.query.asAdmin === 'true';
+        if (req.user.role === 'ADMIN' || isTempAdminView) {
             const where = { AND: conditions };
             const countsWhere = { AND: conditions.filter(c => !c.status || (c.status && c.status.in)) };
 
@@ -243,7 +244,10 @@ router.post('/', authenticate, authorize(['FACULTY', 'ADMIN']), reviewValidation
         // Check if user has permission to review this project (AND phase)
         let phaseToRecord = reviewPhase ? parseInt(reviewPhase) : null;
 
-        if (req.user.role === 'FACULTY') {
+        const isFullAdmin = req.user.role === 'ADMIN';
+        const isTempAdmin = req.user.isTemporaryAdmin;
+
+        if (req.user.role === 'FACULTY' && !isFullAdmin && !isTempAdmin) {
             const [assignment, team] = await Promise.all([
                 prisma.reviewassignment.findFirst({
                     where: {
@@ -279,12 +283,14 @@ router.post('/', authenticate, authorize(['FACULTY', 'ADMIN']), reviewValidation
             // NOTE: Phase matching check removed to allow faculty with any assignment to review subsequent phases.
             // The assignment's reviewPhase is used as fallback if no phase is provided.
 
-            // Record the phase: prioritize provided reviewPhase, then assignment.reviewPhase, else default to 1 (for guide/expert)
             if (!phaseToRecord) {
                 phaseToRecord = assignment?.reviewPhase || 1;
             }
+        } else if (!phaseToRecord) {
+            // Admins and Temp Admins default to Phase 1 if not provided
+            phaseToRecord = 1;
         }
-        // Admins can review any project (no check needed)
+        // Admins and Temp Admins can review any project (no check needed)
 
         // Check if a completed review already exists for this phase
         const existingCompletedReview = await prisma.review.findFirst({
@@ -520,13 +526,38 @@ router.patch('/marks/:id', authenticate, authorize(['ADMIN']), reviewValidation.
 router.delete('/:id', authenticate, authorize(['ADMIN']), reviewValidation.delete, async (req, res, next) => {
     const { id } = req.params;
     try {
-        await prisma.review.delete({
-            where: { id }
+        await prisma.$transaction(async (tx) => {
+            const review = await tx.review.findUnique({
+                where: { id },
+                select: { teamId: true, reviewPhase: true }
+            });
+
+            if (!review) {
+                throw { status: 404, message: "Review not found" };
+            }
+
+            // If the deleted review was for the phase currently marked for submission, reset it
+            const team = await tx.team.findUnique({
+                where: { id: review.teamId },
+                select: { submissionPhase: true }
+            });
+
+            if (team && team.submissionPhase === review.reviewPhase) {
+                await tx.team.update({
+                    where: { id: review.teamId },
+                    data: { submissionPhase: null }
+                });
+            }
+
+            await tx.review.delete({
+                where: { id }
+            });
         });
+
         res.json({ message: "Review deleted successfully" });
     } catch (e) {
-        if (e.code === 'P2025') {
-            return res.status(404).json({ error: "Review not found" });
+        if (e.status === 404 || e.code === 'P2025') {
+            return res.status(404).json({ error: e.message || "Review not found" });
         }
         next(e);
     }

@@ -77,8 +77,9 @@ model projectscope {
 model PhaseDeadline {
   id        String       @id @default(cuid())
   phase     Int
-  deadline  DateTime
-  scopeId   String
+  deadline            DateTime
+  allowLateSubmission Boolean      @default(false)
+  scopeId             String
   scope     projectscope @relation(fields: [scopeId], references: [id], onDelete: Cascade)
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
@@ -202,12 +203,27 @@ model team {
   scope           projectscope?           @relation(fields: [scopeId], references: [id], map: "Team_scopeId_fkey")
   subjectExpert   user?                   @relation("team_subjectExpertIdTouser", fields: [subjectExpertId], references: [id], map: "Team_subjectExpertId_fkey")
   members         teammember[]
+  deadlineOverrides TeamPhaseDeadlineOverride[]
 
   @@index([guideId], map: "Team_guideId_idx")
   @@index([projectId], map: "Team_projectId_idx")
   @@index([scopeId], map: "Team_scopeId_fkey")
   @@index([status], map: "Team_status_idx")
   @@index([subjectExpertId], map: "Team_subjectExpertId_idx")
+}
+
+model TeamPhaseDeadlineOverride {
+  id        String   @id @default(cuid())
+  teamId    String
+  phase     Int
+  reason    String   @db.Text
+  grantedBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  team      team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, phase])
+  @@index([teamId])
 }
 
 model teammember {
@@ -249,6 +265,9 @@ model user {
   isBlocked                             Boolean            @default(false)
   blockedUntil                          DateTime?
   blockReason                           String?            @db.Text
+  lastLoginIp                           String?
+  lastLoginDevice                       Json?
+  lastLoginAt                           DateTime?
 
   @@index([department], map: "User_department_idx")
   @@index([role], map: "User_role_idx")

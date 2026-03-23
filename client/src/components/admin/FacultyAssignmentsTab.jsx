@@ -36,7 +36,11 @@ export default function FacultyAssignmentsTab({
     onOpenReleaseReviews,
     scopes,
     expiredFilter,
-    setExpiredFilter
+    setExpiredFilter,
+    completedFilter,
+    setCompletedFilter,
+    expiredNotFinishedFilter,
+    setExpiredNotFinishedFilter
 }) {
     const { addToast } = useToast();
     const { confirm } = useConfirm();
@@ -227,9 +231,13 @@ export default function FacultyAssignmentsTab({
                                 value={reviewPhase}
                                 onChange={(e) => setReviewPhase(e.target.value)}
                             >
-                                {Array.from({ length: assignedProjects.find(p => p.id === selectedProjectForFaculty)?.scope?.numberOfPhases || assignedProjects.find(p => p.id === selectedProjectForFaculty)?.numberOfPhases || 4 }, (_, i) => i + 1).map(p => (
-                                    <option key={p} value={String(p)}>P{p}</option>
-                                ))}
+                                {(() => {
+                                    const proj = assignedProjects.find(p => p.id === selectedProjectForFaculty);
+                                    const maxPhases = proj?.scope?.numberOfPhases || proj?.numberOfPhases || 4;
+                                    return Array.from({ length: maxPhases }, (_, i) => i + 1).map(p => (
+                                        <option key={p} value={String(p)}>P{p}</option>
+                                    ));
+                                })()}
                             </select>
                         </div>
                         <div>
@@ -300,6 +308,28 @@ export default function FacultyAssignmentsTab({
                                 >
                                     <Clock size={12} />
                                     {expiredFilter ? 'Filter: Expired' : 'All Assignments'}
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        const newVal = !completedFilter;
+                                        setCompletedFilter(newVal);
+                                        if (newVal) setExpiredNotFinishedFilter(false);
+                                    }}
+                                    className={`px-3 py-1.5 rounded-md font-bold text-[10px] uppercase tracking-wider transition-all flex items-center gap-2 ${completedFilter ? 'bg-green-600 text-white shadow-sm' : 'hover:bg-gray-200 text-gray-500'}`}
+                                >
+                                    <Check size={12} />
+                                    {completedFilter ? 'Filter: Completed' : 'Pending Review'}
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        const newVal = !expiredNotFinishedFilter;
+                                        setExpiredNotFinishedFilter(newVal);
+                                        if (newVal) setCompletedFilter(false);
+                                    }}
+                                    className={`px-3 py-1.5 rounded-md font-bold text-[10px] uppercase tracking-wider transition-all flex items-center gap-2 ${expiredNotFinishedFilter ? 'bg-orange-600 text-white shadow-sm' : 'hover:bg-gray-200 text-gray-500'}`}
+                                >
+                                    <AlertTriangle size={12} />
+                                    {expiredNotFinishedFilter ? 'Filter: Expired & Pending' : 'Expired & Pending'}
                                 </button>
                                 <button
                                     onClick={() => setIsBulkSelectVisible(!isBulkSelectVisible)}
@@ -505,7 +535,7 @@ export default function FacultyAssignmentsTab({
                                     </td>
                                     <td className="p-3">
                                         <span className="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-bold uppercase">
-                                            Phase {a.reviewPhase || 1}
+                                            Phase {Math.min(a.reviewPhase || 1, a.project?.scope?.numberOfPhases || a.project?.numberOfPhases || 4)}
                                         </span>
                                     </td>
                                     <td className="p-3">

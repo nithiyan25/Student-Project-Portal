@@ -208,6 +208,7 @@ const FacultyDetailsModal = ({ faculty, isOpen, onClose }) => {
 // Available admin tabs that can be granted
 const ADMIN_TABS = [
     { id: 'overview', label: 'Overview Dashboard', group: 'General' },
+    { id: 'security-alerts', label: 'Security Alerts', group: 'General' },
     { id: 'settings', label: 'System Settings', group: 'General' },
     { id: 'students', label: 'Students', group: 'User Management' },
     { id: 'faculty', label: 'Faculty', group: 'User Management' },
@@ -218,12 +219,14 @@ const ADMIN_TABS = [
     { id: 'student-request-status', label: 'Request Status List', group: 'Projects & Teams' },
     { id: 'teams', label: 'Teams', group: 'Projects & Teams' },
     { id: 'manage-teams', label: 'Manage Teams', group: 'Projects & Teams' },
+    { id: 'venues-schedule', label: 'Venues & Schedule', group: 'Projects & Teams' },
     { id: 'faculty-assignments', label: 'Faculty Assignments', group: 'Projects & Teams' },
     { id: 'rubrics', label: 'Rubrics', group: 'Evaluation' },
-    { id: 'reviews', label: 'Reviews', group: 'Evaluation' },
     { id: 'review-assignments', label: 'Review Assignments', group: 'Evaluation' },
+    { id: 'reviews', label: 'Reviews', group: 'Evaluation' },
+    { id: 'absentees', label: 'Absentees Report', group: 'Evaluation' },
     { id: 'individual-stats', label: 'Student Stats', group: 'Evaluation' },
-    { id: 'venue-scheduler', label: 'Venue Scheduler', group: 'Scheduling' },
+    { id: 'faculty-stats', label: 'Faculty Stats', group: 'Evaluation' },
 ];
 
 const TempAdminModal = ({ faculty, isOpen, onClose, onSave }) => {

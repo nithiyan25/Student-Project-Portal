@@ -13,21 +13,21 @@ export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('batches');
 
-  const loadData = async () => {
+  const loadData = async (isPolling = false) => {
     try {
-      setLoading(true);
-      const res = await api.get('/scopes/my-scopes').catch(() => ({ data: [] }));
+      if (!isPolling) setLoading(true);
+      const res = await api.get('/scopes/my-scopes', { _isPolling: isPolling }).catch(() => ({ data: [] }));
       setMyScopes(res.data || []);
     } catch (e) {
       console.error('Error loading scopes:', e);
     } finally {
-      setLoading(false);
+      if (!isPolling) setLoading(false);
     }
   };
 
   useEffect(() => {
     loadData();
-    const pollInterval = setInterval(loadData, 60000);
+    const pollInterval = setInterval(() => loadData(true), 60000);
     return () => clearInterval(pollInterval);
   }, []);
 

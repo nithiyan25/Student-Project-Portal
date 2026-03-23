@@ -9,8 +9,8 @@ export default function StudentScheduleTab() {
     const [sessions, setSessions] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const fetchMySchedule = async () => {
-        setLoading(true);
+    const fetchMySchedule = async (isPolling = false) => {
+        if (!isPolling) setLoading(true);
         try {
             const now = new Date();
             const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -32,7 +32,7 @@ export default function StudentScheduleTab() {
                 end = yesterdayEnd.toISOString();
             }
 
-            const res = await api.get('/venues/sessions', { params: { start, end } });
+            const res = await api.get('/venues/sessions', { params: { start, end }, _isPolling: isPolling });
 
             // Filter where current user is in session.students
             const mySessions = res.data.filter(s => s.students?.some(student => student.id === user?.id));
@@ -49,13 +49,13 @@ export default function StudentScheduleTab() {
         } catch (e) {
             console.error(e);
         } finally {
-            setLoading(false);
+            if (!isPolling) setLoading(false);
         }
     };
 
     useEffect(() => {
         fetchMySchedule();
-        const pollInterval = setInterval(fetchMySchedule, 30000);
+        const pollInterval = setInterval(() => fetchMySchedule(true), 30000);
         return () => clearInterval(pollInterval);
     }, [activeTab]);
 

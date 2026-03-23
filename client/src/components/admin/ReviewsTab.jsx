@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, MessageSquare, CheckCircle, Clock, AlertCircle, Users, Trash2, RotateCcw } from 'lucide-react';
+import { Search, MessageSquare, CheckCircle, Clock, AlertCircle, Users, Trash2, RotateCcw, UserCheck } from 'lucide-react';
 import SearchInput from '../ui/SearchInput';
 import StatusBadge from '../ui/StatusBadge';
 import { useToast } from '../../context/ToastContext';
@@ -7,7 +7,8 @@ import { useConfirm } from '../../context/ConfirmContext';
 
 export default function ReviewsTab({
     api,
-    scopes
+    scopes,
+    currentUser
 }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -56,7 +57,8 @@ export default function ReviewsTab({
                     phase: filterPhase,
                     active: filterActive,
                     page: pagination.page,
-                    limit: pagination.limit
+                    limit: pagination.limit,
+                    asAdmin: true
                 }
             });
             setTeams(response.data.teams);
@@ -119,7 +121,7 @@ export default function ReviewsTab({
             const team = teams.find(t => t.id === teamId);
             if (team) {
                 setReviewStatus(team.status);
-                const phase = (team.reviews?.length || 0) + 1;
+                const phase = team.submissionPhase || (team.reviews?.length || 0) + 1;
                 setReviewPhase(String(phase));
 
                 // Check for existing review (e.g. if expanding a completed review or one in progress)
@@ -460,6 +462,11 @@ export default function ReviewsTab({
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-4">
+                                        {team.project?.assignedFaculty?.some(af => af.facultyId === currentUser.id) && (
+                                            <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-[10px] font-black uppercase tracking-wider border border-purple-200">
+                                                Self Assigned
+                                            </span>
+                                        )}
                                         <StatusBadge status={team.status} showIcon size="xs" />
                                         <div className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
                                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -492,6 +499,31 @@ export default function ReviewsTab({
                                                                 </div>
                                                             </div>
                                                         ))}
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                                        <UserCheck size={14} /> Assigned Faculty
+                                                    </h4>
+                                                    <div className="space-y-2">
+                                                        {team.project?.assignedFaculty?.length > 0 ? (
+                                                            team.project.assignedFaculty.map((af, idx) => (
+                                                                <div key={idx} className="flex items-center justify-between p-2 bg-purple-50/50 rounded-lg border border-purple-100">
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center text-[10px] font-bold">F</div>
+                                                                        <div>
+                                                                            <p className="text-sm font-bold text-gray-800">{af.faculty?.name}</p>
+                                                                            <p className="text-[10px] text-purple-600 font-bold uppercase">Phase {af.reviewPhase} • {af.mode}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ))
+                                                        ) : (
+                                                            <div className="text-xs text-gray-400 italic p-4 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                                                                No faculty members explicitly assigned to this project.
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
 
@@ -712,10 +744,9 @@ export default function ReviewsTab({
                                                         value={reviewPhase}
                                                         onChange={e => handlePhaseChange(e.target.value, team)}
                                                     >
-                                                        <option value="1">Phase 1</option>
-                                                        <option value="2">Phase 2</option>
-                                                        <option value="3">Phase 3</option>
-                                                        <option value="4">Phase 4</option>
+                                                        {Array.from({ length: team.project?.scope?.numberOfPhases || team.project?.numberOfPhases || 4 }, (_, i) => i + 1).map(p => (
+                                                            <option key={p} value={String(p)}>Phase {p}</option>
+                                                        ))}
                                                     </select>
                                                 </div>
 

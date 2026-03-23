@@ -700,7 +700,9 @@ export default function FacultyDashboard() {
                       {/* Top Row: Badges & Deadlines */}
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="bg-blue-50 text-blue-700 text-[10px] font-semibold px-2.5 py-1 rounded border border-blue-100 uppercase tracking-wider">Phase {team.assignedPhase || 1}</span>
+                          <span className="bg-blue-50 text-blue-700 text-[10px] font-semibold px-2.5 py-1 rounded border border-blue-100 uppercase tracking-wider">
+                            Phase {Math.min(team.assignedPhase || 1, team.project?.scope?.numberOfPhases || team.project?.numberOfPhases || 4)}
+                          </span>
                           <span className={`${team.reviewMode === 'ONLINE' ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-slate-50 text-slate-700 border-slate-200'} border text-[10px] font-black px-2.5 py-1 rounded uppercase tracking-wider`}>
                             {team.reviewMode || 'OFFLINE'}
                           </span>
@@ -761,7 +763,7 @@ export default function FacultyDashboard() {
                                 <UserIcon size={10} />
                               </div>
                               <span className="text-sm font-medium text-slate-600">
-                                Rep: <span className="font-bold text-slate-800">{team.members.find(m => m.isLeader)?.user.name || "Unknown"}</span>
+                                Rep: <span className="font-bold text-slate-800">{team.members.find(m => m.isLeader)?.user.name || "Unknown"} {team.members.find(m => m.isLeader)?.user.rollNumber && `(${team.members.find(m => m.isLeader).user.rollNumber})`}</span>
                               </span>
                             </div>
                           </div>
@@ -783,11 +785,11 @@ export default function FacultyDashboard() {
                     <div className="px-4 pb-4 flex flex-wrap gap-2">
                       {team.isPhaseCompletedByFaculty ? (
                         <span className="flex items-center gap-1 px-2 py-1 rounded text-xs font-bold border bg-green-100 text-green-700 border-green-200 w-fit">
-                          <CheckCircle size={12} /> Phase {team.assignedPhase || 1} Reviewed
+                          <CheckCircle size={12} /> Phase {Math.min(team.assignedPhase || 1, team.project?.scope?.numberOfPhases || team.project?.numberOfPhases || 4)} Reviewed
                         </span>
                       ) : (
                         <span className="flex items-center gap-1 px-2 py-1 rounded text-xs font-bold border bg-amber-50 text-amber-700 border-amber-200 w-fit">
-                          <Clock size={12} /> Phase {team.assignedPhase || 1} — Pending Review
+                          <Clock size={12} /> Phase {Math.min(team.assignedPhase || 1, team.project?.scope?.numberOfPhases || team.project?.numberOfPhases || 4)} — Pending Review
                         </span>
                       )}
                       {team.status === 'CHANGES_REQUIRED' && (
@@ -1558,7 +1560,7 @@ export default function FacultyDashboard() {
                     const allStudents = Array.from(studentMap.values());
                     return allStudents.sort((a, b) => a.name.localeCompare(b.name)).map((s, i) => (
                       <tr key={i} className="hover:bg-gray-50">
-                        <td className="p-4 text-sm font-bold text-gray-800">{s.name}</td>
+                        <td className="p-4 text-sm font-bold text-gray-800">{s.name} {s.rollNumber && <span className="text-xs text-gray-400 font-mono italic ml-1">({s.rollNumber})</span>}</td>
                         <td className="p-4 text-sm"><span className="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded text-[10px] font-black uppercase border border-indigo-100">{s.batch}</span></td>
                         <td className="p-4 text-sm"><span className={`px-2 py-0.5 rounded text-xs font-bold ${s.source === 'Mentee' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>{s.source}</span></td>
                         <td className="p-4 text-sm text-gray-600 truncate max-w-xs cursor-pointer hover:text-blue-600 hover:underline" onClick={() => setSelectedTeamForDetails(s.team)}>{s.project}</td>

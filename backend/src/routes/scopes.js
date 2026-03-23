@@ -514,12 +514,14 @@ router.post('/:id/deadlines', authenticate, authorize(['ADMIN']), async (req, re
                         }
                     },
                     update: {
-                        deadline: new Date(d.deadline)
+                        deadline: new Date(d.deadline),
+                        allowLateSubmission: d.allowLateSubmission === true
                     },
                     create: {
                         scopeId: id,
                         phase: parseInt(d.phase),
-                        deadline: new Date(d.deadline)
+                        deadline: new Date(d.deadline),
+                        allowLateSubmission: d.allowLateSubmission === true
                     }
                 });
             }

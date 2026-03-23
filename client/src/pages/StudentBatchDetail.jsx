@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api';
 import Navbar from '../components/Navbar';
 import { AuthContext } from '../context/AuthContext';
-import { Users, CheckCircle, MessageSquare, Search, ArrowLeft, XCircle, Check, AlertCircle, Clock, MapPin, Layout, History, Timer, Calendar, ChevronDown, Rocket, Video, Building2, ArrowRight } from 'lucide-react';
+import { Users, CheckCircle, MessageSquare, Search, ArrowLeft, XCircle, Check, AlertCircle, Clock, MapPin, Layout, Timer, Calendar, ChevronDown, Rocket, Video, ArrowRight, RefreshCcw } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { useConfirm } from '../context/ConfirmContext';
 import BatchTimer from '../components/student/BatchTimer';
@@ -44,13 +44,13 @@ export default function StudentBatchDetail() {
     const [resubmissionNote, setResubmissionNote] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const loadData = async () => {
+    const loadData = async (isPolling = false) => {
         try {
-            setLoading(true);
+            if (!isPolling) setLoading(true);
             const [teamsRes, pRes, scopeRes] = await Promise.all([
-                api.get('/teams/my-teams').catch(() => ({ data: [] })),
-                api.get('/projects', { params: { status: 'AVAILABLE', limit: 1000 } }),
-                api.get('/scopes/my-scopes').catch(() => ({ data: [] }))
+                api.get('/teams/my-teams', { _isPolling: isPolling }).catch(() => ({ data: [] })),
+                api.get('/projects', { params: { status: 'AVAILABLE', limit: 1000 }, _isPolling: isPolling }),
+                api.get('/scopes/my-scopes', { _isPolling: isPolling }).catch(() => ({ data: [] }))
             ]);
 
             const foundScope = scopeRes.data.find(s => s.id === scopeId);
@@ -70,19 +70,19 @@ export default function StudentBatchDetail() {
 
             // If guide/expert needed, fetch faculty (with batch context for limits)
             if (foundScope.requireGuide || foundScope.requireSubjectExpert) {
-                const fRes = await api.get('/users/faculty-list', { params: { scopeId } });
+                const fRes = await api.get('/users/faculty-list', { params: { scopeId }, _isPolling: isPolling });
                 setFacultyList(fRes.data.users || []);
             }
 
             // Fetch rubrics if project is assigned
             if (foundTeam?.project?.category) {
-                const rRes = await api.get('/rubrics', { params: { category: foundTeam.project.category } });
+                const rRes = await api.get('/rubrics', { params: { category: foundTeam.project.category }, _isPolling: isPolling });
                 setRubrics(rRes.data || []);
             }
         } catch (e) {
             console.error('Error loading batch details:', e);
         } finally {
-            setLoading(false);
+            if (!isPolling) setLoading(false);
         }
     };
 
@@ -92,7 +92,7 @@ export default function StudentBatchDetail() {
         // Pause polling if the submission modal is open to avoid UI flicker/overwriting
         const interval = setInterval(() => {
             if (!isSubmitModalOpen) {
-                loadData();
+                loadData(true);
             }
         }, 60000);
         return () => clearInterval(interval);
@@ -223,26 +223,45 @@ export default function StudentBatchDetail() {
     const effectiveDeadlines = myTeam?.scope?.deadlines || scope.deadlines || [];
 
 
+    // 1. Identify which phases have successful reviews (Approved or Completed)
+    const successfullyReviewedPhases = new Set(
+        (myTeam?.reviews || [])
+            .filter(r => r.status === 'APPROVED' || r.status === 'COMPLETED')
+            .map(r => r.reviewPhase)
+    );
+
+    // 2. Identify phases that are "passed" (Deadline gone AND no late submission AND no override)
     const passedPhases = new Set([
-        ...(myTeam?.reviews || []).filter(r => r.status && r.status !== 'PENDING').map(r => r.reviewPhase),
+        ...effectiveDeadlines
+            .filter(d => {
+                const hasOverride = myTeam?.deadlineOverrides?.some(o => o.phase === d.phase);
+                const isDeadlinePassed = new Date(d.deadline) < now;
+                return isDeadlinePassed && !d.allowLateSubmission && !hasOverride;
+            })
+            .map(d => d.phase),
+        // Also consider phases missed by faculty assignment (if any)
         ...assignedFaculty
             .filter(a => a.accessExpiresAt && new Date(a.accessExpiresAt) < now)
-            .map(a => a.reviewPhase),
-        ...effectiveDeadlines
-            .filter(d => new Date(d.deadline) < now)
-            .map(d => d.phase)
+            .map(a => a.reviewPhase)
+            .filter(p => !myTeam?.deadlineOverrides?.some(o => o.phase === p))
     ]);
 
-    const highestPassedPhase = Math.max(0, ...Array.from(passedPhases));
-    const reviewedPhaseSet = new Set(
-        (myTeam?.reviews || []).filter(r => r.status === 'COMPLETED' || r.status === 'NOT_COMPLETED').map(r => r.reviewPhase)
-    );
-    const activeAssignment = assignedFaculty.find(a => {
-        if (!a.accessExpiresAt) return false;
-        if (reviewedPhaseSet.has(a.reviewPhase)) return false; // Skip completed or missed phases
-        return new Date(a.accessExpiresAt) > now;
-    });
-    const currentPhase = activeAssignment?.reviewPhase || (highestPassedPhase + 1);
+    // 3. Redesign Current Phase Logic:
+    // We prioritize the backend-calculated currentPhase to ensure exact sync.
+    // Fallback to local calculation only if data isn't loaded yet (undefined).
+    const totalPhases = scope.numberOfPhases || 3;
+    let currentPhase = myTeam && 'currentPhase' in myTeam ? myTeam.currentPhase : undefined;
+
+    if (currentPhase === undefined && scope) {
+        let localCalc = null;
+        for (let p = 1; p <= totalPhases; p++) {
+            if (!successfullyReviewedPhases.has(p) && !passedPhases.has(p)) {
+                localCalc = p;
+                break;
+            }
+        }
+        currentPhase = localCalc;
+    }
 
     const currentPhaseDeadline = effectiveDeadlines.find(d => d.phase === currentPhase);
     const deadlineDate = currentPhaseDeadline ? new Date(currentPhaseDeadline.deadline) : null;
@@ -774,46 +793,72 @@ export default function StudentBatchDetail() {
 
                                             {/* Action Buttons — Handcrafted Interaction Banners */}
                                             {myTeam.project && myTeam.status !== 'READY_FOR_REVIEW' && myTeam.status !== 'PENDING' && (() => {
-                                                const completedReviews = myTeam.reviews?.filter(r => r.status === 'COMPLETED' || r.status === 'NOT_COMPLETED') || [];
-                                                const completedPhases = new Set(completedReviews.map(r => r.reviewPhase)).size;
-                                                const totalPhases = scope.numberOfPhases || 4;
-                                                const allPhasesCompleted = completedPhases >= totalPhases;
+                                                const referencePhase = currentPhase || totalPhases;
+                                                const missedPhases = [];
+                                                for (let i = 1; i < referencePhase; i++) {
+                                                    const hasOverride = myTeam?.deadlineOverrides?.some(o => o.phase === i);
+                                                    if (!successfullyReviewedPhases.has(i) && !hasOverride) {
+                                                        missedPhases.push(i);
+                                                    }
+                                                }
 
-                                                const hasCompletedCurrentPhase = myTeam.reviews?.some(r => r.reviewPhase === currentPhase && r.status === 'COMPLETED');
+                                                const trulyCompleted = successfullyReviewedPhases.size >= totalPhases;
+                                                const activeOverrideExists = (myTeam?.deadlineOverrides || []).some(o => !successfullyReviewedPhases.has(o.phase));
+                                                const allPhasesConcluded = currentPhase === null && !activeOverrideExists;
+
+                                                const hasCompletedCurrentPhase = successfullyReviewedPhases.has(currentPhase);
                                                 const hasMissedCurrentPhase = myTeam.reviews?.some(r => r.reviewPhase === currentPhase && r.status === 'NOT_COMPLETED') && !hasCompletedCurrentPhase;
                                                 const hasPendingReview = myTeam.reviews?.some(r => r.status === 'PENDING' || r.status === 'READY_FOR_REVIEW');
 
-                                                if (allPhasesCompleted) {
+                                                if (allPhasesConcluded) {
+                                                    const trulyCompleted = successfullyReviewedPhases.size >= totalPhases;
                                                     return (
                                                         <div className="mt-10 pt-8 border-t border-slate-100">
-                                                            <div className="bg-emerald-50/80 backdrop-blur-sm border border-emerald-100 p-6 rounded-[28px] flex items-center gap-5 shadow-xl shadow-emerald-100/20">
-                                                                <div className="w-14 h-14 bg-emerald-500 text-white rounded-lg flex items-center justify-center shadow-lg shadow-emerald-200">
+                                                            <div className={`${trulyCompleted ? 'bg-emerald-50/80 border-emerald-100' : 'bg-amber-50/80 border-amber-100'} backdrop-blur-sm border p-6 rounded-[28px] flex items-center gap-5 shadow-xl ${trulyCompleted ? 'shadow-emerald-100/20' : 'shadow-amber-100/20'}`}>
+                                                                <div className={`w-14 h-14 ${trulyCompleted ? 'bg-emerald-500 shadow-emerald-200' : 'bg-amber-500 shadow-amber-200'} text-white rounded-lg flex items-center justify-center shadow-lg`}>
                                                                     <CheckCircle size={28} />
                                                                 </div>
                                                                 <div>
-                                                                    <h4 className="text-lg font-black font-outfit text-emerald-900 tracking-tight">Curriculum Completed! 🎉</h4>
-                                                                    <p className="text-xs text-emerald-700 font-bold opacity-80 uppercase tracking-widest mt-0.5">All {totalPhases} review phases have been successfully verified.</p>
+                                                                    <h4 className={`text-lg font-black font-outfit ${trulyCompleted ? 'text-emerald-900' : 'text-amber-900'} tracking-tight`}>
+                                                                        {trulyCompleted ? 'Curriculum Completed! 🎉' : 'Curriculum Concluded'}
+                                                                    </h4>
+                                                                    <p className={`text-xs ${trulyCompleted ? 'text-emerald-700' : 'text-amber-700'} font-bold opacity-80 uppercase tracking-widest mt-0.5`}>
+                                                                        {trulyCompleted 
+                                                                            ? `All ${totalPhases} review phases have been successfully verified.` 
+                                                                            : `Timeline ended. Completed ${successfullyReviewedPhases.size} of ${totalPhases} phases.`
+                                                                        }
+                                                                    </p>
                                                                 </div>
                                                             </div>
+                                                            {missedPhases.length > 0 && (
+                                                                <div className="mt-4 flex items-center gap-3 px-6 py-3 bg-red-50 border border-red-100 rounded-2xl text-red-700 text-[10px] font-bold uppercase tracking-wider animate-in fade-in slide-in-from-top-2">
+                                                                    <AlertCircle size={14} className="shrink-0" />
+                                                                    <span>Incomplete Record: Phases {missedPhases.join(', ')} were bypassed due to deadlines.</span>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     );
                                                 }
 
                                                 if (hasMissedCurrentPhase) {
-                                                    return (
-                                                        <div className="mt-10 pt-8 border-t border-slate-100">
-                                                            <div className="bg-red-50/80 backdrop-blur-sm border border-red-100 p-6 rounded-[28px] flex items-center gap-5 shadow-xl shadow-red-100/20">
-                                                                <div className="w-14 h-14 bg-red-600 text-white rounded-lg flex items-center justify-center shadow-lg shadow-red-200">
-                                                                    <XCircle size={28} />
-                                                                </div>
-                                                                <div>
-                                                                    <h4 className="text-lg font-black font-outfit text-red-900 tracking-tight">Phase {currentPhase} Absent</h4>
-                                                                    <p className="text-xs text-red-600 font-bold opacity-80 uppercase tracking-widest mt-0.5">Evaluation window missed. Awaiting administrative reconfiguration.</p>
+                                                    const hasOverride = myTeam?.deadlineOverrides?.some(o => o.phase === currentPhase);
+                                                    if (!hasOverride) {
+                                                        return (
+                                                            <div className="mt-10 pt-8 border-t border-slate-100">
+                                                                <div className="bg-red-50/80 backdrop-blur-sm border border-red-100 p-6 rounded-[28px] flex items-center gap-5 shadow-xl shadow-red-100/20">
+                                                                    <div className="w-14 h-14 bg-red-600 text-white rounded-lg flex items-center justify-center shadow-lg shadow-red-200">
+                                                                        <XCircle size={28} />
+                                                                    </div>
+                                                                    <div>
+                                                                        <h4 className="text-lg font-black font-outfit text-red-900 tracking-tight">Phase {currentPhase} Absent</h4>
+                                                                        <p className="text-xs text-red-600 font-bold opacity-80 uppercase tracking-widest mt-0.5">Evaluation window missed. Awaiting administrative reconfiguration.</p>
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                    );
+                                                        );
+                                                    }
                                                 }
+
 
                                                 if (hasCompletedCurrentPhase || hasPendingReview) {
                                                     return (
@@ -824,7 +869,7 @@ export default function StudentBatchDetail() {
                                                                 </div>
                                                                 <div>
                                                                     <h4 className="text-lg font-black font-outfit text-blue-900 tracking-tight">
-                                                                        {hasPendingReview ? 'Review in progress' : `Phase ${highestPassedPhase} Verified`}
+                                                                        {hasPendingReview ? 'Review in progress' : `Phase ${currentPhase} Verified`}
                                                                     </h4>
                                                                     <p className="text-xs text-blue-700 font-bold opacity-80 uppercase tracking-widest mt-0.5">
                                                                         {hasPendingReview

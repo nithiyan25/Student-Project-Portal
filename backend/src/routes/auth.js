@@ -65,6 +65,21 @@ router.post('/google', async (req, res) => {
             process.env.JWT_SECRET,
             { expiresIn: '12h' }
         );
+
+        // Track Login Metadata (Non-blocking)
+        const UAParser = require('ua-parser-js');
+        const parser = new UAParser(req.headers['user-agent']);
+        const deviceData = parser.getResult();
+
+        prisma.user.update({
+            where: { id: user.id },
+            data: {
+                lastLoginIp: req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress,
+                lastLoginDevice: JSON.parse(JSON.stringify(deviceData)),
+                lastLoginAt: new Date()
+            }
+        }).catch(err => console.error("Failed to update login status:", err.message));
+
         res.json({ token: appToken, user });
     } catch (error) {
         console.error(error);

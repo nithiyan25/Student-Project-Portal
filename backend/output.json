@@ -1,0 +1,27 @@
+{
+  "teamId": "cml7sm8n703al126sn9by46tr",
+  "status": "READY_FOR_REVIEW",
+  "submissionPhase": null,
+  "nextPhase": 3,
+  "deadlines": [
+    {
+      "id": "cmlm1g7la002bsoxmeyx1n0x0",
+      "phase": 1,
+      "deadline": "2026-03-13T11:00:00.000Z",
+      "allowLateSubmission": false,
+      "scopeId": "cml7sgd560000126s84y5dkpo",
+      "createdAt": "2026-02-14T08:12:10.991Z",
+      "updatedAt": "2026-03-12T05:03:57.801Z"
+    },
+    {
+      "id": "cmmbnfvi900048i6vbgny1j6w",
+      "phase": 2,
+      "deadline": "2026-03-13T11:00:00.000Z",
+      "allowLateSubmission": false,
+      "scopeId": "cml7sgd560000126s84y5dkpo",
+      "createdAt": "2026-03-04T06:22:01.281Z",
+      "updatedAt": "2026-03-12T05:03:57.804Z"
+    }
+  ],
+  "overrides": []
+}
